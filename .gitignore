@@ -1,0 +1,13 @@
+/token.json
+/credentials.json
+__pycache__/
+*.py[codz]
+*$py.class
+.env
+.env*.local
+.env.development
+.env.production
+backend/keys/
+*.pem
+*.log
+/.coverage

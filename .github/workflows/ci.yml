@@ -58,13 +58,13 @@ jobs:
       - name: Check overall coverage (>=80%)
         run: coverage report --fail-under=80
       - name: Check Domain coverage (>=90%)
-        run: >
-          coverage report
-            --include="src/Common/Domain/*"
-            --include="src/Gmail/Domain/*"
-            --include="src/Intelligence/Domain/*"
-            --include="src/Search/Domain/*"
-            --include="src/Notification/Domain/*"
+        run: |
+          coverage report \
+            --include="src/Common/Domain/*" \
+            --include="src/Gmail/Domain/*" \
+            --include="src/Intelligence/Domain/*" \
+            --include="src/Search/Domain/*" \
+            --include="src/Notification/Domain/*" \
             --fail-under=90
 
   security:

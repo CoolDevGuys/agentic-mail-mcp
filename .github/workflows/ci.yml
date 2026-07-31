@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install --no-cache-dir .[dev]
+      - name: Run ruff
+        run: ruff check src/ tests/
+
+  type-check:
+    name: Type Check (mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install --no-cache-dir .[dev]
+      - name: Run mypy
+        run: mypy src/
+
+  test:
+    name: Test (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install --no-cache-dir .[dev]
+      - name: Run pytest (collect coverage)
+        run: pytest --cov=src --cov-config=pyproject.toml
+      - name: Check overall coverage (>=80%)
+        run: coverage report --fail-under=80
+      - name: Check Domain coverage (>=90%)
+        run: |
+          coverage report \
+            --include="src/Common/Domain/*" \
+            --include="src/Gmail/Domain/*" \
+            --include="src/Intelligence/Domain/*" \
+            --include="src/Search/Domain/*" \
+            --include="src/Notification/Domain/*" \
+            --fail-under=90
+
+  security:
+    name: Dependency Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install --no-cache-dir .[dev] pip-audit
+      - name: Run pip-audit
+        run: pip-audit
+
+  lockfile:
+    name: Lockfile Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate lockfile
+        run: |
+          pip install --no-cache-dir hatchling
+          python -m hatchling.build --wheel
+
+  publish:
+    name: Build & Publish
+    needs: [lint, type-check, test, security, lockfile]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install --no-cache-dir build twine
+      - name: Build package
+        run: python -m build
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: twine upload dist/*

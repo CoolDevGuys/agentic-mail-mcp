@@ -38,6 +38,7 @@ dev = [
     "pytest-cov",
     "ruff",
     "mypy",
+    "setuptools>=83.0.0",
 ]
 
 [project.scripts]

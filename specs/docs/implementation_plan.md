@@ -91,7 +91,7 @@ Set up:
 
 ---
 
-## Phase 2 - Common Module (Shared Primitives)
+## Phase 2 - Common Module (Shared Primitives) [DONE]
 
 ### 2.1 - Common/Domain/ValueObjects/
 - base.py: abstract ValueObject with __eq__, __hash__, __repr__ based on all attributes

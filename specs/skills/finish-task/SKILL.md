@@ -1,29 +1,150 @@
 ---
 name: finish-task
-description: Mandatory closing checklist for any coding task. Use before declaring any feature, fix, or refactor done - verifies tests, docs, git hygiene, and persists session learnings to memory. Use proactively when about to say "done" or "complete".
+description: Mandatory completion checklist for any implementation task. Verify requirements, quality gates, documentation, and persist durable knowledge before considering work complete.
 ---
-# Finish a Task (Definition of Done gate)
 
-You may not declare a task done until every gate below passes. Run them in order; report each with evidence (the actual command output), not assertion.
+# Finish Task
 
-## Gates
-1. **Tests** — run the FULL suite now. Paste the summary line. Any new behavior in this change must have a test that fails without it — name the test(s). Skipped/weakened tests = fail this gate.
-2. **Static checks** — lint + type-check clean. Paste outputs.
-3. **Docs (per documentation-guidelines.md)** — walk the change→doc mapping table: schema change ⇒ `data-models.md`; endpoint ⇒ OpenAPI; event ⇒ `events.md`; env var ⇒ `.env.example` + config doc; decision ⇒ ADR. For each: updated, or state "N/A because …". "Forgot" is not an option.
-4. **Diff hygiene** — review `git diff`: no debug output, no commented-out code, no unrelated changes, no secrets. Commit message(s) follow `git-workflow.md`.
-5. **Spec sync (OpenSpec projects)** — if `openspec/` exists and this work belongs to a change: `tasks.md` checkboxes updated *truthfully* (only tasks with passing proof get checked); spec deltas still match what was actually built (update them if implementation diverged — with a note why); `openspec validate` passes — paste its output. Remind the user to `/opsx:archive` after merge.
-6. **Memory persistence** — save to the memory MCP (project-tagged), as *distilled decisions, not transcripts*:
-   - decisions made and their why ("chose optimistic locking for Invoice because …")
-   - gotchas discovered ("the test container needs X env var or hangs")
-   - user preferences expressed this session ("prefers table-driven tests")
-   - what was completed ("Billing: invoice PDF export shipped on branch feature/…")
-   Skip only if the session genuinely produced nothing durable — say so explicitly.
-7. **Handoff summary** — 3–6 lines: what changed, how it's proven, what docs moved, anything intentionally deferred (with ticket/TODO location).
+Do not declare a task complete until every applicable gate below passes.
 
-## Failure protocol
-If any gate fails: fix it and re-run that gate. If it *cannot* pass (e.g. flaky unrelated test), do not hide it — report the failure, why it's unrelated, and the evidence. Never claim green that isn't.
+If a gate fails, fix it and repeat that gate before continuing.
 
-## Anti-patterns
-- "Tests should pass" → run them.
-- Saving a session transcript to memory → save decisions only.
-- Marking docs N/A without stating why.
+---
+
+## 1. Requirements
+
+Verify the implementation satisfies every requested requirement.
+
+- Confirm each requested behavior has been implemented.
+- Identify any intentionally deferred work.
+- Never assume passing tests imply complete implementation.
+
+---
+
+## 2. Testing
+
+Verify the implementation through automated tests.
+
+- Run the relevant test suite.
+- New behavior must be covered by tests.
+- Bug fixes must include a regression test whenever practical.
+- Existing tests must continue to pass.
+
+Report:
+
+- executed command(s)
+- test summary
+- newly added or modified tests
+
+---
+
+## 3. Quality Checks
+
+Run all applicable project quality checks.
+
+Examples:
+
+- formatter
+- linter
+- type checker
+- static analysis
+
+Report the result of each executed check.
+
+---
+
+## 4. Documentation
+
+Determine which project documentation is affected.
+
+Update every required document according to the project's documentation guidelines.
+
+If no documentation changes are required, explicitly explain why.
+
+---
+
+## 5. Architecture Review
+
+Verify the implementation respects the project's architectural principles.
+
+Confirm that:
+
+- responsibilities remain in the correct layer
+- dependency direction is preserved
+- no unnecessary abstractions were introduced
+- existing project conventions were followed
+
+If architectural deviations were necessary, explain them.
+
+---
+
+## 6. Change Hygiene
+
+Review the final changeset.
+
+Verify that it contains:
+
+- no debug code
+- no commented-out code
+- no dead code
+- no unrelated changes
+- no secrets or sensitive information
+
+If creating commits, follow the project's Git guidelines.
+
+---
+
+## 7. Project Memory
+
+Persist only durable project knowledge.
+
+Examples:
+
+- architectural decisions
+- implementation conventions
+- recurring pitfalls
+- long-term project constraints
+- user preferences
+
+Never save:
+
+- temporary debugging
+- implementation details
+- task transcripts
+- one-off fixes
+
+If no durable knowledge was produced, explicitly state so.
+
+---
+
+## 8. Handoff Summary
+
+Provide a concise summary including:
+
+- what changed
+- how it was verified
+- documentation updated
+- deferred work (if any)
+
+---
+
+# Failure Protocol
+
+If any gate cannot pass:
+
+- explain why
+- provide evidence
+- identify the impact
+- never claim success without verification
+
+---
+
+# Anti-Patterns
+
+Never:
+
+- assume tests passed without running them
+- assume requirements were met because code compiles
+- save transcripts instead of distilled knowledge
+- skip documentation without justification
+- hide failing checks

@@ -4,7 +4,7 @@ import pytest
 
 from src.Common.Domain.Exceptions import DomainError
 from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Gmail.Domain.Entities.label import Label, SYSTEM_LABELS
+from src.Gmail.Domain.Entities.label import Label
 
 
 class TestLabelCreation:

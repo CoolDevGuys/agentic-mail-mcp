@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 import pytest
 
@@ -81,8 +81,6 @@ class TestThreadBehaviors:
             thread_id=ThreadId(value="thread_1"),
             email_ids=[email_id],
         )
-        original_updated = thread.last_updated
-
         thread.add_email(UUIDId.generate())
 
         assert thread.last_updated is not None

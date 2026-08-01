@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+import pytest
+
+from src.Common.Domain.Exceptions import ValidationError
 from src.Common.Domain.ValueObjects.uuid_id import UUIDId
 from src.Search.Domain.Entities.search_document import SearchDocument
 
@@ -79,3 +82,44 @@ class TestSearchDocumentCreation:
 
         assert doc2.embedding == []
         assert doc2.metadata == {}
+
+
+class TestSearchDocumentDimensionValidation:
+    def test_valid_embedding_dimension_accepted(self) -> None:
+        doc = SearchDocument.create(
+            id=UUIDId.generate(),
+            email_id=UUIDId.generate(),
+            content="test",
+            embedding=[0.1, 0.2, 0.3],
+            expected_dimension=3,
+        )
+
+        assert doc.embedding == [0.1, 0.2, 0.3]
+
+    def test_wrong_embedding_dimension_raises(self) -> None:
+        with pytest.raises(ValidationError, match="embedding dimension.*does not match"):
+            SearchDocument.create(
+                id=UUIDId.generate(),
+                email_id=UUIDId.generate(),
+                content="test",
+                embedding=[0.1, 0.2],
+                expected_dimension=3,
+            )
+
+    def test_empty_embedding_with_no_dimension_constraint(self) -> None:
+        doc = SearchDocument.create(
+            id=UUIDId.generate(),
+            email_id=UUIDId.generate(),
+            content="test",
+        )
+
+        assert doc.embedding == []
+
+    def test_empty_embedding_with_dimension_constraint_raises(self) -> None:
+        with pytest.raises(ValidationError, match="embedding dimension.*does not match"):
+            SearchDocument.create(
+                id=UUIDId.generate(),
+                email_id=UUIDId.generate(),
+                content="test",
+                expected_dimension=3,
+            )

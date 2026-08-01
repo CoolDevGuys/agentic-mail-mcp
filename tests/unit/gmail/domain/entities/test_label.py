@@ -4,7 +4,7 @@ import pytest
 
 from src.Common.Domain.Exceptions import DomainError
 from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Gmail.Domain.Entities.label import Label
+from src.Gmail.Domain.Entities.label import Label, SYSTEM_LABELS
 
 
 class TestLabelCreation:
@@ -31,6 +31,16 @@ class TestLabelCreation:
 
         assert label.name == "INBOX"
         assert label.type == "system"
+        assert label.is_system is True
+
+    def test_is_system_based_on_name_not_type(self) -> None:
+        label = Label(
+            id=UUIDId.generate(),
+            label_id="INBOX",
+            name="INBOX",
+            type="user",
+        )
+
         assert label.is_system is True
 
     def test_default_type_is_user(self) -> None:

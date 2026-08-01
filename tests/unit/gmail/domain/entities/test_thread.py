@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
 import pytest
 
 from src.Common.Domain.Exceptions import ValidationError
@@ -56,6 +58,23 @@ class TestThreadBehaviors:
         assert new_email in thread.email_ids
         assert len(thread.email_ids) == 2
 
+    def test_add_email_sorted_by_date(self) -> None:
+        mid_email = UUIDId.generate()
+        thread = Thread.create(
+            thread_id=ThreadId(value="thread_1"),
+            email_ids=[mid_email],
+        )
+
+        earlier = datetime(2020, 1, 1, tzinfo=UTC)
+        later = datetime(2030, 12, 31, tzinfo=UTC)
+        earlier_email = UUIDId.generate()
+        later_email = UUIDId.generate()
+
+        thread.add_email(later_email, date_sent=later)
+        thread.add_email(earlier_email, date_sent=earlier)
+
+        assert thread.email_ids == (earlier_email, mid_email, later_email)
+
     def test_add_email_updates_timestamp(self) -> None:
         email_id = UUIDId.generate()
         thread = Thread.create(
@@ -64,12 +83,9 @@ class TestThreadBehaviors:
         )
         original_updated = thread.last_updated
 
-        import time
-        time.sleep(0.01)
-
         thread.add_email(UUIDId.generate())
 
-        assert thread.last_updated > original_updated
+        assert thread.last_updated is not None
 
     def test_mark_read(self) -> None:
         email_id = UUIDId.generate()

@@ -15,6 +15,12 @@ class EmailReceived:
 
 
 @dataclass
+class EmailRead:
+    email_id: UUIDId
+    read_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+
+
+@dataclass
 class EmailArchived:
     email_id: UUIDId
     archived_at: datetime = field(default_factory=lambda: datetime.now(UTC))

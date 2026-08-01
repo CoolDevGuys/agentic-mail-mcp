@@ -31,7 +31,7 @@ class Label:
 
     @property
     def is_system(self) -> bool:
-        return self.type == "system"
+        return self.name in SYSTEM_LABELS
 
     def rename(self, new_name: str) -> None:
         if self.is_system:

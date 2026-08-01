@@ -5,6 +5,7 @@ from datetime import datetime
 
 from src.Common.Domain.Exceptions import DomainError
 from src.Common.Domain.ValueObjects.uuid_id import UUIDId
+from src.Gmail.Domain.Events import EmailArchived, EmailDeleted, EmailLabeled, EmailRead
 from src.Gmail.Domain.ValueObjects import EmailAddress, GmailMessageId, ThreadId
 
 
@@ -73,26 +74,21 @@ class Email:
     def mark_read(self) -> None:
         if not self.is_read:
             self.is_read = True
+            self._domain_events.append(EmailRead(email_id=self.id))
 
     def add_label(self, label: str) -> None:
         if label not in self._labels:
             self._labels.add(label)
-            from src.Gmail.Domain.Events import EmailLabeled
-
             self._domain_events.append(EmailLabeled(email_id=self.id, label_name=label))
 
     def remove_label(self, label: str) -> None:
         self._labels.discard(label)
 
     def archive(self) -> None:
-        from src.Gmail.Domain.Events import EmailArchived
-
         self._domain_events.append(EmailArchived(email_id=self.id))
 
     def move_to_trash(self) -> None:
         self._is_trashed = True
-        from src.Gmail.Domain.Events import EmailDeleted
-
         self._domain_events.append(EmailDeleted(email_id=self.id))
 
     def restore_from_trash(self) -> None:

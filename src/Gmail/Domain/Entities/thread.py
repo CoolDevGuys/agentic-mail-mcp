@@ -2,11 +2,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from typing import NamedTuple
 
 from src.Common.Domain.Exceptions import ValidationError
 from src.Common.Domain.ValueObjects.uuid_id import UUIDId
 
 from ..ValueObjects import ThreadId
+
+
+class _EmailEntry(NamedTuple):
+    email_id: UUIDId
+    date_sent: datetime
 
 
 @dataclass
@@ -16,7 +22,7 @@ class Thread:
     snippet: str = ""
     subject: str = ""
     participants: list[str] = field(default_factory=list)
-    _email_ids: list[UUIDId] = field(default_factory=list)
+    _emails: list[_EmailEntry] = field(default_factory=list)
     last_updated: datetime | None = field(default=None)
     is_read: bool = False
 
@@ -26,7 +32,7 @@ class Thread:
 
     @property
     def email_ids(self) -> tuple[UUIDId, ...]:
-        return tuple(self._email_ids)
+        return tuple(entry.email_id for entry in self._emails)
 
     @classmethod
     def create(
@@ -39,19 +45,25 @@ class Thread:
     ) -> Thread:
         if not email_ids:
             raise ValidationError("Thread must contain at least one email")
+        now = datetime.now(UTC)
+        emails = [_EmailEntry(eid, now) for eid in email_ids]
         return cls(
             id=UUIDId.generate(),
             thread_id=thread_id,
             subject=subject,
             snippet=snippet,
             participants=participants or [],
-            _email_ids=list(email_ids),
+            _emails=emails,
         )
 
-    def add_email(self, email_id: UUIDId) -> None:
-        if email_id not in self._email_ids:
-            self._email_ids.append(email_id)
-            self.last_updated = datetime.now(UTC)
+    def add_email(self, email_id: UUIDId, *, date_sent: datetime | None = None) -> None:
+        if email_id in self.email_ids:
+            return
+        sent = date_sent or datetime.now(UTC)
+        entry = _EmailEntry(email_id, sent)
+        self._emails.append(entry)
+        self._emails.sort(key=lambda e: e.date_sent)
+        self.last_updated = datetime.now(UTC)
 
     def mark_read(self) -> None:
         self.is_read = True

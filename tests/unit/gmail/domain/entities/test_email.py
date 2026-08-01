@@ -11,6 +11,7 @@ from src.Gmail.Domain.Events import (
     EmailArchived,
     EmailDeleted,
     EmailLabeled,
+    EmailRead,
 )
 from src.Gmail.Domain.ValueObjects import EmailAddress, GmailMessageId, ThreadId
 
@@ -72,6 +73,15 @@ class TestEmailBehaviors:
 
         email.mark_read()
         assert email.is_read is True
+
+    def test_mark_read_emits_event(self) -> None:
+        email = Email.from_gmail_message("msg_1", "thread_1")
+        email.mark_read()
+
+        events = email.domain_events
+        assert len(events) == 1
+        assert isinstance(events[0], EmailRead)
+        assert events[0].email_id == email.id
 
     def test_mark_read_idempotent(self) -> None:
         email = Email.from_gmail_message("msg_1", "thread_1")

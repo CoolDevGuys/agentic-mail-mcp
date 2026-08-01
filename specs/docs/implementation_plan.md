@@ -128,7 +128,7 @@ Set up:
 - UuidIdGenerator: wraps uuid.uuid4()
 - Tests: uniqueness, type correctness---
 
-## Phase 3 - Gmail Bounded Context: Domain
+## Phase 3 - Gmail Bounded Context: Domain [DONE]
 
 ### 3.1 - Gmail/Domain/ValueObjects/EmailAddress.py
 - EmailAddress VO with RFC 5322 validation (local-part@domain)
@@ -203,7 +203,7 @@ Set up:
 - InboxSynchronized(history_id, synchronized_at, email_count)
 - Tests: event instantiation, required fields; use-case-level tests (Phase 4/6) assert each event is published to the EventBus with the correct payload via the in-memory bus---
 
-## Phase 3b - Intelligence Bounded Context: Domain
+## Phase 3b - Intelligence Bounded Context: Domain [DONE]
 
 ### 3b.1 - Intelligence Entities
 - Summary: id, email_id, summary_text, model_used, created_at
@@ -223,7 +223,7 @@ Set up:
 
 ---
 
-## Phase 3c - Search Bounded Context: Domain
+## Phase 3c - Search Bounded Context: Domain [DONE]
 
 ### 3c.1 - Search Entities
 - SearchDocument: id, email_id, content (text to index), embedding (vector), metadata (subject, sender, date)
@@ -240,7 +240,7 @@ Set up:
 
 ---
 
-## Phase 3d - Notification Bounded Context: Domain
+## Phase 3d - Notification Bounded Context: Domain [DONE]
 
 ### 3d.1 - Notification Events
 - ImportantEmailDetected(email_id, from_address, subject, priority, detected_at)

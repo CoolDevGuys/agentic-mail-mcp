@@ -1,0 +1,6 @@
+from typing import Any, Protocol
+
+
+class NotificationGateway(Protocol):
+    def send(self, title: str, body: str, channel: str) -> bool: ...
+    def publish(self, event_type: str, payload: dict[str, Any]) -> bool: ...

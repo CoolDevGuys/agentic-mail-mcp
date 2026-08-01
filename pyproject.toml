@@ -55,11 +55,15 @@ packages = ["src"]
 source = ["src"]
 
 [tool.coverage.report]
-fail_under = 80
+fail_under = 90
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING",
     "raise NotImplementedError",
+]
+
+omit = [
+    "src/Notification/Domain/Gateway/*",
 ]
 
 [tool.coverage.paths]

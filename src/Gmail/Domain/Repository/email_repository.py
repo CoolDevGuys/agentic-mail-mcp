@@ -1,0 +1,23 @@
+from __future__ import annotations
+
+from typing import Protocol, runtime_checkable
+
+from src.Common.Domain.ValueObjects.uuid_id import UUIDId
+from src.Gmail.Domain.Entities.email import Email
+
+
+@runtime_checkable
+class EmailRepository(Protocol):
+    def find_by_id(self, id: UUIDId) -> Email | None: ...
+
+    def find_by_gmail_message_id(self, message_id: str) -> Email | None: ...
+
+    def find_by_thread_id(self, thread_id: str) -> list[Email]: ...
+
+    def search(self, query: str) -> list[Email]: ...
+
+    def list_unread(self, limit: int) -> list[Email]: ...
+
+    def save(self, email: Email) -> None: ...
+
+    def delete(self, id: UUIDId) -> None: ...

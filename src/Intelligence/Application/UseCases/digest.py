@@ -48,6 +48,9 @@ class _BaseDigestUseCase:
     def execute(self) -> DigestDTO:
         now = self._clock.now()
         start, end = self._window(now)
+        # Approximation: fetch a bounded page of unread emails and filter by the
+        # time window in memory. Emails inside the window beyond fetch_limit are
+        # dropped. Phase 5 replaces this with a date-scoped repository query.
         candidates = self._email_repository.list_unread(self._fetch_limit)
         selected = [
             e

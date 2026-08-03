@@ -8,13 +8,23 @@
 
 ## Infrastructure
 
-All domain events inherit from `DomainEvent` (`src/Common/Domain/Events/`):
+Domain events are plain dataclasses. The `EventBus` (`src/Common/Domain/Events/`)
+is generic over concrete event types: handlers are registered and dispatched by
+the event's exact type, so events are **not** required to share a common base
+class.
+
+`DomainEvent` is an optional base class events may inherit when they want
+standard metadata:
 
 | Field | Type | Description |
 |---|---|---|
 | `event_id` | `UUID` | Unique identifier, auto-generated (UUID4) |
 | `occurred_at` | `datetime` | UTC-aware timestamp, auto-generated |
 | `aggregate_id` | `UUIDId` | Identifier of the aggregate that raised the event |
+
+Most context-specific events (e.g. `ImportantEmailDetected`, `DigestReady`)
+are lightweight dataclasses that carry only their own fields and do not inherit
+`DomainEvent`.
 
 Events are published through the `EventBus` protocol. The current implementation
 is `InMemoryEventBus`, a synchronous, in-memory bus suitable for tests and

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import pytest
+import logging
 
 from src.Common.Domain.Events import InMemoryEventBus
-from src.Common.Domain.Exceptions import DomainError
 from src.Common.Domain.ValueObjects.uuid_id import UUIDId
 from src.Notification.Application.UseCases.notify_important_email import (
     NotifyImportantEmailUseCase,
@@ -38,13 +37,14 @@ class TestNotifyImportantEmailUseCase:
         assert "boss@corp.com" in gateway.sent[0]["title"]
         assert "priority 5" in gateway.sent[0]["body"]
 
-    def test_failure_is_surfaced(self) -> None:
+    def test_delivery_failure_is_logged_not_raised(self, caplog) -> None:
         gateway = RecordingNotificationGateway(send_result=False)
         uc = NotifyImportantEmailUseCase(gateway)
         bus = InMemoryEventBus()
         uc.register(bus)
 
-        with pytest.raises(DomainError):
+        with caplog.at_level(logging.WARNING):
+            # Must not raise into the bus / producer.
             bus.publish(
                 ImportantEmailDetected(
                     email_id=UUIDId.generate(),
@@ -53,6 +53,31 @@ class TestNotifyImportantEmailUseCase:
                     priority=3,
                 )
             )
+
+        assert len(gateway.sent) == 1
+        assert any(
+            "Failed to deliver important-email notification" in r.message
+            for r in caplog.records
+        )
+
+    def test_failure_does_not_starve_other_subscribers(self) -> None:
+        gateway = RecordingNotificationGateway(send_result=False)
+        uc = NotifyImportantEmailUseCase(gateway)
+        bus = InMemoryEventBus()
+        uc.register(bus)
+
+        other_calls: list[ImportantEmailDetected] = []
+        bus.subscribe(ImportantEmailDetected, other_calls.append)
+
+        bus.publish(
+            ImportantEmailDetected(
+                email_id=UUIDId.generate(),
+                from_address="x@y.com",
+                subject="s",
+                priority=3,
+            )
+        )
+        assert len(other_calls) == 1
 
 
 class TestPublishInboxEventUseCase:
@@ -80,3 +105,19 @@ class TestPublishInboxEventUseCase:
         assert len(gateway.published) == 2
         channels = {p["payload"]["channel"] for p in gateway.published}
         assert channels == {"redis", "webhook"}
+
+    def test_publish_failure_is_logged_not_raised(self, caplog) -> None:
+        gateway = RecordingNotificationGateway(publish_result=False)
+        uc = PublishInboxEventUseCase(gateway, channels=["redis"])
+        bus = InMemoryEventBus()
+        uc.register(bus)
+
+        with caplog.at_level(logging.WARNING):
+            bus.publish(
+                InboxChanged(event_type="email_added", email_id=UUIDId.generate())
+            )
+
+        assert len(gateway.published) == 1
+        assert any(
+            "Failed to publish inbox event" in r.message for r in caplog.records
+        )

@@ -1,12 +1,21 @@
 from __future__ import annotations
 
+import logging
+
 from src.Common.Domain.Events import EventBus
 from src.Notification.Domain.Events.inbox_changed import InboxChanged
 from src.Notification.Domain.Gateway.notification_gateway import NotificationGateway
 
+logger = logging.getLogger(__name__)
+
 
 class PublishInboxEventUseCase:
-    """Subscribe to inbox-change events and publish them to external channels."""
+    """Subscribe to inbox-change events and publish them to external channels.
+
+    Publish failures are logged rather than raised: this handler runs inside the
+    synchronous event bus, so raising would abort the producer of the event.
+    Publishing to external channels is a non-critical side channel.
+    """
 
     def __init__(
         self,
@@ -28,4 +37,13 @@ class PublishInboxEventUseCase:
                 "changed_at": event.changed_at.isoformat(),
                 "channel": channel,
             }
-            self._gateway.publish(event.event_type, payload)
+            published = self._gateway.publish(event.event_type, payload)
+            if not published:
+                logger.warning(
+                    "Failed to publish inbox event",
+                    extra={
+                        "event_type": event.event_type,
+                        "email_id": str(event.email_id),
+                        "channel": channel,
+                    },
+                )

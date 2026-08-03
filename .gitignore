@@ -1,5 +1,11 @@
 /token.json
 /credentials.json
+# Local persistence, encrypted token store, and downloaded model artifacts
+*.db
+*.sqlite
+*.sqlite3
+/models/
+.config/gmail-mcp-server/
 __pycache__/
 *.py[codz]
 *$py.class

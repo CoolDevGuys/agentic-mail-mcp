@@ -10,8 +10,10 @@ class GmailConfig(BaseSettings):
 
 
 class DatabaseConfig(BaseSettings):
-    url: str = "sqlite+aiosqlite:///./gmail_mcp.db"
-    driver: str = "aiosqlite"
+    # Synchronous driver: the repository ports and use cases (Phases 3-4) are
+    # synchronous, so the persistence layer uses synchronous SQLAlchemy.
+    url: str = "sqlite:///./gmail_mcp.db"
+    driver: str = "sqlite"
 
 
 class RailguardsConfig(BaseSettings):
@@ -31,6 +33,18 @@ class LLMConfig(BaseSettings):
     provider: str = "openai"
     model: str = "gpt-4"
     api_key: str = ""
+    # OpenAI-compatible HTTP endpoint (remote inference); empty uses the
+    # official OpenAI base URL.
+    base_url: str = ""
+    # Local llama.cpp model path (used when provider is "llamacpp").
+    model_path: str = ""
+
+
+class SearchConfig(BaseSettings):
+    # Vector backend: "sqlite_vss" (default) or "pgvector".
+    backend: str = "sqlite_vss"
+    embedding_model: str = "BAAI/bge-small-en-v1.5"
+    embedding_dimension: int = 384
 
 
 class NotificationsConfig(BaseSettings):
@@ -49,6 +63,7 @@ class Settings(BaseSettings):
     railguards: RailguardsConfig = RailguardsConfig()
     mcp: MCPConfig = MCPConfig()
     llm: LLMConfig = LLMConfig()
+    search: SearchConfig = SearchConfig()
     notifications: NotificationsConfig = NotificationsConfig()
     logging: LoggingConfig = LoggingConfig()
 

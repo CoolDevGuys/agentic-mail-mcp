@@ -252,7 +252,7 @@ Set up:
 - NotificationGateway port: send(title, body, channel) -> bool, publish(event_type, payload) -> bool
 - Tests: none (interface only)---
 
-## Phase 4 - Gmail Application: Use Cases
+## Phase 4 - Gmail Application: Use Cases [DONE]
 
 ### 4.1 - Query Objects
 - SearchEmailsQuery: query_string, from_address, to_address, subject, date_from, date_to, has_attachment, label, unread_only, page, page_size
@@ -297,7 +297,7 @@ Set up:
 
 ### 4.7 - Unit tests for all read use cases---
 
-## Phase 4b - Intelligence Application
+## Phase 4b - Intelligence Application [DONE]
 
 ### 4b.1 - SummarizeEmailUseCase
 - Accepts email_id, calls LlmGateway with summarization prompt
@@ -333,7 +333,7 @@ Set up:
 
 ---
 
-## Phase 4c - Search Application
+## Phase 4c - Search Application [DONE]
 
 ### 4c.1 - SemanticSearchUseCase
 - Accepts natural language query
@@ -357,7 +357,7 @@ Set up:
 
 ### 4c.4 - Unit tests for all Search use cases---
 
-## Phase 4d - Notification Application
+## Phase 4d - Notification Application [DONE]
 
 ### 4d.1 - NotifyImportantEmailUseCase
 - Subscribes to ImportantEmailDetected domain event

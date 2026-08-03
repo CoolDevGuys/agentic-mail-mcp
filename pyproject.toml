@@ -20,17 +20,29 @@ dependencies = [
     "google-auth-oauthlib",
     "pydantic",
     "pydantic-settings",
-    "aiosqlite",
     "sqlalchemy",
     "alembic",
     "httpx",
+    "cryptography",
     "python-dotenv",
 ]
 
 [project.optional-dependencies]
 postgresql = [
-    "asyncpg",
-    "psycopg2",
+    "psycopg2-binary",
+    "pgvector",
+]
+search = [
+    # sqlite-vec is the maintained successor to sqlite-vss and ships prebuilt
+    # wheels; it implements the same default vector-backend capability.
+    "sqlite-vec",
+    "sentence-transformers",
+]
+notifications = [
+    "redis",
+]
+llm = [
+    "llama-cpp-python",
 ]
 dev = [
     "pytest",
@@ -39,6 +51,9 @@ dev = [
     "ruff",
     "mypy",
     "setuptools>=83.0.0",
+    "fakeredis",
+    "respx",
+    "pytest-httpserver",
 ]
 
 [project.scripts]
@@ -64,6 +79,12 @@ exclude_lines = [
 
 omit = [
     "src/Notification/Domain/Gateway/*",
+    # Native/optional adapters that require a SQLite build with extension
+    # loading, PostgreSQL, or model weights — exercised via guarded integration
+    # tests when those backends are available, skipped in the default suite.
+    "src/Search/Infrastructure/SqliteVec/*",
+    "src/Search/Infrastructure/PgVector/*",
+    "src/Gmail/Infrastructure/Persistence/PostgreSQL/*",
 ]
 
 [tool.coverage.paths]

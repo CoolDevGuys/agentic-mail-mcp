@@ -36,8 +36,8 @@ class TestGmailConfig:
 class TestDatabaseConfig:
     def test_default_values(self):
         config = DatabaseConfig()
-        assert config.url == "sqlite+aiosqlite:///./gmail_mcp.db"
-        assert config.driver == "aiosqlite"
+        assert config.url == "sqlite:///./gmail_mcp.db"
+        assert config.driver == "sqlite"
 
 
 class TestRailguardsConfig:

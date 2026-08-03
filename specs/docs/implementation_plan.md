@@ -373,7 +373,7 @@ Set up:
 
 ---
 
-## Phase 5 - Infrastructure Adapters
+## Phase 5 - Infrastructure Adapters [DONE]
 
 ### 5.1 - Gmail/Infrastructure/Google/ (OAuth, API Gateway, Watcher)
 - GmailOAuthProvider: OAuth2 flow (interactive browser + headless with pre-authorized tokens); persists refresh tokens outside the repo (path from Settings.gmail.token_storage_path, default outside the project directory e.g. ~/.config/gmail-mcp-server/), encrypted at rest using Settings.gmail.token_encryption_key; never logs token values (relies on Bootstrap/Logging.py redaction filter, 1.4)

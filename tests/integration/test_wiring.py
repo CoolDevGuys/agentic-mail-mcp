@@ -49,3 +49,21 @@ async def test_wired_repository_persists(container: Container) -> None:
     email = Email.from_gmail_message(message_id="w1", thread_id="t1", subject="Wired")
     repo.save(email)
     assert repo.find_by_gmail_message_id("w1").subject == "Wired"
+
+
+async def test_file_database_wiring_applies_migrations(tmp_path) -> None:
+    # A file-backed URL goes through Alembic, not create_all, so the schema is
+    # migration-managed (an alembic_version table is present).
+    from sqlalchemy import create_engine, inspect
+
+    from src.Gmail.Domain.Entities.email import Email
+
+    url = f"sqlite:///{tmp_path / 'wired.db'}"
+    settings = Settings(database=DatabaseConfig(url=url))
+    container = register_infrastructure(Container(), settings)
+
+    assert "alembic_version" in inspect(create_engine(url)).get_table_names()
+
+    repo = await container.resolve(EmailRepository)
+    repo.save(Email.from_gmail_message(message_id="f1", thread_id="t1", subject="File"))
+    assert repo.find_by_gmail_message_id("f1").subject == "File"

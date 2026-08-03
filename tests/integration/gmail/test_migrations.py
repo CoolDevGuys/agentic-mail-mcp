@@ -17,6 +17,35 @@ def _alembic_config(db_url: str) -> Config:
     return cfg
 
 
+def _schema(url: str) -> dict[str, set[str]]:
+    inspector = inspect(create_engine(url))
+    return {
+        table: {col["name"] for col in inspector.get_columns(table)}
+        for table in inspector.get_table_names()
+        if table != "alembic_version"
+    }
+
+
+def test_migration_matches_orm_metadata(tmp_path: Path) -> None:
+    """The Alembic migration must produce the same schema as the ORM models,
+    so the two schema sources cannot silently drift."""
+    from src.Common.Infrastructure.Persistence.database import (
+        create_all,
+        create_database_engine,
+    )
+    from src.Gmail.Infrastructure.Persistence.SqlAlchemy.Models import (
+        models,  # noqa: F401  (registers tables on the metadata)
+    )
+
+    migrated_url = f"sqlite:///{tmp_path / 'migrated.db'}"
+    command.upgrade(_alembic_config(migrated_url), "head")
+
+    orm_url = f"sqlite:///{tmp_path / 'orm.db'}"
+    create_all(create_database_engine(orm_url))
+
+    assert _schema(migrated_url) == _schema(orm_url)
+
+
 def test_upgrade_creates_schema(tmp_path: Path) -> None:
     db_file = tmp_path / "migrate.db"
     url = f"sqlite:///{db_file}"

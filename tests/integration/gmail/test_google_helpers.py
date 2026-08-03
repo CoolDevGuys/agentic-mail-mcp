@@ -133,3 +133,46 @@ class TestMessageParser:
         assert len(message.attachments) == 1
         assert message.attachments[0].file_name == "report.pdf"
         assert message.attachments[0].size_bytes == 2048
+
+    def test_parses_nested_multipart_body_and_attachment(self) -> None:
+        # multipart/mixed -> [multipart/alternative -> [text/plain, text/html], pdf]
+        raw = {
+            "id": "m2",
+            "threadId": "t2",
+            "labelIds": ["INBOX"],
+            "payload": {
+                "mimeType": "multipart/mixed",
+                "headers": [{"name": "Subject", "value": "Nested"}],
+                "parts": [
+                    {
+                        "mimeType": "multipart/alternative",
+                        "parts": [
+                            {
+                                "mimeType": "text/plain",
+                                "body": {
+                                    "data": base64.urlsafe_b64encode(
+                                        b"deep body"
+                                    ).decode()
+                                },
+                            },
+                            {
+                                "mimeType": "text/html",
+                                "body": {
+                                    "data": base64.urlsafe_b64encode(
+                                        b"<p>deep</p>"
+                                    ).decode()
+                                },
+                            },
+                        ],
+                    },
+                    {
+                        "mimeType": "application/pdf",
+                        "filename": "deep.pdf",
+                        "body": {"attachmentId": "att9", "size": 10},
+                    },
+                ],
+            },
+        }
+        message = to_gmail_message(raw)
+        assert message.body == "deep body"
+        assert [a.file_name for a in message.attachments] == ["deep.pdf"]

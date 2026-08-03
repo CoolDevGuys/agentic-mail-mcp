@@ -17,6 +17,7 @@ from src.Common.Infrastructure.Persistence.database import (
     create_database_engine,
     create_session_factory,
 )
+from src.Common.Infrastructure.Persistence.migrations_runner import apply_migrations
 from src.Gmail.Domain.Repository.email_repository import EmailRepository
 from src.Gmail.Domain.Repository.thread_repository import ThreadRepository
 from src.Gmail.Infrastructure.Persistence.SqlAlchemy.Models import models  # noqa: F401
@@ -36,13 +37,21 @@ from src.Search.Domain.Gateway.embedding_gateway import EmbeddingGateway
 from src.Search.Infrastructure.BGE.bge_embedding_gateway import BgeEmbeddingGateway
 
 
+def _is_in_memory(url: str) -> bool:
+    return url in ("sqlite://", "sqlite:///:memory:")
+
+
 def register_infrastructure(container: Container, settings: Settings) -> Container:
     engine = create_database_engine(settings.database.url)
-    create_all(engine)
+    if _is_in_memory(settings.database.url):
+        # Alembic opens its own connection, which for in-memory SQLite is a
+        # separate database; create the schema on this engine directly.
+        create_all(engine)
+    else:
+        # Migrations are the single source of truth for file/server databases.
+        apply_migrations(settings.database.url)
     session_factory = create_session_factory(engine)
 
-    # Registering a port (Protocol) -> implementation is the intended DI mapping;
-    # mypy's type-abstract check is a false positive for service-locator keys.
     # Registering a port (Protocol) -> implementation is the intended DI mapping;
     # mypy's type-abstract check is a false positive for service-locator keys.
     container.register(EventBus, InMemoryEventBus)  # type: ignore[type-abstract]

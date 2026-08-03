@@ -1,12 +1,21 @@
+from collections.abc import Callable, Iterable
 from datetime import UTC, datetime
-from typing import Protocol
+from typing import Any, Protocol, TypeVar
 from uuid import UUID, uuid4
 
 from ..ValueObjects.uuid_id import UUIDId
 
+E = TypeVar("E")
+
 
 class DomainEvent:
-    """Base class for domain events."""
+    """Rich base class offering standard event metadata.
+
+    Inheriting from ``DomainEvent`` is optional. The event bus is generic over
+    concrete event types (see :class:`EventBus`), so plain ``@dataclass`` events
+    publish just as well. Use this base when an event wants the standard
+    ``event_id`` / ``occurred_at`` / ``aggregate_id`` metadata.
+    """
 
     def __init__(
         self,
@@ -19,49 +28,50 @@ class DomainEvent:
         self.aggregate_id = aggregate_id
 
 
-class EventHandler(Protocol):
-    """Protocol for domain event handlers."""
-
-    def __call__(self, event: DomainEvent) -> None: ...
+EventHandler = Callable[[Any], None]
+"""A callable invoked with a published event of the type it subscribed to."""
 
 
 class EventBus(Protocol):
-    """Protocol for publishing and subscribing to domain events."""
+    """Generic, type-keyed publish/subscribe bus for domain events.
 
-    def publish(self, event: DomainEvent) -> None: ...
+    Events are dispatched to handlers registered for their concrete type; the
+    bus does not require events to share a common base class.
+    """
+
+    def publish(self, event: object) -> None: ...
 
     def subscribe(
-        self, event_type: type[DomainEvent], handler: EventHandler
+        self, event_type: type[E], handler: Callable[[E], None]
     ) -> None: ...
 
-    def publish_all(self, events: list[DomainEvent]) -> None: ...
+    def publish_all(self, events: Iterable[object]) -> None: ...
 
 
 class InMemoryEventBus:
     """Synchronous, in-memory event bus implementation."""
 
     def __init__(self) -> None:
-        self._subscribers: dict[type[DomainEvent], list[EventHandler]] = {}
-        self._published: list[DomainEvent] = []
+        self._subscribers: dict[type, list[Callable[[Any], None]]] = {}
+        self._published: list[object] = []
 
-    def subscribe(self, event_type: type[DomainEvent], handler: EventHandler) -> None:
-        if event_type not in self._subscribers:
-            self._subscribers[event_type] = []
-        self._subscribers[event_type].append(handler)
+    def subscribe(
+        self, event_type: type[E], handler: Callable[[E], None]
+    ) -> None:
+        self._subscribers.setdefault(event_type, []).append(handler)
 
-    def publish(self, event: DomainEvent) -> None:
+    def publish(self, event: object) -> None:
         self._published.append(event)
         self._dispatch(event)
 
-    def publish_all(self, events: list[DomainEvent]) -> None:
+    def publish_all(self, events: Iterable[object]) -> None:
         for event in events:
             self.publish(event)
 
-    def _dispatch(self, event: DomainEvent) -> None:
-        event_type = type(event)
-        for handler in self._subscribers.get(event_type, []):
+    def _dispatch(self, event: object) -> None:
+        for handler in self._subscribers.get(type(event), []):
             handler(event)
 
     @property
-    def published(self) -> list[DomainEvent]:
+    def published(self) -> list[object]:
         return list(self._published)

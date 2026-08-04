@@ -1,5 +1,12 @@
+# Secrets and OAuth credentials — never commit these
 /token.json
 /credentials.json
+# Default token_storage_path (Settings.gmail.token_storage_path)
+token.json
+# Build artifacts
+/dist/
+/build/
+*.egg-info/
 # Local persistence, encrypted token store, and downloaded model artifacts
 *.db
 *.sqlite

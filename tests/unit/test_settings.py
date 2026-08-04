@@ -108,3 +108,36 @@ class TestSettings:
         )
         assert settings.database.url == "postgresql://u:p@h/d"
         assert settings.database.driver == "asyncpg"
+
+
+class TestEnvironmentOverride:
+    """Nested sections load from GMAIL_MCP_<SECTION>_<FIELD> env vars."""
+
+    def test_env_overrides_across_sections(self, monkeypatch):
+        monkeypatch.setenv("GMAIL_MCP_DATABASE_URL", "postgresql://u:p@h/d")
+        monkeypatch.setenv("GMAIL_MCP_RAILGUARDS_ACCESS_LEVEL", "read_write")
+        monkeypatch.setenv("GMAIL_MCP_MCP_TRANSPORT", "http")
+        monkeypatch.setenv("GMAIL_MCP_MCP_PORT", "9999")
+        monkeypatch.setenv("GMAIL_MCP_LLM_API_KEY", "sk-test")
+
+        settings = Settings.from_env()
+
+        assert settings.database.url == "postgresql://u:p@h/d"
+        assert settings.railguards.access_level == "read_write"
+        assert settings.mcp.transport == "http"
+        assert settings.mcp.port == 9999
+        assert settings.llm.api_key == "sk-test"
+
+    def test_defaults_when_env_absent(self, monkeypatch):
+        for var in (
+            "GMAIL_MCP_DATABASE_URL",
+            "GMAIL_MCP_RAILGUARDS_ACCESS_LEVEL",
+            "GMAIL_MCP_MCP_TRANSPORT",
+        ):
+            monkeypatch.delenv(var, raising=False)
+
+        settings = Settings.from_env()
+
+        assert settings.database.url == "sqlite:///./gmail_mcp.db"
+        assert settings.railguards.access_level == "read_only"
+        assert settings.mcp.transport == "stdio"

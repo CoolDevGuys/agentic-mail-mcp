@@ -8,7 +8,36 @@ All notable changes to this project will be documented in this file.
 
 - **Railguards default is now read-only** (Phase 6): `railguards.access_level` defaults to `read_only` (was `owner`), so all write operations (forward/archive/delete/draft) are denied until a deployment sets `GMAIL_MCP_RAILGUARDS_ACCESS_LEVEL=read_write`.
 
+### Fixed
+
+- **Environment-variable configuration now works** (Phase 8): the `Settings`
+  sub-sections (`gmail`, `database`, `railguards`, `mcp`, `llm`, `search`,
+  `notifications`, `logging`) previously ignored their `GMAIL_MCP_<SECTION>_<FIELD>`
+  environment variables and always used defaults. Each section now carries its
+  own env prefix, so documented variables such as
+  `GMAIL_MCP_RAILGUARDS_ACCESS_LEVEL`, `GMAIL_MCP_MCP_TRANSPORT`, and
+  `GMAIL_MCP_DATABASE_URL` take effect — required for pip/Docker deployments to
+  be configurable.
+
 ### Added
+
+- **Distribution and polish** (Phase 8)
+  - `LICENSE` (MIT); `pyproject.toml` distribution metadata (`readme`,
+    `project.urls`, `license-files`) and a scoped sdist target producing a clean
+    source distribution + wheel with the `gmail-mcp-server` entry point
+  - `specs/docs/api.md` — the MCP tool/resource/prompt reference with input
+    schemas, output shapes, and the structured error format
+  - Architecture ADRs `0002`–`0005` (DDD + vertical slicing, SQLite/PostgreSQL
+    persistence, railguards write-safety, MCP stdio transport)
+  - Expanded `README.md` (tool catalog, railguards security model, stdio
+    integration example, contributing) and `RELEASING.md` (PyPI + multi-arch
+    Docker publish flow)
+  - Multi-stage `Dockerfile` (builder + slim non-root runtime, health check),
+    multi-arch build support
+  - End-to-end MCP session tests (`tests/e2e/`) covering the read/write tool
+    flow, railguard enforcement, and a container health-check smoke test
+  - Removed the superseded pre-DDD `main.py` / `server.py` skeletons from the
+    repo root (replaced by `src/MCP/Server.py` and `src/Bootstrap/cli.py`)
 
 - **MCP server layer** (Phase 7)
   - `create_server` bootstrap that assembles the server from the dependency container and integrates the application lifespan; configurable transport (`stdio` default, streamable HTTP) via `Settings.mcp.transport`; the `gmail-mcp-server` console entry point launches it

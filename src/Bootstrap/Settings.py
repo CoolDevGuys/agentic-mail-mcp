@@ -17,10 +17,13 @@ class DatabaseConfig(BaseSettings):
 
 
 class RailguardsConfig(BaseSettings):
-    access_level: str = "owner"
+    # read_only (default) denies all writes; read_write enables them subject to
+    # the remaining rules.
+    access_level: str = "read_only"
     allowed_recipients: list[str] = []
     blocked_actions: list[str] = []
     rate_limits: dict[str, int] = {}
+    archive_first_policy: bool = False
 
 
 class MCPConfig(BaseSettings):

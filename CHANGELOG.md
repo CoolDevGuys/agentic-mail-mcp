@@ -4,8 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### ⚠ Breaking
+
+- **Railguards default is now read-only** (Phase 6): `railguards.access_level` defaults to `read_only` (was `owner`), so all write operations (forward/archive/delete/draft) are denied until a deployment sets `GMAIL_MCP_RAILGUARDS_ACCESS_LEVEL=read_write`.
+
 ### Added
 
+- **Railguards framework** (Phase 6)
+  - `RailguardConfig` (access level, recipient allowlist with address/domain matching, action blocklist, windowed rate limits, archive-first policy) and `RailguardValidator` raising `PermissionError` on violation
+  - `audit_log` table, `AuditLogRepository` (SQLite), and `AuditLogHandler` event subscriber recording every write with a correlation id
+  - Railguarded write use cases: `ForwardEmailUseCase`, `ArchiveEmailUseCase`, `DeleteEmailUseCase` (soft-delete default, archive-first for permanent), `CreateDraftUseCase` / `SendDraftUseCase` (draft-first sending)
+  - `GmailGateway` draft operations (`create_draft`/`send_draft`/`delete_draft`) and their `GmailApiGateway` implementation
+  - `Settings.railguards.archive_first_policy`; Alembic migration `0002`
 - **Shared domain primitives** (Phase 2)
   - `ValueObject` base class with structural equality, hashing, and repr
   - `UUIDId` value object wrapping `uuid.UUID` with `generate()` factory

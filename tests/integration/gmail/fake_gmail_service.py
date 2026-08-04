@@ -73,6 +73,24 @@ class _Messages:
         return _Attachments(self._service)
 
 
+class _Drafts:
+    def __init__(self, service: FakeGmailService) -> None:
+        self._service = service
+
+    def _call(self, op: str, **kwargs: Any) -> _Request:
+        self._service.calls.append((op, kwargs))
+        return _Request(self._service, op)
+
+    def create(self, **kwargs: Any) -> _Request:
+        return self._call("drafts.create", **kwargs)
+
+    def send(self, **kwargs: Any) -> _Request:
+        return self._call("drafts.send", **kwargs)
+
+    def delete(self, **kwargs: Any) -> _Request:
+        return self._call("drafts.delete", **kwargs)
+
+
 class _Labels:
     def __init__(self, service: FakeGmailService) -> None:
         self._service = service
@@ -97,6 +115,9 @@ class _Users:
 
     def messages(self) -> _Messages:
         return _Messages(self._service)
+
+    def drafts(self) -> _Drafts:
+        return _Drafts(self._service)
 
     def labels(self) -> _Labels:
         return _Labels(self._service)

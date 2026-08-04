@@ -64,6 +64,20 @@ stored as JSON since they are value collections owned by the aggregate.
 | `color` | String(64) | |
 | `type` | String(32) | `system` or `user` |
 
+## Table: `audit_log`
+
+Records every write operation (forward, archive, delete) for the railguards
+audit trail. Created by migration `0002`.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | String(36) | Primary key (domain UUID) |
+| `action` | String(64) | Operation performed; index `ix_audit_log_action` |
+| `timestamp` | UtcDateTime | When the operation occurred |
+| `correlation_id` | String(64) | Ties the entry to the originating operation; index `ix_audit_log_correlation_id` |
+| `email_id` | String(36) | Nullable; the affected email's domain id |
+| `details` | JSON | Operation-specific metadata (e.g. `forwarded_to`) |
+
 ## Vector index (search context)
 
 Embeddings are **not** stored in the relational schema above. The

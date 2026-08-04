@@ -56,6 +56,12 @@ class ModifyResult:
 
 
 @dataclass
+class DraftResult:
+    draft_id: str
+    message_id: str
+
+
+@dataclass
 class WatchResponse:
     expiration: int
 
@@ -94,6 +100,12 @@ class GmailGateway(Protocol):
     def get_batch_messages(self, message_ids: list[str]) -> list[GmailMessage]: ...
 
     def send_message(self, raw_message: str) -> SentMessageResult: ...
+
+    def create_draft(self, raw_message: str) -> DraftResult: ...
+
+    def send_draft(self, draft_id: str) -> SentMessageResult: ...
+
+    def delete_draft(self, draft_id: str) -> None: ...
 
     def modify_message(
         self,

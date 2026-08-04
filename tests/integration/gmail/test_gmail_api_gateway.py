@@ -121,6 +121,28 @@ class TestGmailApiGateway:
         data = _gateway(service).download_attachment("m1", "att1")
         assert data == b"file-bytes"
 
+    def test_create_draft_maps_response(self) -> None:
+        service = FakeGmailService()
+        service.set_result(
+            "drafts.create", {"id": "draft1", "message": {"id": "msg1"}}
+        )
+        result = _gateway(service).create_draft("cmF3")
+        assert result.draft_id == "draft1"
+        assert result.message_id == "msg1"
+        assert service.calls[0][0] == "drafts.create"
+
+    def test_send_draft_maps_response(self) -> None:
+        service = FakeGmailService()
+        service.set_result("drafts.send", {"id": "sent1", "threadId": "t1"})
+        result = _gateway(service).send_draft("draft1")
+        assert result.message_id == "sent1"
+        assert result.thread_id == "t1"
+
+    def test_delete_draft_executes(self) -> None:
+        service = FakeGmailService()
+        _gateway(service).delete_draft("draft1")
+        assert "drafts.delete" in service.executed
+
     def test_get_history_maps_added_messages(self) -> None:
         service = FakeGmailService()
         service.set_result(

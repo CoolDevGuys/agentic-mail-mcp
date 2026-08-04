@@ -29,6 +29,9 @@ def _schema(url: str) -> dict[str, set[str]]:
 def test_migration_matches_orm_metadata(tmp_path: Path) -> None:
     """The Alembic migration must produce the same schema as the ORM models,
     so the two schema sources cannot silently drift."""
+    from src.Common.Infrastructure.Persistence import (
+        audit_models,  # noqa: F401  (registers audit_log on the metadata)
+    )
     from src.Common.Infrastructure.Persistence.database import (
         create_all,
         create_database_engine,

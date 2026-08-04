@@ -412,7 +412,7 @@ Set up:
 
 ### 5.7 - Integration tests for all infrastructure adapters---
 
-## Phase 6 - Railguards Framework
+## Phase 6 - Railguards Framework [DONE]
 
 ### 6.1 - Railguard configuration model
 - AccessLevel: read_only (default) or read_write — the single top-level switch gating whether any write capability exists at all

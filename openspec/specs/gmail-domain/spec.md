@@ -1,5 +1,8 @@
-## ADDED Requirements
+# gmail-domain Specification
 
+## Purpose
+TBD - normalized during phase-6 archive. Update Purpose after archive.
+## Requirements
 ### Requirement: EmailAddress value object validation
 The system SHALL validate email addresses against RFC 5322 format (local-part@domain) with a maximum length of 254 characters.
 
@@ -213,3 +216,19 @@ The system SHALL define domain events for Gmail operations: EmailReceived, Email
 #### Scenario: InboxSynchronized event created
 - **WHEN** an InboxSynchronized event is instantiated
 - **THEN** it contains history_id, synchronized_at, and email_count
+
+### Requirement: GmailGateway draft operations
+The GmailGateway port SHALL provide draft operations — `create_draft`, `send_draft`, and `delete_draft` — with their gateway DTOs, so drafts can be created for human review, sent, or discarded without composing and sending in one step.
+
+#### Scenario: create_draft returns a draft identifier
+- **WHEN** create_draft is called with a raw message
+- **THEN** it returns a draft result containing the draft id and the associated message id
+
+#### Scenario: send_draft sends an existing draft
+- **WHEN** send_draft is called with a draft id
+- **THEN** it sends the draft and returns the sent message result
+
+#### Scenario: delete_draft discards a draft
+- **WHEN** delete_draft is called with a draft id
+- **THEN** the draft is removed
+

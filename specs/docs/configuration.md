@@ -26,10 +26,13 @@
 
 | Key | Env var | Default | Purpose |
 |---|---|---|---|
-| `access_level` | `GMAIL_MCP_RAILGUARDS_ACCESS_LEVEL` | `owner` | Write-access gate (Phase 6) |
-| `allowed_recipients` | `GMAIL_MCP_RAILGUARDS_ALLOWED_RECIPIENTS` | `[]` | Forwarding allowlist |
-| `blocked_actions` | `GMAIL_MCP_RAILGUARDS_BLOCKED_ACTIONS` | `[]` | Blocked actions |
-| `rate_limits` | `GMAIL_MCP_RAILGUARDS_RATE_LIMITS` | `{}` | Per-action rate limits |
+| `access_level` | `GMAIL_MCP_RAILGUARDS_ACCESS_LEVEL` | `read_only` | Master write gate: `read_only` (default) denies all writes; `read_write` enables them subject to the other rules |
+| `allowed_recipients` | `GMAIL_MCP_RAILGUARDS_ALLOWED_RECIPIENTS` | `[]` | Forwarding allowlist; matches a full address or a domain (`@example.com`). Empty = no restriction |
+| `blocked_actions` | `GMAIL_MCP_RAILGUARDS_BLOCKED_ACTIONS` | `[]` | Blocked actions (e.g. `permanent_delete`) |
+| `rate_limits` | `GMAIL_MCP_RAILGUARDS_RATE_LIMITS` | `{}` | Max operations per action within the trailing 1-hour window (e.g. `{"forward": 50}`) |
+| `archive_first_policy` | `GMAIL_MCP_RAILGUARDS_ARCHIVE_FIRST_POLICY` | `false` | When true, an email must be archived before it can be permanently deleted |
+
+> **Writes are denied by default.** With `access_level=read_only` (the default), every forward/archive/delete/draft operation is refused. Set `read_write` to enable writes.
 
 ## mcp
 

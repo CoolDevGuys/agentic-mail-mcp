@@ -6,6 +6,7 @@ from collections.abc import Callable
 from typing import Any
 
 from src.Gmail.Domain.Gateway.gmail_gateway import (
+    DraftResult,
     GmailHistory,
     GmailLabel,
     GmailListResponse,
@@ -75,6 +76,9 @@ class GmailApiGateway:
     def _messages(self) -> Any:
         return self._service.users().messages()
 
+    def _drafts(self) -> Any:
+        return self._service.users().drafts()
+
     def list_messages(
         self, query: str, page_token: str | None, max_results: int
     ) -> GmailListResponse:
@@ -116,6 +120,28 @@ class GmailApiGateway:
         return SentMessageResult(
             message_id=result.get("id", ""), thread_id=result.get("threadId", "")
         )
+
+    def create_draft(self, raw_message: str) -> DraftResult:
+        result = self._execute(
+            self._drafts().create(
+                userId=_USER, body={"message": {"raw": raw_message}}
+            )
+        )
+        message = result.get("message", {})
+        return DraftResult(
+            draft_id=result.get("id", ""), message_id=message.get("id", "")
+        )
+
+    def send_draft(self, draft_id: str) -> SentMessageResult:
+        result = self._execute(
+            self._drafts().send(userId=_USER, body={"id": draft_id})
+        )
+        return SentMessageResult(
+            message_id=result.get("id", ""), thread_id=result.get("threadId", "")
+        )
+
+    def delete_draft(self, draft_id: str) -> None:
+        self._execute(self._drafts().delete(userId=_USER, id=draft_id))
 
     def modify_message(
         self, message_id: str, add_labels: list[str], remove_labels: list[str]

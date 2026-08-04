@@ -51,6 +51,27 @@ async def test_wired_repository_persists(container: Container) -> None:
     assert repo.find_by_gmail_message_id("w1").subject == "Wired"
 
 
+async def test_railguard_validator_resolves(container: Container) -> None:
+    from src.Common.Railguards.validator import RailguardValidator
+
+    assert isinstance(await container.resolve(RailguardValidator), RailguardValidator)
+
+
+async def test_audit_handler_records_write_events(container: Container) -> None:
+    from src.Common.Audit.audit_log import AuditLogRepository
+    from src.Common.Domain.Events import EventBus
+    from src.Common.Domain.ValueObjects.uuid_id import UUIDId
+    from src.Gmail.Domain.Events import EmailArchived
+
+    bus = await container.resolve(EventBus)
+    bus.publish(EmailArchived(email_id=UUIDId.generate()))
+
+    audit_repo = await container.resolve(AuditLogRepository)
+    entries = audit_repo.list_all()
+    assert len(entries) == 1
+    assert entries[0].action == "archive"
+
+
 async def test_file_database_wiring_applies_migrations(tmp_path) -> None:
     # A file-backed URL goes through Alembic, not create_all, so the schema is
     # migration-managed (an alembic_version table is present).

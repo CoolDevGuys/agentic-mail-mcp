@@ -32,6 +32,9 @@ class DeleteEmailUseCase:
         if email is None:
             raise NotFoundError(f"Email not found: {command.email_id}")
 
+        # Archived state comes from the locally cached labels. The repository is
+        # a cache of Gmail kept current by GmailHistorySynchronizer; the
+        # archive-first gate therefore relies on that cache being up to date.
         is_archived = _INBOX not in email.labels
         action = "permanent_delete" if command.permanent else "delete"
         self._validator.validate(

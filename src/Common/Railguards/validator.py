@@ -87,6 +87,10 @@ class RailguardValidator:
         result = self.check(request)
         if not result.allowed:
             raise PermissionError(result.reason)
+        # A rate-limit slot is reserved at validation time, before the caller
+        # performs the operation. A subsequent gateway failure still consumes the
+        # slot; this is intentional so retries of a failing action cannot bypass
+        # the limit.
         self._record(request.action)
         return result
 

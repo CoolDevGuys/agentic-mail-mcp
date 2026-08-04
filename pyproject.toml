@@ -50,7 +50,9 @@ dev = [
     "pytest",
     "pytest-asyncio",
     "pytest-cov",
-    "ruff",
+    # Pinned so CI and local lint identically (import grouping differs across
+    # ruff versions).
+    "ruff==0.16.1",
     "mypy",
     "setuptools>=83.0.0",
     "fakeredis",
@@ -119,6 +121,11 @@ source = ["src"]
 
 [tool.ruff]
 lint.ignore = ["N999"]
+
+# Pin the project package as first-party so import grouping is deterministic
+# across ruff versions (CI installs from the pinned dev dependency below).
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
 
 [tool.mypy]
 ignore_missing_imports = true

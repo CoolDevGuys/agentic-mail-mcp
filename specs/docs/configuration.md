@@ -39,6 +39,7 @@
 | Key | Env var | Default | Purpose |
 |---|---|---|---|
 | `server_name` | `GMAIL_MCP_MCP_SERVER_NAME` | `Gmail-MCP` | MCP server name |
+| `transport` | `GMAIL_MCP_MCP_TRANSPORT` | `stdio` | Transport for AI-agent harnesses: `stdio` (default) or `http` (streamable HTTP, served on `host:port`) |
 | `host` | `GMAIL_MCP_MCP_HOST` | `127.0.0.1` | HTTP transport host |
 | `port` | `GMAIL_MCP_MCP_PORT` | `8080` | HTTP transport port |
 

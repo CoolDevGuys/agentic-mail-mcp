@@ -28,6 +28,9 @@ class RailguardsConfig(BaseSettings):
 
 class MCPConfig(BaseSettings):
     server_name: str = "Gmail-MCP"
+    # Transport for AI-agent harnesses: "stdio" (default) or "http"
+    # (streamable HTTP), served on host:port.
+    transport: str = "stdio"
     host: str = "127.0.0.1"
     port: int = 8080
 

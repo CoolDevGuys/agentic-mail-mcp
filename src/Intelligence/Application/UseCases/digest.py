@@ -45,8 +45,10 @@ class _BaseDigestUseCase:
     def _period_label(self, start: datetime, end: datetime) -> str:
         raise NotImplementedError
 
-    def execute(self) -> DigestDTO:
-        now = self._clock.now()
+    def execute(self, anchor: datetime | None = None) -> DigestDTO:
+        # ``anchor`` selects the day/week to summarize; when omitted the window
+        # is anchored on the current time.
+        now = anchor if anchor is not None else self._clock.now()
         start, end = self._window(now)
         # Approximation: fetch a bounded page of unread emails and filter by the
         # time window in memory. Emails inside the window beyond fetch_limit are

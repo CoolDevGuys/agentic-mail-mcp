@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from src.Gmail.Domain.Events import EmailArchived, EmailForwarded, EmailLabeled
-from src.MCP.errors import NOT_FOUND, PERMISSION_DENIED
+from src.MCP.errors import INVALID_INPUT, NOT_FOUND, PERMISSION_DENIED
 from src.MCP.Tools.write_tools import build_write_tools
 
 from .conftest import make_env
@@ -53,6 +53,15 @@ class TestForwardEmailTool:
         result = await tool.handler(email_id=str(uuid4()), to="a@b.com")
 
         assert result["error"]["type"] == NOT_FOUND
+
+    async def test_malformed_email_id_maps_to_invalid_input(self) -> None:
+        env = make_env()
+        tool = _tool(env.uses, "forward_email")
+
+        result = await tool.handler(email_id="not-a-uuid", to="a@b.com")
+
+        assert result["error"]["type"] == INVALID_INPUT
+        assert env.gateway.sent == []
 
 
 class TestArchiveEmailTool:

@@ -13,6 +13,7 @@ prompts are library-agnostic and unit-testable on their own.
 from __future__ import annotations
 
 import inspect
+import logging
 
 from mcp.server import MCPServer
 from src.Bootstrap.DependencyContainer import Container
@@ -25,6 +26,8 @@ from src.MCP.Tools.builder import build_registry
 from src.MCP.Tools.use_cases import McpUseCases
 
 _HTTP_TRANSPORTS = {"http", "streamable-http", "streamable_http"}
+
+_logger = logging.getLogger(__name__)
 
 
 def create_server(
@@ -59,6 +62,14 @@ def create_server(
     if use_cases is not None:
         registry = build_registry(use_cases, settings.railguards.access_level)
         register_tools(server, registry)
+    else:
+        # No use-case bundle was supplied or registered on the container, so no
+        # tools are exposed. This is a misconfigured composition root, not a
+        # normal state — surface it rather than starting a silently empty server.
+        _logger.warning(
+            "MCP server built without an McpUseCases bundle; no tools registered. "
+            "Register McpUseCases on the container to expose the Gmail tools."
+        )
 
     if resources is not None:
         register_resources(server, resources)

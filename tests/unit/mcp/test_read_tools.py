@@ -34,6 +34,15 @@ class TestSearchEmailsTool:
 
         assert result["error"]["type"] == INVALID_INPUT
 
+    async def test_malformed_date_maps_to_invalid_input(self) -> None:
+        env = make_env()
+        tool = _tool(env.uses, "search_emails")
+
+        result = await tool.handler(query="x", date_from="07/01/2026")
+
+        assert result["error"]["type"] == INVALID_INPUT
+        assert env.gateway.list_calls == []  # never reached the use case
+
 
 class TestGetEmailTool:
     async def test_resolves_by_uuid(self) -> None:

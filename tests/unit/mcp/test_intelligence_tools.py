@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from uuid import uuid4
 
-from src.MCP.errors import NOT_FOUND
+from src.Gmail.Domain.Entities.email import Email
+from src.MCP.errors import INVALID_INPUT, NOT_FOUND
 from src.MCP.Tools.intelligence_tools import build_intelligence_tools
 
 from .conftest import make_env
@@ -31,6 +33,14 @@ class TestSummarizeEmailTool:
         result = await tool.handler(email_id=str(uuid4()))
 
         assert result["error"]["type"] == NOT_FOUND
+
+    async def test_malformed_email_id_maps_to_invalid_input(self) -> None:
+        env = make_env()
+        tool = _tool(env.uses, "summarize_email")
+
+        result = await tool.handler(email_id="not-a-uuid")
+
+        assert result["error"]["type"] == INVALID_INPUT
 
 
 class TestClassifyEmailTool:
@@ -71,7 +81,18 @@ class TestExtractActionItemsTool:
 
 
 class TestDigestTools:
-    async def test_daily_digest_runs(self) -> None:
+    def _unread_on(self, env, day: datetime) -> None:
+        env.email_repo.add(
+            Email.from_gmail_message(
+                message_id=f"m-{day.date()}",
+                thread_id="t1",
+                subject="Dated mail",
+                date_sent=day,
+                labels=["INBOX", "UNREAD"],
+            )
+        )
+
+    async def test_daily_digest_runs_for_current_day(self) -> None:
         env = make_env(llm_text="Daily digest text.")
         tool = _tool(env.uses, "daily_digest")
 
@@ -79,10 +100,34 @@ class TestDigestTools:
 
         assert result["digest_type"] == "daily"
 
-    async def test_weekly_digest_runs(self) -> None:
+    async def test_daily_digest_anchors_on_provided_date(self) -> None:
+        env = make_env(llm_text="Daily digest text.")
+        self._unread_on(env, datetime(2026, 7, 1, 10, tzinfo=UTC))
+        tool = _tool(env.uses, "daily_digest")
+
+        on_day = await tool.handler(date="2026-07-01")
+        off_day = await tool.handler(date="2026-07-02")
+
+        assert on_day["digest_period"] == "2026-07-01"
+        assert on_day["email_count"] == 1
+        assert off_day["email_count"] == 0
+
+    async def test_daily_digest_rejects_malformed_date(self) -> None:
+        env = make_env(llm_text="x")
+        tool = _tool(env.uses, "daily_digest")
+
+        result = await tool.handler(date="07-01-2026")
+
+        assert result["error"]["type"] == INVALID_INPUT
+
+    async def test_weekly_digest_anchors_on_provided_week(self) -> None:
         env = make_env(llm_text="Weekly digest text.")
+        # 2026-07-01 is a Wednesday; the week runs Mon 2026-06-29 .. Sun 2026-07-05.
+        self._unread_on(env, datetime(2026, 7, 1, 10, tzinfo=UTC))
         tool = _tool(env.uses, "weekly_digest")
 
-        result = await tool.handler()
+        result = await tool.handler(week_start="2026-07-01")
 
         assert result["digest_type"] == "weekly"
+        assert result["digest_period"] == "2026-06-29/2026-07-05"
+        assert result["email_count"] == 1

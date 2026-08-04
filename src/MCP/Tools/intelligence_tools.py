@@ -2,30 +2,24 @@
 
 from __future__ import annotations
 
-from uuid import UUID
-
 from src.Common.Domain.Exceptions import (
     NotFoundError,
     PermissionError,
     ValidationError,
 )
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
 from src.MCP.errors import error_result
 from src.MCP.serialization import to_jsonable
 from src.MCP.ToolRegistry import INTELLIGENCE, ToolDefinition
+from src.MCP.Tools.arguments import parse_date_anchor, parse_uuid
 from src.MCP.Tools.use_cases import McpUseCases
 
 _INTEL_ERRORS = (ValidationError, NotFoundError, PermissionError)
 
 
-def _uuid(email_id: str) -> UUIDId:
-    return UUIDId(UUID(email_id))
-
-
 def build_summarize_email_tool(uses: McpUseCases) -> ToolDefinition:
     async def summarize_email(email_id: str) -> dict:
         try:
-            return to_jsonable(uses.summarize_email.execute(_uuid(email_id)))
+            return to_jsonable(uses.summarize_email.execute(parse_uuid(email_id)))
         except _INTEL_ERRORS as exc:
             return error_result(exc)
 
@@ -40,7 +34,7 @@ def build_summarize_email_tool(uses: McpUseCases) -> ToolDefinition:
 def build_classify_email_tool(uses: McpUseCases) -> ToolDefinition:
     async def classify_email(email_id: str) -> dict:
         try:
-            return to_jsonable(uses.classify_email.execute(_uuid(email_id)))
+            return to_jsonable(uses.classify_email.execute(parse_uuid(email_id)))
         except _INTEL_ERRORS as exc:
             return error_result(exc)
 
@@ -58,7 +52,7 @@ def build_classify_email_tool(uses: McpUseCases) -> ToolDefinition:
 def build_suggest_reply_tool(uses: McpUseCases) -> ToolDefinition:
     async def suggest_reply(email_id: str) -> dict:
         try:
-            return to_jsonable(uses.suggest_reply.execute(_uuid(email_id)))
+            return to_jsonable(uses.suggest_reply.execute(parse_uuid(email_id)))
         except _INTEL_ERRORS as exc:
             return error_result(exc)
 
@@ -73,7 +67,7 @@ def build_suggest_reply_tool(uses: McpUseCases) -> ToolDefinition:
 def build_extract_action_items_tool(uses: McpUseCases) -> ToolDefinition:
     async def extract_action_items(email_id: str) -> dict:
         try:
-            items = uses.extract_action_items.execute(_uuid(email_id))
+            items = uses.extract_action_items.execute(parse_uuid(email_id))
             return {"action_items": to_jsonable(items)}
         except _INTEL_ERRORS as exc:
             return error_result(exc)
@@ -88,16 +82,19 @@ def build_extract_action_items_tool(uses: McpUseCases) -> ToolDefinition:
 
 def build_daily_digest_tool(uses: McpUseCases) -> ToolDefinition:
     async def daily_digest(date: str | None = None) -> dict:
-        # The digest window is anchored on the server clock; ``date`` is accepted
-        # for forward compatibility and currently advisory.
+        # ``date`` (YYYY-MM-DD) selects the day to summarize; the server clock's
+        # current day is used when omitted.
         try:
-            return to_jsonable(uses.daily_digest.execute())
+            return to_jsonable(uses.daily_digest.execute(parse_date_anchor(date)))
         except _INTEL_ERRORS as exc:
             return error_result(exc)
 
     return ToolDefinition(
         name="daily_digest",
-        description="Generate a digest of the day's unread/important emails.",
+        description=(
+            "Generate a digest of a day's unread/important emails. Pass a "
+            "YYYY-MM-DD date to pick the day; defaults to today."
+        ),
         category=INTELLIGENCE,
         handler=daily_digest,
     )
@@ -105,14 +102,19 @@ def build_daily_digest_tool(uses: McpUseCases) -> ToolDefinition:
 
 def build_weekly_digest_tool(uses: McpUseCases) -> ToolDefinition:
     async def weekly_digest(week_start: str | None = None) -> dict:
+        # ``week_start`` (YYYY-MM-DD) selects any date within the target week; the
+        # current week is used when omitted.
         try:
-            return to_jsonable(uses.weekly_digest.execute())
+            return to_jsonable(uses.weekly_digest.execute(parse_date_anchor(week_start)))
         except _INTEL_ERRORS as exc:
             return error_result(exc)
 
     return ToolDefinition(
         name="weekly_digest",
-        description="Generate a digest of the week's unread/important emails.",
+        description=(
+            "Generate a digest of a week's unread/important emails. Pass a "
+            "YYYY-MM-DD date within the target week; defaults to this week."
+        ),
         category=INTELLIGENCE,
         handler=weekly_digest,
     )

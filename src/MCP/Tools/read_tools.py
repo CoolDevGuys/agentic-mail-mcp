@@ -7,15 +7,11 @@ serializes the result. Domain errors are mapped to structured tool errors.
 
 from __future__ import annotations
 
-from datetime import date
-from uuid import UUID
-
 from src.Common.Domain.Exceptions import (
     NotFoundError,
     PermissionError,
     ValidationError,
 )
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
 from src.Gmail.Application.Queries.queries import (
     GetEmailQuery,
     GetThreadQuery,
@@ -23,17 +19,13 @@ from src.Gmail.Application.Queries.queries import (
     ListUnreadQuery,
     SearchEmailsQuery,
 )
-from src.Gmail.Domain.ValueObjects import GmailMessageId
 from src.MCP.errors import error_result
 from src.MCP.serialization import to_jsonable
 from src.MCP.ToolRegistry import READ, ToolDefinition
+from src.MCP.Tools.arguments import parse_date, parse_email_identifier
 from src.MCP.Tools.use_cases import McpUseCases
 
 _READ_ERRORS = (ValidationError, NotFoundError, PermissionError)
-
-
-def _parse_date(value: str | None) -> date | None:
-    return date.fromisoformat(value) if value else None
 
 
 def build_search_emails_tool(uses: McpUseCases) -> ToolDefinition:
@@ -56,8 +48,8 @@ def build_search_emails_tool(uses: McpUseCases) -> ToolDefinition:
                 from_address=from_address,
                 to_address=to_address,
                 subject=subject,
-                date_from=_parse_date(date_from),
-                date_to=_parse_date(date_to),
+                date_from=parse_date(date_from),
+                date_to=parse_date(date_to),
                 has_attachment=has_attachment,
                 label=label,
                 unread_only=unread_only,
@@ -83,10 +75,7 @@ def build_search_emails_tool(uses: McpUseCases) -> ToolDefinition:
 def build_get_email_tool(uses: McpUseCases) -> ToolDefinition:
     async def get_email(email_id: str) -> dict:
         try:
-            try:
-                identifier: UUIDId | GmailMessageId = UUIDId(UUID(email_id))
-            except ValueError:
-                identifier = GmailMessageId(email_id)
+            identifier = parse_email_identifier(email_id)
             return to_jsonable(uses.get_email.execute(GetEmailQuery(email_id=identifier)))
         except _READ_ERRORS as exc:
             return error_result(exc)

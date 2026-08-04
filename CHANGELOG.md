@@ -10,6 +10,16 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **MCP server layer** (Phase 7)
+  - `create_server` bootstrap that assembles the server from the dependency container and integrates the application lifespan; configurable transport (`stdio` default, streamable HTTP) via `Settings.mcp.transport`; the `gmail-mcp-server` console entry point launches it
+  - `ToolRegistry` with category-grouped tools (read/write/intelligence/search) and JSON-Schema input schemas; **defense-in-depth**: write-category tools are not registered when `railguards.access_level` is `read_only`, so they are never exposed to the agent
+  - Read tools: `search_emails`, `get_email`, `get_thread`, `list_unread`, `list_labels`
+  - Write tools (railguarded): `forward_email`, `archive_email`, `delete_email`, `create_draft`, `send_draft`, `add_label`
+  - Intelligence tools: `summarize_email`, `classify_email`, `suggest_reply`, `extract_action_items`, `daily_digest`, `weekly_digest`
+  - Search tool: `semantic_search`
+  - MCP resources (account info, watch status, index status) and prompts (search strategy, email management); structured tool-error mapping for railguard denials, missing entities, and invalid input
+  - `AddLabelUseCase` (railguarded) emitting `EmailLabeled`; digest use cases accept an optional date anchor
+  - `Settings.mcp.transport` (`stdio` default)
 - **Railguards framework** (Phase 6)
   - `RailguardConfig` (access level, recipient allowlist with address/domain matching, action blocklist, windowed rate limits, archive-first policy) and `RailguardValidator` raising `PermissionError` on violation
   - `audit_log` table, `AuditLogRepository` (SQLite), and `AuditLogHandler` event subscriber recording every write with a correlation id

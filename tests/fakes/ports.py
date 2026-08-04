@@ -12,9 +12,12 @@ from src.Common.Domain.ValueObjects.uuid_id import UUIDId
 from src.Gmail.Domain.Entities.email import Email
 from src.Gmail.Domain.Entities.thread import Thread
 from src.Gmail.Domain.Gateway.gmail_gateway import (
+    DraftResult,
     GmailLabel,
     GmailListResponse,
     GmailMessage,
+    ModifyResult,
+    SentMessageResult,
 )
 from src.Intelligence.Domain.Gateway.llm_gateway import LlmResponse, Usage
 from src.Search.Domain.Entities.search_document import SearchDocument
@@ -85,6 +88,14 @@ class StubGmailGateway:
         self.messages: dict[str, GmailMessage] = {}
         self.labels: list[GmailLabel] = []
         self.list_calls: list[tuple[str, str | None, int]] = []
+        self.sent: list[str] = []
+        self.drafts_created: list[str] = []
+        self.drafts_sent: list[str] = []
+        self.drafts_deleted: list[str] = []
+        self.modify_calls: list[tuple[str, list[str], list[str]]] = []
+        self.trashed: list[str] = []
+        self.untrashed: list[str] = []
+        self.deleted: list[str] = []
 
     def list_messages(
         self, query: str, page_token: str | None, max_results: int
@@ -97,6 +108,37 @@ class StubGmailGateway:
 
     def list_labels(self) -> list[GmailLabel]:
         return list(self.labels)
+
+    # --- write operations (recorded for assertions) ---
+    def send_message(self, raw_message: str) -> SentMessageResult:
+        self.sent.append(raw_message)
+        return SentMessageResult(message_id="sent-1", thread_id="thread-1")
+
+    def create_draft(self, raw_message: str) -> DraftResult:
+        self.drafts_created.append(raw_message)
+        return DraftResult(draft_id="draft-1", message_id="draft-msg-1")
+
+    def send_draft(self, draft_id: str) -> SentMessageResult:
+        self.drafts_sent.append(draft_id)
+        return SentMessageResult(message_id="sent-1", thread_id="thread-1")
+
+    def delete_draft(self, draft_id: str) -> None:
+        self.drafts_deleted.append(draft_id)
+
+    def modify_message(
+        self, message_id: str, add_labels: list[str], remove_labels: list[str]
+    ) -> ModifyResult:
+        self.modify_calls.append((message_id, add_labels, remove_labels))
+        return ModifyResult(label_ids=[])
+
+    def trash_message(self, message_id: str) -> None:
+        self.trashed.append(message_id)
+
+    def untrash_message(self, message_id: str) -> None:
+        self.untrashed.append(message_id)
+
+    def delete_message(self, message_id: str) -> None:
+        self.deleted.append(message_id)
 
 
 class StubLlmGateway:
@@ -184,6 +226,17 @@ class InMemorySuggestionRepository:
 
     def save(self, suggestion: Any) -> None:
         self.saved.append(suggestion)
+
+
+class InMemoryAuditLogRepository:
+    def __init__(self) -> None:
+        self.entries: list[Any] = []
+
+    def save(self, entry: Any) -> None:
+        self.entries.append(entry)
+
+    def list_all(self) -> list[Any]:
+        return list(self.entries)
 
 
 class RecordingNotificationGateway:

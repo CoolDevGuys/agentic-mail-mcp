@@ -43,10 +43,11 @@ class TestDatabaseConfig:
 class TestRailguardsConfig:
     def test_default_values(self):
         config = RailguardsConfig()
-        assert config.access_level == "owner"
+        assert config.access_level == "read_only"
         assert config.allowed_recipients == []
         assert config.blocked_actions == []
         assert config.rate_limits == {}
+        assert config.archive_first_policy is False
 
 
 class TestMCPConfig:

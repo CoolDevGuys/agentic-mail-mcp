@@ -11,13 +11,21 @@ from __future__ import annotations
 
 from src.Bootstrap.DependencyContainer import Container
 from src.Bootstrap.Settings import Settings
+from src.Common.Audit.audit_log import AuditLogRepository
 from src.Common.Domain.Events import EventBus, InMemoryEventBus
+from src.Common.Infrastructure.Persistence import audit_models  # noqa: F401
 from src.Common.Infrastructure.Persistence.database import (
     create_all,
     create_database_engine,
     create_session_factory,
 )
 from src.Common.Infrastructure.Persistence.migrations_runner import apply_migrations
+from src.Common.Infrastructure.Persistence.sqlite_audit_repository import (
+    SqliteAuditLogRepository,
+)
+from src.Common.Railguards.config import RailguardConfig
+from src.Common.Railguards.validator import RailguardValidator
+from src.Gmail.Application.Handlers.audit_log_handler import AuditLogHandler
 from src.Gmail.Domain.Repository.email_repository import EmailRepository
 from src.Gmail.Domain.Repository.thread_repository import ThreadRepository
 from src.Gmail.Infrastructure.Persistence.SqlAlchemy.Models import models  # noqa: F401
@@ -52,9 +60,20 @@ def register_infrastructure(container: Container, settings: Settings) -> Contain
         apply_migrations(settings.database.url)
     session_factory = create_session_factory(engine)
 
+    # A single shared event bus so the audit handler observes the same events
+    # the use cases publish.
+    event_bus = InMemoryEventBus()
+    audit_repository = SqliteAuditLogRepository(session_factory)
+    AuditLogHandler(audit_repository).register(event_bus)
+
+    railguards = RailguardValidator(RailguardConfig.from_settings(settings.railguards))
+
+    container.singleton(EventBus, event_bus)  # type: ignore[type-abstract]
+    container.singleton(AuditLogRepository, audit_repository)  # type: ignore[type-abstract]
+    container.singleton(RailguardValidator, railguards)
+
     # Registering a port (Protocol) -> implementation is the intended DI mapping;
     # mypy's type-abstract check is a false positive for service-locator keys.
-    container.register(EventBus, InMemoryEventBus)  # type: ignore[type-abstract]
     container.register(
         EmailRepository,  # type: ignore[type-abstract]
         lambda: SqliteEmailRepository(session_factory),

@@ -118,9 +118,7 @@ def _make_renderer(prompt: PromptDefinition):
         for arg in prompt.arguments
     ]
     _renderer.__signature__ = inspect.Signature(params)  # type: ignore[attr-defined]
-    _renderer.__annotations__ = {arg: str for arg in prompt.arguments} | {
-        "return": str
-    }
+    _renderer.__annotations__ = {arg: str for arg in prompt.arguments} | {"return": str}
     return _renderer
 
 

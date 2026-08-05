@@ -63,9 +63,7 @@ class TestBuildForwardMessage:
             ),
         )
         parsed = _decode(raw)
-        assert not any(
-            p.get_content_type() == "message/rfc822" for p in parsed.walk()
-        )
+        assert not any(p.get_content_type() == "message/rfc822" for p in parsed.walk())
 
     def test_defaults_subject_to_fwd_prefix(self) -> None:
         raw = build_forward_message(

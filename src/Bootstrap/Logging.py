@@ -20,13 +20,9 @@ class RedactionFilter(Filter):
         record.msg = self._redact(str(record.msg))
         if record.args:
             if isinstance(record.args, dict):
-                record.args = {
-                    k: self._redact(str(v)) for k, v in record.args.items()
-                }
+                record.args = {k: self._redact(str(v)) for k, v in record.args.items()}
             elif isinstance(record.args, tuple):
-                record.args = tuple(
-                    self._redact(str(a)) for a in record.args
-                )
+                record.args = tuple(self._redact(str(a)) for a in record.args)
         return True
 
     def _redact(self, text: str) -> str:

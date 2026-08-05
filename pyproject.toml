@@ -58,6 +58,9 @@ dev = [
     "fakeredis",
     "respx",
     "pytest-httpserver",
+    # Packaging tools for the `make build` / release flow.
+    "build",
+    "twine",
 ]
 
 [project.urls]

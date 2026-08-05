@@ -129,7 +129,9 @@ class TestPublishInboxEventUseCase:
         bus = InMemoryEventBus()
         uc.register(bus)
 
-        bus.publish(InboxChanged(event_type="email_removed", email_id=UUIDId.generate()))
+        bus.publish(
+            InboxChanged(event_type="email_removed", email_id=UUIDId.generate())
+        )
 
         assert len(gateway.published) == 2
         channels = {p["payload"]["channel"] for p in gateway.published}
@@ -149,6 +151,4 @@ class TestPublishInboxEventUseCase:
             )
 
         assert len(gateway.published) == 1
-        assert any(
-            "Failed to publish inbox event" in r.getMessage() for r in records
-        )
+        assert any("Failed to publish inbox event" in r.getMessage() for r in records)

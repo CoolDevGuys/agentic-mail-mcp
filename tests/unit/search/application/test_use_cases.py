@@ -37,8 +37,18 @@ class TestSemanticSearchUseCase:
         repo = InMemoryVectorSearchRepository()
         doc_id, email_id = UUIDId.generate(), UUIDId.generate()
         repo.search_results = [
-            SearchResult(document_id=doc_id, email_id=email_id, score=0.9, metadata={"subject": "x"}),
-            SearchResult(document_id=UUIDId.generate(), email_id=UUIDId.generate(), score=0.5, metadata={}),
+            SearchResult(
+                document_id=doc_id,
+                email_id=email_id,
+                score=0.9,
+                metadata={"subject": "x"},
+            ),
+            SearchResult(
+                document_id=UUIDId.generate(),
+                email_id=UUIDId.generate(),
+                score=0.5,
+                metadata={},
+            ),
         ]
         uc = SemanticSearchUseCase(StubEmbeddingGateway(), repo)
         results = uc.execute("meeting", limit=10, min_score=0.6)
@@ -51,7 +61,12 @@ class TestSemanticSearchUseCase:
     def test_honors_limit(self) -> None:
         repo = InMemoryVectorSearchRepository()
         repo.search_results = [
-            SearchResult(document_id=UUIDId.generate(), email_id=UUIDId.generate(), score=0.9 - i * 0.01, metadata={})
+            SearchResult(
+                document_id=UUIDId.generate(),
+                email_id=UUIDId.generate(),
+                score=0.9 - i * 0.01,
+                metadata={},
+            )
             for i in range(5)
         ]
         uc = SemanticSearchUseCase(StubEmbeddingGateway(), repo)
@@ -60,7 +75,12 @@ class TestSemanticSearchUseCase:
     def test_no_matches_returns_empty(self) -> None:
         repo = InMemoryVectorSearchRepository()
         repo.search_results = [
-            SearchResult(document_id=UUIDId.generate(), email_id=UUIDId.generate(), score=0.3, metadata={})
+            SearchResult(
+                document_id=UUIDId.generate(),
+                email_id=UUIDId.generate(),
+                score=0.3,
+                metadata={},
+            )
         ]
         uc = SemanticSearchUseCase(StubEmbeddingGateway(), repo)
         assert uc.execute("q", min_score=0.9) == []
@@ -73,7 +93,10 @@ class TestIndexEmailUseCase:
         email_repo.add(email)
         vector_repo = InMemoryVectorSearchRepository()
         uc = IndexEmailUseCase(
-            email_repo, StubEmbeddingGateway(dimension=4), vector_repo, UuidIdGenerator()
+            email_repo,
+            StubEmbeddingGateway(dimension=4),
+            vector_repo,
+            UuidIdGenerator(),
         )
         doc_id = uc.execute(email.id)
 
@@ -106,7 +129,10 @@ class TestIndexEmailUseCase:
         email = _email()
         email_repo.add(email)
         uc = IndexEmailUseCase(
-            email_repo, BadEmbedding(dimension=4), InMemoryVectorSearchRepository(), UuidIdGenerator()
+            email_repo,
+            BadEmbedding(dimension=4),
+            InMemoryVectorSearchRepository(),
+            UuidIdGenerator(),
         )
         with pytest.raises(ValidationError):
             uc.execute(email.id)

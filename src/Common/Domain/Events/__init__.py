@@ -41,9 +41,7 @@ class EventBus(Protocol):
 
     def publish(self, event: object) -> None: ...
 
-    def subscribe(
-        self, event_type: type[E], handler: Callable[[E], None]
-    ) -> None: ...
+    def subscribe(self, event_type: type[E], handler: Callable[[E], None]) -> None: ...
 
     def publish_all(self, events: Iterable[object]) -> None: ...
 
@@ -55,9 +53,7 @@ class InMemoryEventBus:
         self._subscribers: dict[type, list[Callable[[Any], None]]] = {}
         self._published: list[object] = []
 
-    def subscribe(
-        self, event_type: type[E], handler: Callable[[E], None]
-    ) -> None:
+    def subscribe(self, event_type: type[E], handler: Callable[[E], None]) -> None:
         self._subscribers.setdefault(event_type, []).append(handler)
 
     def publish(self, event: object) -> None:

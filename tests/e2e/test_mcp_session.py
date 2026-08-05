@@ -29,7 +29,9 @@ class TestReadWriteFlow:
         assert env.gateway.list_calls  # reached the (mocked) Gmail API
 
         # 2. read the cached email by id
-        read = tool_json(await server.call_tool("get_email", {"email_id": str(email.id)}))
+        read = tool_json(
+            await server.call_tool("get_email", {"email_id": str(email.id)})
+        )
         assert read["subject"] == "Hello"
 
         # 3. forward
@@ -42,12 +44,16 @@ class TestReadWriteFlow:
         assert len(env.gateway.sent) == 1
 
         # 4. archive
-        arch = tool_json(await server.call_tool("archive_email", {"email_id": str(email.id)}))
+        arch = tool_json(
+            await server.call_tool("archive_email", {"email_id": str(email.id)})
+        )
         assert arch == {"status": "archived"}
         assert ("m1", [], ["INBOX"]) in env.gateway.modify_calls
 
         # 5. delete (soft)
-        deleted = tool_json(await server.call_tool("delete_email", {"email_id": str(email.id)}))
+        deleted = tool_json(
+            await server.call_tool("delete_email", {"email_id": str(email.id)})
+        )
         assert deleted == {"status": "deleted", "permanent": False}
         assert env.gateway.trashed == ["m1"]
 

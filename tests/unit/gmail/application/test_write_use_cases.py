@@ -63,7 +63,10 @@ class TestForwardEmailUseCase:
         repo.add(email)
         gateway = StubGmailGateway()
         uc = ForwardEmailUseCase(
-            gateway, _validator(allowed_recipients=["@corp.com"]), repo, InMemoryEventBus()
+            gateway,
+            _validator(allowed_recipients=["@corp.com"]),
+            repo,
+            InMemoryEventBus(),
         )
         with pytest.raises(PermissionError):
             uc.execute(ForwardEmailCommand(email_id=email.id, to_address="x@evil.com"))

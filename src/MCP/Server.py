@@ -31,12 +31,12 @@ _logger = logging.getLogger(__name__)
 
 
 def create_server(
-    container: Container | None = None,
-    *,
-    use_cases: McpUseCases | None = None,
-    settings: Settings | None = None,
-    resources: ResourceContext | None = None,
-    name: str | None = None,
+        container: Container | None = None,
+        *,
+        use_cases: McpUseCases | None = None,
+        settings: Settings | None = None,
+        resources: ResourceContext | None = None,
+        name: str | None = None,
 ) -> MCPServer:
     """Build the MCP server.
 

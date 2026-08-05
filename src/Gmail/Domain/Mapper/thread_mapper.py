@@ -9,7 +9,9 @@ class ThreadMapper:
     @staticmethod
     def to_domain(gateway_data: dict) -> Thread:
         thread_id = gateway_data.get("thread_id", "")
-        email_ids = [UUIDId.from_string(eid) for eid in gateway_data.get("email_ids", [])]
+        email_ids = [
+            UUIDId.from_string(eid) for eid in gateway_data.get("email_ids", [])
+        ]
 
         return Thread.create(
             thread_id=ThreadId(thread_id),

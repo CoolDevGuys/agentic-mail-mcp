@@ -20,7 +20,9 @@ def _clear_correlation():
     reset_correlation_id()
 
 
-def _handler(repo: InMemoryAuditLogRepository) -> tuple[AuditLogHandler, InMemoryEventBus]:
+def _handler(
+    repo: InMemoryAuditLogRepository,
+) -> tuple[AuditLogHandler, InMemoryEventBus]:
     handler = AuditLogHandler(repo)
     bus = InMemoryEventBus()
     handler.register(bus)

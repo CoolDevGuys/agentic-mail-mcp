@@ -14,7 +14,9 @@ class EmailMapper:
         date_sent = None
         if gateway_message.date:
             try:
-                date_sent = datetime.fromisoformat(gateway_message.date.removesuffix("Z"))
+                date_sent = datetime.fromisoformat(
+                    gateway_message.date.removesuffix("Z")
+                )
             except (ValueError, AttributeError):
                 date_sent = None
 

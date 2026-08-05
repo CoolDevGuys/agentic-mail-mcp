@@ -16,7 +16,9 @@ def build_semantic_search_tool(uses: McpUseCases) -> ToolDefinition:
         query: str, limit: int = 10, min_score: float = 0.0
     ) -> dict:
         try:
-            results = uses.semantic_search.execute(query, limit=limit, min_score=min_score)
+            results = uses.semantic_search.execute(
+                query, limit=limit, min_score=min_score
+            )
             return {"results": to_jsonable(results)}
         except _SEARCH_ERRORS as exc:
             return error_result(exc)

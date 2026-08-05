@@ -86,7 +86,9 @@ def build_archive_email_tool(uses: McpUseCases) -> ToolDefinition:
 def build_delete_email_tool(uses: McpUseCases) -> ToolDefinition:
     async def delete_email(email_id: str, permanent: bool = False) -> dict:
         try:
-            command = DeleteEmailCommand(email_id=parse_uuid(email_id), permanent=permanent)
+            command = DeleteEmailCommand(
+                email_id=parse_uuid(email_id), permanent=permanent
+            )
             uses.delete_email.execute(command)
             return {"status": "deleted", "permanent": permanent}
         except _WRITE_ERRORS as exc:

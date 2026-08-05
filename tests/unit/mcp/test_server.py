@@ -23,7 +23,10 @@ def _container(settings: Settings, uses: McpUseCases) -> Container:
     container.singleton(McpUseCases, uses)
     container.singleton(
         ResourceContext,
-        ResourceContext(account_email="me@example.com", access_level=settings.railguards.access_level),
+        ResourceContext(
+            account_email="me@example.com",
+            access_level=settings.railguards.access_level,
+        ),
     )
     return container
 

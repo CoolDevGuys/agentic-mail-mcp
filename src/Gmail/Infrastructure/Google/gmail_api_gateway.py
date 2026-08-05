@@ -58,7 +58,9 @@ class GmailApiGateway:
         self._sleep = sleep
 
     @classmethod
-    def from_credentials(cls, credentials: Any, **kwargs: Any) -> GmailApiGateway:  # pragma: no cover - requires google auth
+    def from_credentials(
+        cls, credentials: Any, **kwargs: Any
+    ) -> GmailApiGateway:  # pragma: no cover - requires google auth
         from googleapiclient.discovery import build
 
         service = build("gmail", "v1", credentials=credentials, cache_discovery=False)
@@ -123,9 +125,7 @@ class GmailApiGateway:
 
     def create_draft(self, raw_message: str) -> DraftResult:
         result = self._execute(
-            self._drafts().create(
-                userId=_USER, body={"message": {"raw": raw_message}}
-            )
+            self._drafts().create(userId=_USER, body={"message": {"raw": raw_message}})
         )
         message = result.get("message", {})
         return DraftResult(
@@ -133,9 +133,7 @@ class GmailApiGateway:
         )
 
     def send_draft(self, draft_id: str) -> SentMessageResult:
-        result = self._execute(
-            self._drafts().send(userId=_USER, body={"id": draft_id})
-        )
+        result = self._execute(self._drafts().send(userId=_USER, body={"id": draft_id}))
         return SentMessageResult(
             message_id=result.get("id", ""), thread_id=result.get("threadId", "")
         )
@@ -191,9 +189,9 @@ class GmailApiGateway:
 
     def get_history(self, history_id: str, start_history_id: str) -> GmailHistory:
         result = self._execute(
-            self._service.users().history().list(
-                userId=_USER, startHistoryId=start_history_id
-            )
+            self._service.users()
+            .history()
+            .list(userId=_USER, startHistoryId=start_history_id)
         )
         messages: list[GmailMessageHeader] = []
         for entry in result.get("history", []):

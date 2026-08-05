@@ -58,7 +58,9 @@ class TestBuildGmailQuery:
         q = build_gmail_query(
             SearchEmailsQuery(query_string="hi", from_address="a@b.com", subject="inv")
         )
-        assert "hi" in q.value and "from:a@b.com" in q.value and "subject:inv" in q.value
+        assert (
+            "hi" in q.value and "from:a@b.com" in q.value and "subject:inv" in q.value
+        )
 
     def test_defaults_to_inbox_when_empty(self) -> None:
         assert build_gmail_query(SearchEmailsQuery()).value == "in:inbox"
@@ -266,7 +268,9 @@ class TestDTOMapping:
     def test_label_dto_from_entity(self) -> None:
         from src.Gmail.Domain.Entities.label import Label
 
-        label = Label(id=UUIDId.generate(), label_id="INBOX", name="INBOX", type="system")
+        label = Label(
+            id=UUIDId.generate(), label_id="INBOX", name="INBOX", type="system"
+        )
         dto = LabelDTO.from_entity(label)
         assert dto.label_id == "INBOX"
         assert dto.is_system is True

@@ -175,16 +175,20 @@ error, never as an unhandled exception. See the
 
 ## Development
 
+A `Makefile` wraps the common tasks (run `make` to list them):
+
 ```bash
-# Run tests
-pytest
-
-# Run linter
-ruff check .
-
-# Run type checker
-mypy src/
+make setup        # first-time: create .venv, install dev deps, .env, run migrations
+make run          # start the server (stdio); make run-http for HTTP transport
+make test         # full test suite with coverage gates (as CI runs)
+make check        # lint (ruff) + type-check (mypy) + tests
+make format       # auto-format and fix imports
+make migrate      # apply DB migrations; make migration m="..." to autogenerate
+make build        # build the sdist + wheel and validate metadata
 ```
+
+Prefer raw tools? They work too: `pytest`, `ruff check src tests`, `mypy src`,
+`alembic upgrade head`. All `make` targets run inside a local `.venv`.
 
 ## Contributing
 

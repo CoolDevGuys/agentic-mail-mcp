@@ -97,7 +97,9 @@ class TestSearchDocumentDimensionValidation:
         assert doc.embedding == [0.1, 0.2, 0.3]
 
     def test_wrong_embedding_dimension_raises(self) -> None:
-        with pytest.raises(ValidationError, match="embedding dimension.*does not match"):
+        with pytest.raises(
+            ValidationError, match="embedding dimension.*does not match"
+        ):
             SearchDocument.create(
                 id=UUIDId.generate(),
                 email_id=UUIDId.generate(),
@@ -116,7 +118,9 @@ class TestSearchDocumentDimensionValidation:
         assert doc.embedding == []
 
     def test_empty_embedding_with_dimension_constraint_raises(self) -> None:
-        with pytest.raises(ValidationError, match="embedding dimension.*does not match"):
+        with pytest.raises(
+            ValidationError, match="embedding dimension.*does not match"
+        ):
             SearchDocument.create(
                 id=UUIDId.generate(),
                 email_id=UUIDId.generate(),

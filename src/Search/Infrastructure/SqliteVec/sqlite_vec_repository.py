@@ -22,7 +22,9 @@ class SqliteVecRepository:
         self._ensure_schema()
 
     @classmethod
-    def create(cls, path: str = ":memory:", dimension: int = 384) -> SqliteVecRepository:
+    def create(
+        cls, path: str = ":memory:", dimension: int = 384
+    ) -> SqliteVecRepository:
         import sqlite_vec
 
         conn = sqlite3.connect(path)

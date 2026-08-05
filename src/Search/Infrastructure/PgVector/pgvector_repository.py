@@ -16,7 +16,9 @@ class PgVectorRepository:
     the shared VectorSearchRepository contract.
     """
 
-    def __init__(self, connection: Any, dimension: int, *, table: str = "search_documents") -> None:
+    def __init__(
+        self, connection: Any, dimension: int, *, table: str = "search_documents"
+    ) -> None:
         self._conn = connection
         self._dimension = dimension
         self._table = table

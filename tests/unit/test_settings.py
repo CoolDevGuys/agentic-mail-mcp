@@ -1,4 +1,3 @@
-
 from src.Bootstrap.Settings import (
     DatabaseConfig,
     GmailConfig,
@@ -96,9 +95,7 @@ class TestSettings:
         assert isinstance(settings, Settings)
 
     def test_nested_config_customization(self):
-        settings = Settings(
-            logging=LoggingConfig(level="DEBUG", json_format=False)
-        )
+        settings = Settings(logging=LoggingConfig(level="DEBUG", json_format=False))
         assert settings.logging.level == "DEBUG"
         assert settings.logging.json_format is False
 

@@ -105,7 +105,9 @@ def build_weekly_digest_tool(uses: McpUseCases) -> ToolDefinition:
         # ``week_start`` (YYYY-MM-DD) selects any date within the target week; the
         # current week is used when omitted.
         try:
-            return to_jsonable(uses.weekly_digest.execute(parse_date_anchor(week_start)))
+            return to_jsonable(
+                uses.weekly_digest.execute(parse_date_anchor(week_start))
+            )
         except _INTEL_ERRORS as exc:
             return error_result(exc)
 

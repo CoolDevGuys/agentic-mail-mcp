@@ -18,7 +18,10 @@ class SearchDocument:
     _expected_dimension: int | None = None
 
     def __post_init__(self) -> None:
-        if self._expected_dimension is not None and len(self.embedding) != self._expected_dimension:
+        if (
+            self._expected_dimension is not None
+            and len(self.embedding) != self._expected_dimension
+        ):
             raise ValidationError(
                 f"embedding dimension {len(self.embedding)} does not match "
                 f"expected dimension {self._expected_dimension}"

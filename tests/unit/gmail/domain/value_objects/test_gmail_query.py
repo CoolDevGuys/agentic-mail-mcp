@@ -44,9 +44,7 @@ class TestGmailQueryBuilders:
         assert q.value == "before:2024-12-31"
 
     def test_date_range_both(self) -> None:
-        q = GmailQuery.date_range(
-            after=date(2024, 1, 1), before=date(2024, 12, 31)
-        )
+        q = GmailQuery.date_range(after=date(2024, 1, 1), before=date(2024, 12, 31))
         assert q.value == "after:2024-01-01 before:2024-12-31"
 
     def test_date_range_neither_raises(self) -> None:

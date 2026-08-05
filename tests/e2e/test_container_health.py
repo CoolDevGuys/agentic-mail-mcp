@@ -25,9 +25,12 @@ _IMAGE = "gmail-mcp-server:e2e-health"
 def _docker_available() -> bool:
     if shutil.which("docker") is None:
         return False
-    return subprocess.run(
-        ["docker", "info"], capture_output=True, text=True, check=False
-    ).returncode == 0
+    return (
+        subprocess.run(
+            ["docker", "info"], capture_output=True, text=True, check=False
+        ).returncode
+        == 0
+    )
 
 
 requires_docker = pytest.mark.skipif(
@@ -49,10 +52,17 @@ def test_container_starts_and_reports_healthy() -> None:
     name = f"gmail-mcp-e2e-{uuid.uuid4().hex[:8]}"
     run = _run(
         [
-            "docker", "run", "-d", "--name", name,
-            "-e", "GMAIL_MCP_MCP_TRANSPORT=http",
-            "-e", "GMAIL_MCP_MCP_HOST=0.0.0.0",
-            "-e", "GMAIL_MCP_MCP_PORT=8080",
+            "docker",
+            "run",
+            "-d",
+            "--name",
+            name,
+            "-e",
+            "GMAIL_MCP_MCP_TRANSPORT=http",
+            "-e",
+            "GMAIL_MCP_MCP_HOST=0.0.0.0",
+            "-e",
+            "GMAIL_MCP_MCP_PORT=8080",
             _IMAGE,
         ]
     )

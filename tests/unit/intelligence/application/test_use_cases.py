@@ -36,7 +36,9 @@ from tests.fakes.ports import (
 )
 
 
-def _email(subject: str = "Sub", body: str = "Body", *, sent: datetime | None = None) -> Email:
+def _email(
+    subject: str = "Sub", body: str = "Body", *, sent: datetime | None = None
+) -> Email:
     email = Email.from_gmail_message(
         message_id="m1", thread_id="t1", subject=subject, body=body
     )
@@ -208,7 +210,9 @@ class TestDigestUseCases:
         repo.add(_email("Today", sent=datetime(2026, 8, 3, 9, 0, tzinfo=UTC)))
         repo.add(_email("Yesterday", sent=datetime(2026, 8, 2, 9, 0, tzinfo=UTC)))
         bus = InMemoryEventBus()
-        uc = DailyDigestUseCase(repo, StubLlmGateway(response_text="digest"), clock, bus)
+        uc = DailyDigestUseCase(
+            repo, StubLlmGateway(response_text="digest"), clock, bus
+        )
 
         dto = uc.execute()
         assert dto.digest_type == "daily"

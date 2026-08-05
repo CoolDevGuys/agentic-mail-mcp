@@ -1,4 +1,3 @@
-
 import pytest
 
 from src.Common.Domain.Exceptions import ValidationError

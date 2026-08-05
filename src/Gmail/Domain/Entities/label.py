@@ -5,20 +5,22 @@ from dataclasses import dataclass
 from src.Common.Domain.Exceptions import DomainError
 from src.Common.Domain.ValueObjects.uuid_id import UUIDId
 
-SYSTEM_LABELS = frozenset({
-    "INBOX",
-    "SPAM",
-    "TRASH",
-    "SENT",
-    "DRAFT",
-    "IMPORTANT",
-    "STARRED",
-    "UNREAD",
-    "CATEGORY_PERSONAL",
-    "CATEGORY_PROMOTIONS",
-    "CATEGORY_UPDATES",
-    "CATEGORY_FORUMS",
-})
+SYSTEM_LABELS = frozenset(
+    {
+        "INBOX",
+        "SPAM",
+        "TRASH",
+        "SENT",
+        "DRAFT",
+        "IMPORTANT",
+        "STARRED",
+        "UNREAD",
+        "CATEGORY_PERSONAL",
+        "CATEGORY_PROMOTIONS",
+        "CATEGORY_UPDATES",
+        "CATEGORY_FORUMS",
+    }
+)
 
 
 @dataclass

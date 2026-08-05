@@ -109,7 +109,9 @@ class TestClassification:
             )
 
     def test_confidence_below_range_raises(self) -> None:
-        with pytest.raises(ValidationError, match="confidence must be between 0.0 and 1.0"):
+        with pytest.raises(
+            ValidationError, match="confidence must be between 0.0 and 1.0"
+        ):
             Classification(
                 id=UUIDId.generate(),
                 email_id=UUIDId.generate(),
@@ -121,7 +123,9 @@ class TestClassification:
             )
 
     def test_confidence_above_range_raises(self) -> None:
-        with pytest.raises(ValidationError, match="confidence must be between 0.0 and 1.0"):
+        with pytest.raises(
+            ValidationError, match="confidence must be between 0.0 and 1.0"
+        ):
             Classification(
                 id=UUIDId.generate(),
                 email_id=UUIDId.generate(),

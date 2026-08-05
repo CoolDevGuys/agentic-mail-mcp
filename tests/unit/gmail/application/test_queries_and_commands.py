@@ -44,7 +44,9 @@ class TestQueries:
         assert q.page == 2
 
     @pytest.mark.parametrize("page,page_size", [(0, 10), (1, 0), (-1, 10)])
-    def test_search_emails_query_rejects_bad_pagination(self, page: int, page_size: int) -> None:
+    def test_search_emails_query_rejects_bad_pagination(
+        self, page: int, page_size: int
+    ) -> None:
         with pytest.raises(ValidationError):
             SearchEmailsQuery(page=page, page_size=page_size)
 

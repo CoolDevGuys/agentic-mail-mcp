@@ -10,8 +10,8 @@
 > machine, and because the app only ever authorizes you, **there's no central
 > service and no Google verification to wait for.**
 
-> **ℹ️ Status:** pre-release (`0.1.0`), fully functional locally. Not yet on PyPI —
-> install from source (below).
+> **ℹ️ Status:** `0.1.0` — available on [PyPI](https://pypi.org/project/agentic-mail-mcp/):
+> `pip install agentic-mail-mcp` (or `uvx agentic-mail-mcp`).
 
 ## ✨ Features
 
@@ -35,10 +35,10 @@ flowchart LR
     D --> E[5. Connect agent<br/>or run HTTP]
 ```
 
-**1. Install** (from source until published — see [Installation](#-installation)):
+**1. Install** from PyPI (see [Installation](#-installation) for extras & Docker):
 
 ```bash
-pip install "git+https://github.com/CoolDevGuys/agentic-mail-mcp.git"
+pip install agentic-mail-mcp        # or: uvx agentic-mail-mcp
 ```
 
 **2. Get Google credentials** — in *your* Google Cloud project, enable the Gmail
@@ -74,15 +74,16 @@ See [Usage](#-usage).
 
 ## 📦 Installation
 
-**From source (works today):**
+**From PyPI (recommended):**
 
 ```bash
-pip install "git+https://github.com/CoolDevGuys/agentic-mail-mcp.git"
-# or, from a clone:
-pip install .
+pip install agentic-mail-mcp
 ```
 
-**Optional extras** (combine as needed, e.g. `".[postgresql,search]"`):
+> 💡 For MCP clients, prefer **`uvx agentic-mail-mcp`** / **`pipx run agentic-mail-mcp`** —
+> it runs the published package in an isolated environment with no virtualenv to manage.
+
+**Optional extras** (combine as needed, e.g. `"agentic-mail-mcp[postgresql,search]"`):
 
 | Extra | Adds |
 |---|---|
@@ -92,10 +93,19 @@ pip install .
 | `llm` | local llama.cpp inference |
 | `dev` | test / lint / build tooling |
 
-**Docker:** `docker compose up --build` (see [HTTP server](#http-server-deployment)).
+```bash
+pip install "agentic-mail-mcp[search,llm]"
+```
 
-> 💡 Once published to PyPI, the recommended install for MCP clients will be
-> `uvx agentic-mail-mcp` / `pipx run agentic-mail-mcp` — no virtualenv to manage.
+**From source** (development, or to track `main`):
+
+```bash
+pip install "git+https://github.com/CoolDevGuys/agentic-mail-mcp.git"
+# or, from a clone:
+pip install .
+```
+
+**Docker:** `docker compose up --build` (see [HTTP server](#http-server-deployment)).
 
 ## ⚙️ Configuration
 
@@ -138,13 +148,15 @@ The server speaks MCP over two transports:
 
 ### 💻 Local (stdio) — connect an AI agent
 
-Point your MCP client at the `agentic-mail-mcp` command. Example client config:
+Point your MCP client at the server. With `uvx` the client runs the published
+package directly — nothing to install globally:
 
 ```json
 {
   "mcpServers": {
     "gmail": {
-      "command": "agentic-mail-mcp",
+      "command": "uvx",
+      "args": ["agentic-mail-mcp"],
       "env": {
         "AGENTIC_MAIL_MCP_GMAIL_OAUTH_CLIENT_ID": "...",
         "AGENTIC_MAIL_MCP_GMAIL_OAUTH_CLIENT_SECRET": "...",
@@ -155,6 +167,8 @@ Point your MCP client at the `agentic-mail-mcp` command. Example client config:
   }
 }
 ```
+
+> If you installed with `pip`, use `"command": "agentic-mail-mcp"` and drop `args`.
 
 The agent then discovers the tools, resources, and prompts described in the
 [MCP API reference](specs/docs/api.md). Start with `read_only` and enable

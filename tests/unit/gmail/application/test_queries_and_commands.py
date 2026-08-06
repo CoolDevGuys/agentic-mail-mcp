@@ -86,10 +86,14 @@ class TestQueries:
 class TestCommands:
     def test_forward_requires_recipient(self) -> None:
         with pytest.raises(ValidationError):
-            ForwardEmailCommand(email_id=UUIDId.generate(), to_address="")
+            ForwardEmailCommand(message_id="m1", to_address="")
+
+    def test_forward_requires_message_id(self) -> None:
+        with pytest.raises(ValidationError):
+            ForwardEmailCommand(message_id="", to_address="x@y.com")
 
     def test_forward_valid(self) -> None:
-        cmd = ForwardEmailCommand(email_id=UUIDId.generate(), to_address="x@y.com")
+        cmd = ForwardEmailCommand(message_id="m1", to_address="x@y.com")
         assert cmd.include_original is True
 
     def test_archive_requires_target(self) -> None:
@@ -100,7 +104,7 @@ class TestCommands:
         assert ArchiveEmailCommand(thread_id="t1").thread_id == "t1"
 
     def test_delete_defaults_non_permanent(self) -> None:
-        assert DeleteEmailCommand(email_id=UUIDId.generate()).permanent is False
+        assert DeleteEmailCommand(message_id="m1").permanent is False
 
     def test_create_draft_requires_recipient(self) -> None:
         with pytest.raises(ValidationError):
@@ -116,20 +120,19 @@ class TestCommands:
 
     def test_add_label_requires_name(self) -> None:
         with pytest.raises(ValidationError):
-            AddLabelCommand(email_id=UUIDId.generate(), label_name="")
+            AddLabelCommand(message_id="m1", label_name="")
 
     def test_add_label_valid(self) -> None:
-        cmd = AddLabelCommand(email_id=UUIDId.generate(), label_name="Work")
+        cmd = AddLabelCommand(message_id="m1", label_name="Work")
         assert cmd.label_name == "Work"
 
     def test_mark_read_valid(self) -> None:
-        uid = UUIDId.generate()
-        assert MarkReadCommand(email_id=uid).email_id == uid
+        assert MarkReadCommand(message_id="m1").message_id == "m1"
 
-    def test_mark_read_requires_email_id(self) -> None:
+    def test_mark_read_requires_message_id(self) -> None:
         with pytest.raises(ValidationError):
-            MarkReadCommand(email_id=None)  # type: ignore[arg-type]
+            MarkReadCommand(message_id="")
 
-    def test_add_label_requires_email_id(self) -> None:
+    def test_add_label_requires_message_id(self) -> None:
         with pytest.raises(ValidationError):
-            AddLabelCommand(email_id=None, label_name="Work")  # type: ignore[arg-type]
+            AddLabelCommand(message_id="", label_name="Work")

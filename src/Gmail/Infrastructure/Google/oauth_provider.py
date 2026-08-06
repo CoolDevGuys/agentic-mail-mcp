@@ -3,7 +3,9 @@ from __future__ import annotations
 import base64
 import logging
 import os
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
@@ -11,6 +13,15 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from src.Common.Domain.Exceptions import DomainError
 
 logger = logging.getLogger(__name__)
+
+
+def _default_flow_factory(
+    client_config: dict, scopes: list[str]
+) -> Any:  # pragma: no cover - google dependency
+    from google_auth_oauthlib.flow import InstalledAppFlow
+
+    return InstalledAppFlow.from_client_config(client_config, scopes)
+
 
 _SALT_BYTES = 16
 # scrypt cost parameters (memory-hard); tolerant of low-entropy passphrases.
@@ -75,13 +86,33 @@ class GmailOAuthProvider:
     def has_token(self) -> bool:
         return self._path.exists()
 
-    def authorize_interactive(self) -> str:  # pragma: no cover - opens a browser
-        from google_auth_oauthlib.flow import InstalledAppFlow
+    def authorize_interactive(
+        self,
+        *,
+        flow_factory: Callable[[dict, list[str]], Any] | None = None,
+    ) -> str:
+        """Run the interactive Google authorization and store the token.
 
+        Any failure of the browser flow — the user canceling or denying consent,
+        a mismatched redirect, a network error — is surfaced as a ``DomainError``
+        with actionable guidance instead of an unhandled traceback. No token is
+        written unless the flow completes successfully.
+        """
         if self._client_config is None:
             raise DomainError("client_config is required for interactive authorization")
-        flow = InstalledAppFlow.from_client_config(self._client_config, self._scopes)
-        credentials = flow.run_local_server(port=0)
+
+        flow = (flow_factory or _default_flow_factory)(
+            self._client_config, self._scopes
+        )
+        try:
+            credentials = flow.run_local_server(port=0)
+        except Exception as exc:
+            raise DomainError(
+                "Google authorization did not complete — it was canceled or "
+                "denied, so no token was saved. Re-run `gmail-mcp-server auth` "
+                "and click Allow on the consent screen."
+            ) from exc
+
         token_json = credentials.to_json()
         self.save_token(token_json)
         return token_json

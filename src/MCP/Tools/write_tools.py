@@ -24,7 +24,6 @@ from src.Gmail.Application.Commands.commands import (
 from src.MCP.errors import error_result
 from src.MCP.serialization import to_jsonable
 from src.MCP.ToolRegistry import WRITE, ToolDefinition
-from src.MCP.Tools.arguments import parse_uuid
 from src.MCP.Tools.use_cases import McpUseCases
 
 _WRITE_ERRORS = (ValidationError, NotFoundError, PermissionError)
@@ -40,7 +39,7 @@ def build_forward_email_tool(uses: McpUseCases) -> ToolDefinition:
     ) -> dict:
         try:
             command = ForwardEmailCommand(
-                email_id=parse_uuid(email_id),
+                message_id=email_id,
                 to_address=to,
                 subject=subject,
                 body=body,
@@ -67,7 +66,7 @@ def build_archive_email_tool(uses: McpUseCases) -> ToolDefinition:
     ) -> dict:
         try:
             command = ArchiveEmailCommand(
-                email_id=parse_uuid(email_id) if email_id else None,
+                message_id=email_id or None,
                 thread_id=thread_id,
             )
             uses.archive_email.execute(command)
@@ -86,9 +85,7 @@ def build_archive_email_tool(uses: McpUseCases) -> ToolDefinition:
 def build_delete_email_tool(uses: McpUseCases) -> ToolDefinition:
     async def delete_email(email_id: str, permanent: bool = False) -> dict:
         try:
-            command = DeleteEmailCommand(
-                email_id=parse_uuid(email_id), permanent=permanent
-            )
+            command = DeleteEmailCommand(message_id=email_id, permanent=permanent)
             uses.delete_email.execute(command)
             return {"status": "deleted", "permanent": permanent}
         except _WRITE_ERRORS as exc:
@@ -144,7 +141,7 @@ def build_send_draft_tool(uses: McpUseCases) -> ToolDefinition:
 def build_add_label_tool(uses: McpUseCases) -> ToolDefinition:
     async def add_label(email_id: str, label: str) -> dict:
         try:
-            command = AddLabelCommand(email_id=parse_uuid(email_id), label_name=label)
+            command = AddLabelCommand(message_id=email_id, label_name=label)
             uses.add_label.execute(command)
             return {"status": "labeled", "label": label}
         except _WRITE_ERRORS as exc:

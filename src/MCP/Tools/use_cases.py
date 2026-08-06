@@ -52,12 +52,14 @@ class McpUseCases:
     create_draft: CreateDraftUseCase
     send_draft: SendDraftUseCase
     add_label: AddLabelUseCase
-    # intelligence
-    summarize_email: SummarizeEmailUseCase
-    classify_email: ClassifyEmailUseCase
-    suggest_reply: SuggestReplyUseCase
-    extract_action_items: ExtractActionItemsUseCase
-    daily_digest: DailyDigestUseCase
-    weekly_digest: WeeklyDigestUseCase
-    # search
-    semantic_search: SemanticSearchUseCase
+    # intelligence — optional. Per-email tools register only when internal LLM
+    # tools are enabled; digests register when an LLM is configured. Caller-first
+    # by default (see MCP prompts), so these are None unless wired.
+    summarize_email: SummarizeEmailUseCase | None = None
+    classify_email: ClassifyEmailUseCase | None = None
+    suggest_reply: SuggestReplyUseCase | None = None
+    extract_action_items: ExtractActionItemsUseCase | None = None
+    daily_digest: DailyDigestUseCase | None = None
+    weekly_digest: WeeklyDigestUseCase | None = None
+    # search (optional: requires the `search` extra + a vector backend)
+    semantic_search: SemanticSearchUseCase | None = None

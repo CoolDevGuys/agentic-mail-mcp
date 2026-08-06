@@ -4,7 +4,6 @@ import base64
 from email import message_from_bytes
 from email.message import Message
 
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
 from src.Gmail.Application.Commands.commands import (
     CreateDraftCommand,
     ForwardEmailCommand,
@@ -35,7 +34,7 @@ class TestBuildForwardMessage:
         raw = build_forward_message(
             _original(),
             ForwardEmailCommand(
-                email_id=UUIDId.generate(),
+                message_id="m1",
                 to_address="dest@corp.com",
                 subject="Please review",
                 body="See below",
@@ -57,7 +56,7 @@ class TestBuildForwardMessage:
         raw = build_forward_message(
             _original(),
             ForwardEmailCommand(
-                email_id=UUIDId.generate(),
+                message_id="m1",
                 to_address="dest@corp.com",
                 include_original=False,
             ),
@@ -68,7 +67,7 @@ class TestBuildForwardMessage:
     def test_defaults_subject_to_fwd_prefix(self) -> None:
         raw = build_forward_message(
             _original(),
-            ForwardEmailCommand(email_id=UUIDId.generate(), to_address="d@corp.com"),
+            ForwardEmailCommand(message_id="m1", to_address="d@corp.com"),
         )
         assert _decode(raw)["Subject"] == "Fwd: Original subject"
 

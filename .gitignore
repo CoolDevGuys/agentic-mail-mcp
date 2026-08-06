@@ -3,6 +3,8 @@
 /credentials.json
 # Default token_storage_path (Settings.gmail.token_storage_path)
 token.json
+# Encrypted token store (Settings.gmail.token_storage_path)
+/.secrets/
 # Build artifacts
 /dist/
 /build/

@@ -56,6 +56,10 @@ setup: install env migrate ## First-time setup: venv + deps + .env + database sc
 # Run
 # ---------------------------------------------------------------------------
 
+.PHONY: auth
+auth: $(STAMP) ## Authorize Gmail access (one-time browser consent)
+	$(BIN)/gmail-mcp-server auth
+
 .PHONY: run
 run: $(STAMP) ## Run the MCP server (stdio transport, default)
 	$(BIN)/gmail-mcp-server

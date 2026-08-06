@@ -17,6 +17,10 @@ def _section_config(prefix: str) -> SettingsConfigDict:
 class GmailConfig(BaseSettings):
     model_config = _section_config("GMAIL_MCP_GMAIL_")
 
+    # Bring-your-own Google app. Either point at the OAuth client JSON you
+    # download from Google Cloud (recommended — no copy-pasting secrets)…
+    client_secrets_file: str = ""
+    # …or set the client id/secret directly.
     oauth_client_id: str = ""
     oauth_client_secret: str = ""
     scopes: list[str] = ["https://www.googleapis.com/auth/gmail.modify"]
@@ -31,6 +35,10 @@ class DatabaseConfig(BaseSettings):
     # synchronous, so the persistence layer uses synchronous SQLAlchemy.
     url: str = "sqlite:///./gmail_mcp.db"
     driver: str = "sqlite"
+    # Read-through email cache TTL (seconds). The cache stores metadata only
+    # (never bodies) and is refreshed live per-email; this bounds how long list
+    # views may serve recently-seen metadata. Gmail stays the source of truth.
+    cache_ttl_seconds: int = 900
 
 
 class RailguardsConfig(BaseSettings):
@@ -67,6 +75,11 @@ class LLMConfig(BaseSettings):
     base_url: str = ""
     # Local llama.cpp model path (used when provider is "llamacpp").
     model_path: str = ""
+    # Caller-first by default: the calling agent is itself an LLM, so per-email
+    # reasoning (summarize/classify/reply/action-items) is exposed as MCP prompts
+    # the caller runs, not as internal-inference tools. Set true to also register
+    # those as server-side tools (adds latency + needs a configured LLM).
+    internal_tools: bool = False
 
 
 class SearchConfig(BaseSettings):

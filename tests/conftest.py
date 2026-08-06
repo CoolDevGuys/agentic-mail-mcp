@@ -33,7 +33,12 @@ _SETTINGS_CLASSES = (
 
 
 @pytest.fixture(autouse=True)
-def _isolate_settings_from_dotenv(monkeypatch):
+def _isolate_settings_from_dotenv(request, monkeypatch):
+    # Live tests marked `uses_real_env` deliberately read the developer's .env
+    # (e.g. the write-path smoke test needs real credentials); everything else
+    # is isolated for determinism.
+    if request.node.get_closest_marker("uses_real_env"):
+        return
     for cls in _SETTINGS_CLASSES:
         monkeypatch.setitem(cls.model_config, "env_file", None)
 

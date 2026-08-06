@@ -19,8 +19,56 @@ All notable changes to this project will be documented in this file.
   `GMAIL_MCP_DATABASE_URL` take effect — required for pip/Docker deployments to
   be configurable.
 
+### Changed
+
+- **Caller-first intelligence** ([ADR 0006](specs/docs/adr/0006-caller-first-intelligence.md)):
+  the calling agent is itself an LLM, so per-email reasoning (summarize, classify,
+  draft reply, extract action items) is now exposed as **MCP prompts** the agent
+  runs — no server-side inference, no added latency, and **no LLM key required**
+  for the core experience. Internal LLM inference is reserved for the digest tools
+  (map-reduce over many emails), which register only when an LLM is configured;
+  set `GMAIL_MCP_LLM_INTERNAL_TOOLS=true` to also expose the per-email tools
+  server-side. Embeddings for semantic search remain internal.
+
 ### Added
 
+- **Live write-path smoke test** (`tests/e2e/test_live_write_path.py`, opt-in via
+  `GMAIL_MCP_LIVE_WRITE_E2E=1`). Self-contained and safe: it creates its own
+  throwaway message and exercises `create_draft` → `send_draft` → `add_label` →
+  `forward_email` (to self) → `archive_email` → `delete_email`, then trashes its
+  own artifacts. Verified green against a real account. Documented finding:
+  permanent delete needs the `https://mail.google.com/` scope (soft delete works
+  under `gmail.modify`); `add_label` uses Gmail label **ids** (system labels like
+  `STARRED`), not arbitrary user-label names.
+- **Bring-your-own Google app** ([ADR 0008](specs/docs/adr/0008-bring-your-own-google-app.md)).
+  The server is a local, bring-your-own-credentials tool — no central app, no
+  Google verification. Point `GMAIL_MCP_GMAIL_CLIENT_SECRETS_FILE` at the
+  `credentials.json` you download from your own Google Cloud project (or set the
+  client id/secret directly); credentials and token stay on your machine. Docs
+  now cover the full self-service Google setup, the unverified-app screen, and
+  avoiding the 7-day testing-token expiry.
+- **Persistence: read-through cache** ([ADR 0007](specs/docs/adr/0007-persistence-read-through-cache.md)).
+  Gmail is the source of truth; local persistence is a `CachedEmailRepository`, not
+  a mirror: single-email reads are live (fresh, full body), the SQLite cache stores
+  **metadata only — never bodies**, list views are served within a TTL
+  (`GMAIL_MCP_DATABASE_CACHE_TTL_SECONDS`, default 900s), and emails gone from the
+  server are evicted (no sync engine, no delete-propagation). Tools now identify an
+  email by its Gmail **`message_id`** end to end (write commands carry `message_id`;
+  the internal UUID is an implementation detail). The Gmail→domain mapper extracts
+  bare addresses from display-name headers (`"Name <a@b.com>"`) instead of failing.
+- **Runtime composition root + auth** (makes the server usable end to end)
+  - `src/Bootstrap/Composition.py` assembles every use case from `Settings` —
+    SQLite persistence (schema applied via Alembic), a lazy OAuth-backed Gmail
+    gateway, railguard validator, event bus, LLM gateway, and optional semantic
+    search — into the `McpUseCases` bundle the server registers. The launched
+    `gmail-mcp-server` now exposes its tools (previously zero).
+  - `LazyGmailGateway` builds the authenticated Gmail client on first use, so
+    tools register at startup and calls before authorization return a clear
+    "run `gmail-mcp-server auth`" error.
+  - `gmail-mcp-server auth` subcommand performs the one-time interactive Google
+    authorization and stores the encrypted token (`make auth`).
+  - Semantic search degrades gracefully: `semantic_search` is registered only
+    when the `search` extra (sentence-transformers + sqlite-vec) is installed.
 - **Distribution and polish** (Phase 8)
   - `LICENSE` (MIT); `pyproject.toml` distribution metadata (`readme`,
     `project.urls`, `license-files`) and a scoped sdist target producing a clean
@@ -30,8 +78,7 @@ All notable changes to this project will be documented in this file.
   - Architecture ADRs `0002`–`0005` (DDD + vertical slicing, SQLite/PostgreSQL
     persistence, railguards write-safety, MCP stdio transport)
   - Expanded `README.md` (tool catalog, railguards security model, stdio
-    integration example, contributing) and `RELEASING.md` (PyPI + multi-arch
-    Docker publish flow)
+    integration example, contributing, and the automated PyPI release flow)
   - Multi-stage `Dockerfile` (builder + slim non-root runtime, health check),
     multi-arch build support
   - End-to-end MCP session tests (`tests/e2e/`) covering the read/write tool

@@ -5,10 +5,126 @@
 > `.env.example` for a copy-paste template. This document stays in sync with
 > both.
 
+## Getting your Google credentials (OAuth)
+
+> **You bring your own Google app.** This server is a local tool, not a hosted
+> service — there is no central app to sign into and **no Google verification to
+> wait for**. You create your own OAuth client in *your* Google Cloud project,
+> and your credentials and token never leave your machine. Because the app only
+> ever authorizes you (its own owner / test user), Google's verification process
+> does not apply.
+
+The server talks to Gmail on your behalf using a Google OAuth **client** (the
+`client_id` / `client_secret`, downloaded as a `credentials.json`) plus a
+**refresh token** obtained once through a consent screen. You create the client
+in Google Cloud; the server obtains and stores the token. This is a one-time,
+~5-minute setup.
+
+### 1. Create a Google Cloud project
+
+1. Open the [Google Cloud Console](https://console.cloud.google.com/).
+2. Click the project picker (top bar) → **New Project** → name it (e.g.
+   `gmail-mcp`) → **Create**, then select it.
+
+### 2. Enable the Gmail API
+
+1. Go to **APIs & Services → Library**
+   ([direct link](https://console.cloud.google.com/apis/library/gmail.googleapis.com)).
+2. Search **Gmail API** → **Enable**.
+
+### 3. Configure the OAuth consent screen
+
+1. Go to **APIs & Services → OAuth consent screen**.
+2. Choose **External** (unless you're on Google Workspace and want Internal) →
+   **Create**.
+3. Fill the required fields (app name, your support email, developer email) →
+   **Save and Continue**.
+4. **Scopes**: you can leave this empty here — the server requests
+   `https://www.googleapis.com/auth/gmail.modify` at authorization time.
+5. **Test users**: add the Gmail address(es) you'll connect. While the app is in
+   "Testing" mode, only listed test users can authorize — that's fine for
+   personal use and avoids Google's app-verification review.
+
+### 4. Create an OAuth client ID
+
+1. Go to **APIs & Services → Credentials → Create Credentials → OAuth client ID**.
+2. **Application type: Desktop app** (this is important — the server uses the
+   installed-app / loopback flow) → **Create**.
+3. **Download JSON** — this is your `credentials.json`.
+
+Point the server at it (recommended — no copying secrets around):
+
+```bash
+GMAIL_MCP_GMAIL_CLIENT_SECRETS_FILE=/path/to/credentials.json
+```
+
+*Or*, if you prefer, set the id/secret directly instead:
+
+```bash
+GMAIL_MCP_GMAIL_OAUTH_CLIENT_ID=<client id>.apps.googleusercontent.com
+GMAIL_MCP_GMAIL_OAUTH_CLIENT_SECRET=<client secret>
+```
+
+### 5. Set a token encryption key
+
+The refresh token is encrypted at rest. Provide any secret string (a Fernet key
+is derived from it):
+
+```bash
+GMAIL_MCP_GMAIL_TOKEN_ENCRYPTION_KEY=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
+```
+
+### 6. Authorize (one-time consent)
+
+Run the interactive authorization once:
+
+```bash
+gmail-mcp-server auth        # or: make auth
+```
+
+A browser window opens; sign in with a **test user** account and grant access.
+You may see an **"unverified app"** screen — that's expected for your own app;
+click *Advanced → Go to … (unsafe)* to continue. The encrypted refresh token is
+written to `token_storage_path` and reused on every subsequent start — you won't
+be prompted again unless the token is revoked or deleted. If you launch the
+server before authorizing, its tools are still listed but calling one returns a
+clear *"run `gmail-mcp-server auth`"* error.
+
+> **Keep the token from expiring.** While your app's publishing status is
+> **"Testing"**, Google expires refresh tokens after **7 days**, so you'd re-run
+> `gmail-mcp-server auth` weekly. To avoid that, set the OAuth consent screen to
+> **"In production"** (*APIs & Services → OAuth consent screen → Publish app*).
+> For your own single-user app this needs **no Google verification** — the
+> unverified-app screen just remains. Tokens then persist until revoked.
+
+### Scopes
+
+`gmail.modify` (the default) covers read, label, archive, **trash** (soft
+delete), and draft/send — everything the tools do except one thing:
+**permanent delete** (`delete_email` with `permanent=true`) needs the broader
+`https://mail.google.com/` scope. Under `gmail.modify` a permanent delete
+returns a 403; soft delete (the default) always works. Permanent delete is also
+blocked by the railguards unless you explicitly allow it, so most deployments
+never need the broader scope.
+
+For a strictly read-only deployment you can narrow it to
+`https://www.googleapis.com/auth/gmail.readonly` — but note that write **tools**
+are already gated off by `railguards.access_level=read_only` (the default), so
+you usually don't need to change the scope.
+
+### Security notes
+
+- Treat the client secret and the stored token as secrets. `token.json` and
+  `credentials.json` are git-ignored; keep the token outside the repo in
+  production (e.g. `~/.config/gmail-mcp-server/token.json`).
+- If a credential leaks, rotate it in the Cloud Console (**Credentials →** your
+  client **→ Reset secret**) and re-authorize.
+
 ## gmail
 
 | Key | Env var | Default | Purpose |
 |---|---|---|---|
+| `client_secrets_file` | `GMAIL_MCP_GMAIL_CLIENT_SECRETS_FILE` | `""` | Path to the OAuth client JSON you download from Google Cloud (recommended). Takes precedence over `client_id`/`client_secret` |
 | `oauth_client_id` | `GMAIL_MCP_GMAIL_OAUTH_CLIENT_ID` | `""` | Google OAuth client id |
 | `oauth_client_secret` | `GMAIL_MCP_GMAIL_OAUTH_CLIENT_SECRET` | `""` | Google OAuth client secret |
 | `scopes` | `GMAIL_MCP_GMAIL_SCOPES` | `gmail.modify` | OAuth scopes |
@@ -21,6 +137,7 @@
 |---|---|---|---|
 | `url` | `GMAIL_MCP_DATABASE_URL` | `sqlite:///./gmail_mcp.db` | SQLAlchemy URL. **Synchronous** driver — the repositories are synchronous. Use `postgresql+psycopg2://…` for PostgreSQL |
 | `driver` | `GMAIL_MCP_DATABASE_DRIVER` | `sqlite` | Informational driver name |
+| `cache_ttl_seconds` | `GMAIL_MCP_DATABASE_CACHE_TTL_SECONDS` | `900` | Read-through email cache TTL. Cache stores **metadata only** (never bodies); single reads are live. Gmail is the source of truth (see [ADR 0007](adr/0007-persistence-read-through-cache.md)) |
 
 ## railguards
 
@@ -45,13 +162,21 @@
 
 ## llm
 
+> **The LLM is optional (caller-first).** The calling agent is itself an LLM, so
+> per-email reasoning (summarize, classify, draft a reply, extract action items)
+> ships as **MCP prompts** the agent runs on data it fetches with `get_email` —
+> no server-side inference, no added latency, no key required. Configuring an LLM
+> only enables the **digest tools** (`daily_digest` / `weekly_digest`), which
+> map-reduce over many emails. See [ADR 0006](adr/0006-caller-first-intelligence.md).
+
 | Key | Env var | Default | Purpose |
 |---|---|---|---|
 | `provider` | `GMAIL_MCP_LLM_PROVIDER` | `openai` | `openai` (OpenAI-compatible HTTP) or `llamacpp` (local model) |
 | `model` | `GMAIL_MCP_LLM_MODEL` | `gpt-4` | Model name |
-| `api_key` | `GMAIL_MCP_LLM_API_KEY` | `""` | API key for the remote endpoint |
+| `api_key` | `GMAIL_MCP_LLM_API_KEY` | `""` | API key. Empty = no LLM (digests off, per-email stays caller-side) |
 | `base_url` | `GMAIL_MCP_LLM_BASE_URL` | `""` | OpenAI-compatible base URL; empty uses the official OpenAI URL |
 | `model_path` | `GMAIL_MCP_LLM_MODEL_PATH` | `""` | Local llama.cpp model path (used when `provider=llamacpp`) |
+| `internal_tools` | `GMAIL_MCP_LLM_INTERNAL_TOOLS` | `false` | Also expose per-email summarize/classify/reply/action-items as **server-side tools** (adds latency; needs an LLM). Default keeps them as prompts |
 
 ## search
 

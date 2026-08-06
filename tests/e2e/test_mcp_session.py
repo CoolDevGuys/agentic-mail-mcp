@@ -30,14 +30,14 @@ class TestReadWriteFlow:
 
         # 2. read the cached email by id
         read = tool_json(
-            await server.call_tool("get_email", {"email_id": str(email.id)})
+            await server.call_tool("get_email", {"email_id": email.message_id.value})
         )
         assert read["subject"] == "Hello"
 
         # 3. forward
         fwd = tool_json(
             await server.call_tool(
-                "forward_email", {"email_id": str(email.id), "to": "dest@corp.com"}
+                "forward_email", {"email_id": email.message_id.value, "to": "dest@corp.com"}
             )
         )
         assert "error" not in fwd
@@ -45,14 +45,14 @@ class TestReadWriteFlow:
 
         # 4. archive
         arch = tool_json(
-            await server.call_tool("archive_email", {"email_id": str(email.id)})
+            await server.call_tool("archive_email", {"email_id": email.message_id.value})
         )
         assert arch == {"status": "archived"}
         assert ("m1", [], ["INBOX"]) in env.gateway.modify_calls
 
         # 5. delete (soft)
         deleted = tool_json(
-            await server.call_tool("delete_email", {"email_id": str(email.id)})
+            await server.call_tool("delete_email", {"email_id": email.message_id.value})
         )
         assert deleted == {"status": "deleted", "permanent": False}
         assert env.gateway.trashed == ["m1"]
@@ -76,7 +76,7 @@ class TestRailguardEnforcement:
 
         result = tool_json(
             await server.call_tool(
-                "forward_email", {"email_id": str(email.id), "to": "x@evil.com"}
+                "forward_email", {"email_id": email.message_id.value, "to": "x@evil.com"}
             )
         )
 

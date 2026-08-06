@@ -13,9 +13,21 @@ def _prompt(name):
 
 
 class TestPrompts:
-    def test_two_prompts_registered(self) -> None:
+    def test_expected_prompts_registered(self) -> None:
         names = {p.name for p in build_prompts()}
-        assert names == {"search_strategy", "email_management"}
+        assert names == {
+            "search_strategy",
+            "email_management",
+            "summarize_email",
+            "classify_email",
+            "draft_reply",
+            "extract_action_items",
+        }
+
+    def test_caller_first_prompt_renders_with_email_id(self) -> None:
+        rendered = _prompt("summarize_email").render(email_id="abc-123")
+        assert "abc-123" in rendered
+        assert "get_email" in rendered
 
     def test_search_strategy_renders_with_goal(self) -> None:
         rendered = _prompt("search_strategy").render(goal="unpaid invoices")

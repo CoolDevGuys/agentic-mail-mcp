@@ -29,10 +29,10 @@ class ArchiveEmailUseCase:
 
     def execute(self, command: ArchiveEmailCommand) -> None:
         self._validator.validate(RailguardRequest(action="archive"))
-        if command.email_id is not None:
-            email = self._email_repository.find_by_id(command.email_id)
+        if command.message_id is not None:
+            email = self._email_repository.find_by_gmail_message_id(command.message_id)
             if email is None:
-                raise NotFoundError(f"Email not found: {command.email_id}")
+                raise NotFoundError(f"Email not found: {command.message_id}")
             self._archive(email.id, email.message_id.value)
         elif command.thread_id is not None:
             emails = self._email_repository.find_by_thread_id(command.thread_id)

@@ -12,8 +12,11 @@
 
 - **Input schema** — each tool declares a JSON-Schema `object`. A `*` marks a
   required property; all others are optional with a sensible default.
-- **`email_id`** — accepts an internal UUID (resolved from the local cache) or a
-  Gmail message id (resolved against the live API).
+- **`email_id`** — the Gmail **message id** (the `message_id` returned by
+  `search_emails` / `get_email`). It is the identity used across read *and* write
+  tools. Persistence is a read-through cache over live Gmail (metadata only, never
+  bodies); Gmail is the source of truth. See
+  [ADR 0007](adr/0007-persistence-read-through-cache.md).
 - **Dates** — `YYYY-MM-DD` strings.
 - **Output** — tools return a JSON object (email/thread/label DTOs, digests,
   search results) or a small status object. Errors use the
@@ -150,19 +153,21 @@ Add a label to an email.
 
 ## Intelligence tools
 
-LLM-backed; always registered.
+**Caller-first** ([ADR 0006](adr/0006-caller-first-intelligence.md)). Per-email
+reasoning is exposed as [prompts](#prompts), not tools — the calling agent runs
+them on `get_email` output. The only intelligence **tools** are the digests, and
+they register **only when an LLM is configured** (`llm.api_key` or `model_path`):
 
 | Tool | Required params | Optional params | Output |
 |---|---|---|---|
-| `summarize_email` | `email_id` | | `Summary` (summary_text, model_used) |
-| `classify_email` | `email_id` | | `Classification` (category, priority, confidence) |
-| `suggest_reply` | `email_id` | | `Suggestion` (draft_text, suggestion_type) |
-| `extract_action_items` | `email_id` | | `{ action_items: ActionItem[] }` |
 | `daily_digest` | | `date` (`YYYY-MM-DD`, defaults to today) | `Digest` (digest_type, digest_period, email_count, summary_text, items) |
 | `weekly_digest` | | `week_start` (any `YYYY-MM-DD` in the target week, defaults to this week) | `Digest` |
 
-Categories for `classify_email` are `urgent`, `normal`, `spam`, `promo`;
-priority is `1`–`5`.
+Setting `GMAIL_MCP_LLM_INTERNAL_TOOLS=true` *also* registers server-side
+`summarize_email`, `classify_email`, `suggest_reply`, and `extract_action_items`
+tools (each takes `email_id`) for deployments that want that — at the cost of
+extra latency. `classify_email` categories are `urgent`/`normal`/`spam`/`promo`,
+priority `1`–`5`.
 
 ## Search tools
 
@@ -195,6 +200,10 @@ Pre-built prompts that guide an agent to use the server effectively.
 |---|---|---|
 | `search_strategy` | `goal` | How to search the mailbox effectively for a goal |
 | `email_management` | — | A workflow for triaging and managing the inbox |
+| `summarize_email` | `email_id` | Summarize an email (caller runs it on `get_email` output) |
+| `classify_email` | `email_id` | Classify an email by category + priority (caller-run) |
+| `draft_reply` | `email_id` | Draft a reply for review (caller-run) |
+| `extract_action_items` | `email_id` | Extract action items from an email (caller-run) |
 
 ## Error responses
 

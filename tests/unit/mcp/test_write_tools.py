@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from src.Gmail.Domain.Events import EmailArchived, EmailForwarded, EmailLabeled
-from src.MCP.errors import INVALID_INPUT, NOT_FOUND, PERMISSION_DENIED
+from src.MCP.errors import NOT_FOUND, PERMISSION_DENIED
 from src.MCP.Tools.write_tools import build_write_tools
 
 from .conftest import make_env
@@ -17,7 +17,7 @@ class TestForwardEmailTool:
         email = env.add_email()
         tool = _tool(env.uses, "forward_email")
 
-        result = await tool.handler(email_id=str(email.id), to="dest@corp.com")
+        result = await tool.handler(email_id=email.message_id.value, to="dest@corp.com")
 
         assert "error" not in result
         assert env.gateway.sent
@@ -28,7 +28,7 @@ class TestForwardEmailTool:
         email = env.add_email()
         tool = _tool(env.uses, "forward_email")
 
-        result = await tool.handler(email_id=str(email.id), to="x@evil.com")
+        result = await tool.handler(email_id=email.message_id.value, to="x@evil.com")
 
         assert result["error"]["type"] == PERMISSION_DENIED
         assert "not allowed" in result["error"]["message"]
@@ -41,26 +41,17 @@ class TestForwardEmailTool:
         # validator denies it and the tool returns a structured error.
         tool = _tool(env.uses, "forward_email")
 
-        result = await tool.handler(email_id=str(email.id), to="a@b.com")
+        result = await tool.handler(email_id=email.message_id.value, to="a@b.com")
 
         assert result["error"]["type"] == PERMISSION_DENIED
 
-    async def test_missing_email_maps_to_not_found(self) -> None:
+    async def test_unknown_message_id_maps_to_not_found(self) -> None:
         env = make_env()
-        from uuid import uuid4
-
         tool = _tool(env.uses, "forward_email")
-        result = await tool.handler(email_id=str(uuid4()), to="a@b.com")
+
+        result = await tool.handler(email_id="unknown-message-id", to="a@b.com")
 
         assert result["error"]["type"] == NOT_FOUND
-
-    async def test_malformed_email_id_maps_to_invalid_input(self) -> None:
-        env = make_env()
-        tool = _tool(env.uses, "forward_email")
-
-        result = await tool.handler(email_id="not-a-uuid", to="a@b.com")
-
-        assert result["error"]["type"] == INVALID_INPUT
         assert env.gateway.sent == []
 
 
@@ -70,7 +61,7 @@ class TestArchiveEmailTool:
         email = env.add_email()
         tool = _tool(env.uses, "archive_email")
 
-        result = await tool.handler(email_id=str(email.id))
+        result = await tool.handler(email_id=email.message_id.value)
 
         assert result == {"status": "archived"}
         assert env.gateway.modify_calls == [("m1", [], ["INBOX"])]
@@ -83,7 +74,7 @@ class TestDeleteEmailTool:
         email = env.add_email()
         tool = _tool(env.uses, "delete_email")
 
-        result = await tool.handler(email_id=str(email.id))
+        result = await tool.handler(email_id=email.message_id.value)
 
         assert result == {"status": "deleted", "permanent": False}
         assert env.gateway.trashed == ["m1"]
@@ -110,7 +101,7 @@ class TestAddLabelTool:
         email = env.add_email()
         tool = _tool(env.uses, "add_label")
 
-        result = await tool.handler(email_id=str(email.id), label="Important")
+        result = await tool.handler(email_id=email.message_id.value, label="Important")
 
         assert result == {"status": "labeled", "label": "Important"}
         assert env.gateway.modify_calls == [("m1", ["Important"], [])]

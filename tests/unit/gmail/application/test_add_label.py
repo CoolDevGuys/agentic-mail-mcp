@@ -4,7 +4,6 @@ import pytest
 
 from src.Common.Domain.Events import InMemoryEventBus
 from src.Common.Domain.Exceptions import NotFoundError, PermissionError
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
 from src.Common.Railguards.config import RailguardConfig
 from src.Common.Railguards.validator import RailguardValidator
 from src.Gmail.Application.Commands.commands import AddLabelCommand
@@ -33,7 +32,7 @@ class TestAddLabelUseCase:
         bus = InMemoryEventBus()
         uc = AddLabelUseCase(gateway, _validator(), repo, bus)
 
-        uc.execute(AddLabelCommand(email_id=email.id, label_name="Important"))
+        uc.execute(AddLabelCommand(message_id=email.message_id.value, label_name="Important"))
 
         assert gateway.modify_calls == [("m1", ["Important"], [])]
         events = [e for e in bus.published if isinstance(e, EmailLabeled)]
@@ -50,7 +49,7 @@ class TestAddLabelUseCase:
         uc = AddLabelUseCase(gateway, _validator("read_only"), repo, bus)
 
         with pytest.raises(PermissionError):
-            uc.execute(AddLabelCommand(email_id=email.id, label_name="Important"))
+            uc.execute(AddLabelCommand(message_id=email.message_id.value, label_name="Important"))
 
         assert gateway.modify_calls == []
         assert bus.published == []
@@ -62,7 +61,7 @@ class TestAddLabelUseCase:
         uc = AddLabelUseCase(gateway, _validator(), repo, bus)
 
         with pytest.raises(NotFoundError):
-            uc.execute(AddLabelCommand(email_id=UUIDId.generate(), label_name="X"))
+            uc.execute(AddLabelCommand(message_id="missing", label_name="X"))
 
     def test_no_event_when_gateway_fails(self) -> None:
         repo = InMemoryEmailRepository()
@@ -77,6 +76,6 @@ class TestAddLabelUseCase:
         uc = AddLabelUseCase(FailingGateway(), _validator(), repo, bus)
 
         with pytest.raises(RuntimeError):
-            uc.execute(AddLabelCommand(email_id=email.id, label_name="X"))
+            uc.execute(AddLabelCommand(message_id=email.message_id.value, label_name="X"))
 
         assert bus.published == []

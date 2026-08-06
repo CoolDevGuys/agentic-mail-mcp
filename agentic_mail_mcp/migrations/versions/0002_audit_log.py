@@ -4,6 +4,7 @@ Revision ID: 0002
 Revises: 0001
 Create Date: 2026-08-04
 """
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -28,9 +29,7 @@ def upgrade() -> None:
         sa.Column("details", sa.JSON(), nullable=True),
     )
     op.create_index("ix_audit_log_action", "audit_log", ["action"])
-    op.create_index(
-        "ix_audit_log_correlation_id", "audit_log", ["correlation_id"]
-    )
+    op.create_index("ix_audit_log_correlation_id", "audit_log", ["correlation_id"])
 
 
 def downgrade() -> None:

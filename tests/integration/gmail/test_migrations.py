@@ -6,12 +6,16 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+# Resolve the shipped scripts exactly as the runtime does, so this test also
+# guards that the packaged migrations directory is found.
+from agentic_mail_mcp.Common.Infrastructure.Persistence.migrations_runner import (
+    _MIGRATIONS_DIR,
+)
 
 
 def _alembic_config(db_url: str) -> Config:
-    cfg = Config(str(_REPO_ROOT / "alembic.ini"))
-    cfg.set_main_option("script_location", str(_REPO_ROOT / "migrations"))
+    cfg = Config()
+    cfg.set_main_option("script_location", str(_MIGRATIONS_DIR))
     # env.py reads this injected url instead of Settings.
     cfg.attributes["sqlalchemy.url"] = db_url
     return cfg

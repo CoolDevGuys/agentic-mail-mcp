@@ -11,14 +11,18 @@ from pathlib import Path
 from alembic import command
 from alembic.config import Config
 
-# migrations_runner.py -> Persistence -> Infrastructure -> Common -> agentic_mail_mcp -> repo root
-_REPO_ROOT = Path(__file__).resolve().parents[4]
+# The Alembic scripts ship *inside* the package so they resolve identically from
+# a source checkout and a pip-installed wheel. Path:
+# migrations_runner.py -> Persistence -> Infrastructure -> Common -> agentic_mail_mcp
+_MIGRATIONS_DIR = Path(__file__).resolve().parents[3] / "migrations"
 
 
 def apply_migrations(database_url: str) -> None:
     """Run ``alembic upgrade head`` against ``database_url``."""
-    config = Config(str(_REPO_ROOT / "alembic.ini"))
-    config.set_main_option("script_location", str(_REPO_ROOT / "migrations"))
-    # env.py reads this injected url instead of Settings.
+    # Build the config programmatically (no on-disk alembic.ini needed at
+    # runtime): the app configures its own logging, and env.py reads the url
+    # from ``config.attributes``.
+    config = Config()
+    config.set_main_option("script_location", str(_MIGRATIONS_DIR))
     config.attributes["sqlalchemy.url"] = database_url
     command.upgrade(config, "head")

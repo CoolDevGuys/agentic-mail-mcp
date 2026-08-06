@@ -1,5 +1,9 @@
 import argparse
+import os
 import sys
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 from agentic_mail_mcp.Bootstrap.Composition import (
     build_oauth_provider,
@@ -71,16 +75,45 @@ def _auth(settings: Settings) -> None:
     print("You can now run 'agentic-mail-mcp' (or restart your MCP client).")
 
 
+def _load_env_file(path: str) -> None:
+    """Load a specific .env file into the environment before Settings are built.
+
+    Values are loaded with ``override=False`` so any variables already set in the
+    process environment (e.g. an MCP client's ``env`` block) still win.
+    """
+    resolved = Path(path).expanduser()
+    if not resolved.exists():
+        print(f"--env-file not found: {resolved}", file=sys.stderr)
+        sys.exit(1)
+    load_dotenv(resolved, override=False)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="agentic-mail-mcp",
         description="Agentic Mail — an MCP server exposing Gmail to AI agents.",
     )
+    # Shared across subcommands: for serve/auth it is the file to LOAD config
+    # from; for init it is the file to WRITE. Falls back to the
+    # AGENTIC_MAIL_MCP_ENV_FILE environment variable.
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument(
+        "--env-file",
+        default=None,
+        metavar="PATH",
+        help="Path to a .env file (loaded for serve/auth, written for init). "
+        "Overrides AGENTIC_MAIL_MCP_ENV_FILE.",
+    )
+
     subparsers = parser.add_subparsers(dest="command")
-    subparsers.add_parser("serve", help="Run the MCP server.")
-    subparsers.add_parser("auth", help="Authorize access to Gmail (one-time).")
+    subparsers.add_parser("serve", parents=[common], help="Run the MCP server.")
     subparsers.add_parser(
-        "init", help="Interactively generate a .env configuration file."
+        "auth", parents=[common], help="Authorize access to Gmail (one-time)."
+    )
+    subparsers.add_parser(
+        "init",
+        parents=[common],
+        help="Interactively generate a .env configuration file.",
     )
     args = parser.parse_args()
 
@@ -89,10 +122,17 @@ def main() -> None:
         parser.print_help()
         return
 
+    env_file = args.env_file or os.environ.get("AGENTIC_MAIL_MCP_ENV_FILE")
+
     # `init` writes configuration and must run before Settings exist; it does not
-    # load Settings or configure logging.
+    # load Settings or configure logging. --env-file selects the output path.
     if args.command == "init":
-        sys.exit(run_init())
+        sys.exit(run_init(env_path=Path(env_file) if env_file else Path(".env")))
+
+    # serve/auth: load the requested .env into the environment before Settings
+    # are read, so a client-launched server can be pointed at a config file.
+    if env_file:
+        _load_env_file(env_file)
 
     settings = Settings.from_env()
     setup_logging(

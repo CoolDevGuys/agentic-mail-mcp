@@ -30,6 +30,130 @@ When it finishes, run `agentic-mail-mcp auth` (below) and then start the server.
 > its purpose. The wizard writes the same keys; the tables further down document
 > them in full. You can always edit the generated `.env` by hand afterward.
 
+## How configuration is loaded
+
+Settings come from these sources, **highest priority first**:
+
+1. **Process environment variables** (`AGENTIC_MAIL_MCP_*`) — e.g. exported in a
+   shell, a systemd unit, a Docker `environment:`, or an MCP client's `env` block.
+2. **A `--env-file PATH`** (or the `AGENTIC_MAIL_MCP_ENV_FILE` variable) — an
+   explicit `.env` the server loads on startup, regardless of working directory.
+   Real environment variables from step 1 still win over it.
+3. **A `.env` file** — read from the server's **current working directory**.
+4. **Built-in defaults**.
+
+Two consequences worth internalizing:
+
+- **A `.env` file is never required.** It is just a convenient carrier for the
+  same variables. Anything you can put in `.env` you can set as an environment
+  variable instead, for either transport.
+- **`.env` is resolved relative to the process's working directory**, not to
+  where you ran a command. If a program launches the server from some other
+  directory, a `.env` sitting in your project folder is simply not seen. This is
+  the key difference between the two workflows below.
+
+## Configuration workflows: stdio vs HTTP
+
+The same settings drive both transports; only *how you deliver them* differs.
+
+### What's always needed (both transports)
+
+| Thing | When | Notes |
+|---|---|---|
+| Google client (`CLIENT_SECRETS_FILE`, or `OAUTH_CLIENT_ID` + `_SECRET`) | at `auth` **and** `serve` | Identifies your OAuth app |
+| `GMAIL_TOKEN_ENCRYPTION_KEY` | at `auth` **and** `serve` | The token is encrypted with a key derived from this — it **must be identical** at auth time and serve time, or the server can't decrypt the token |
+| `GMAIL_TOKEN_STORAGE_PATH` | at `auth` **and** `serve` | Must point to the **same file** both times (default `token.json`, relative to cwd — set an absolute path to avoid surprises) |
+| `agentic-mail-mcp auth` | **once**, up front | Mints the encrypted token. Needs a browser (see [Headless](#7-headless--server-deployment-no-browser) if the server host has none) |
+
+`init` is **optional** — it only generates a `.env` and auto-creates the
+encryption key. Skip it if you provide the variables another way.
+
+### 🧩 stdio — the MCP client launches the server
+
+Here the client spawns `agentic-mail-mcp serve` as a subprocess **and controls
+its working directory**, which is usually *not* your project folder — so a
+`.env` there won't be found. You have two ways to supply config:
+
+**Option A — point at a `.env` file (recommended).** Pass `--env-file` with an
+**absolute** path; the server loads every setting from that file. Run
+`agentic-mail-mcp init` first to create it. The `env` block can stay empty:
+
+```json
+{
+  "mcpServers": {
+    "gmail": {
+      "command": "uvx",
+      "args": ["agentic-mail-mcp", "serve", "--env-file", "/abs/path/.env"]
+    }
+  }
+}
+```
+
+(Equivalently, set `"env": { "AGENTIC_MAIL_MCP_ENV_FILE": "/abs/path/.env" }`.)
+
+**Option B — inline `env` block.** Put the variables directly in the client
+config; they become the process environment. No file involved:
+
+```json
+{
+  "mcpServers": {
+    "gmail": {
+      "command": "uvx",
+      "args": ["agentic-mail-mcp", "serve"],
+      "env": {
+        "AGENTIC_MAIL_MCP_GMAIL_CLIENT_SECRETS_FILE": "/abs/path/credentials.json",
+        "AGENTIC_MAIL_MCP_GMAIL_TOKEN_ENCRYPTION_KEY": "<same key used at auth>",
+        "AGENTIC_MAIL_MCP_GMAIL_TOKEN_STORAGE_PATH": "/abs/path/token.json",
+        "AGENTIC_MAIL_MCP_RAILGUARDS_ACCESS_LEVEL": "read_only"
+      }
+    }
+  }
+}
+```
+
+Either way:
+
+1. Get Google credentials (below) and pick an encryption key (or let `init`
+   generate one).
+2. Run `agentic-mail-mcp auth` **once** with those same values — for Option A,
+   the easiest is `agentic-mail-mcp auth --env-file /abs/path/.env`, which reads
+   the very same file. This writes the encrypted token to `TOKEN_STORAGE_PATH`.
+3. Configure your client as above with the **same** encryption key and token
+   path. The client starts the server on demand; you do **not** run `serve`
+   yourself.
+
+> Inline `env` values take precedence over the `--env-file`, which in turn takes
+> precedence over a `.env` in the working directory — so you can point at a file
+> and still override a single value in the `env` block.
+
+### 🌐 HTTP — you launch the server
+
+Here **you** start a long-running process, so you control the working directory.
+Both a `.env` and exported environment variables work; pick one.
+
+1. Get Google credentials and either run `agentic-mail-mcp init` (writes `.env`)
+   or set the `AGENTIC_MAIL_MCP_*` variables in your service manager /
+   `docker-compose`.
+2. Run `agentic-mail-mcp auth` **once** (from the same directory / with the same
+   variables, so it reads the same client + key).
+3. Start the server from that directory (so `.env` is found) or with the
+   variables exported:
+
+   ```bash
+   AGENTIC_MAIL_MCP_MCP_TRANSPORT=http AGENTIC_MAIL_MCP_MCP_HOST=0.0.0.0 \
+   AGENTIC_MAIL_MCP_MCP_PORT=8080 agentic-mail-mcp serve
+   ```
+
+   With Docker, set the variables in `environment:` (or mount a `.env` and an
+   absolute `TOKEN_STORAGE_PATH`); the token file must be the one produced by
+   `auth` (see [Headless](#7-headless--server-deployment-no-browser) to authorize
+   on a machine with a browser and copy the token in).
+
+> **Rule of thumb:** if *something else* starts the server (an MCP client),
+> deliver config through its `env` block. If *you* start the server (HTTP,
+> systemd, Docker, or `make run`), a `.env` in that working directory — the thing
+> `init` writes — is the easy path.
+
 ## Getting your Google credentials (OAuth)
 
 > **You bring your own Google app.** This server is a local tool, not a hosted

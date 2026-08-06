@@ -5,6 +5,31 @@
 > `.env.example` for a copy-paste template. This document stays in sync with
 > both.
 
+## Quick setup: `agentic-mail-mcp init`
+
+The fastest way to a valid `.env` is the interactive wizard:
+
+```bash
+agentic-mail-mcp init
+```
+
+It walks through **every** configuration section, showing each field's default —
+**press Enter to accept a default**, or type a value to override it. It also:
+
+- **Auto-generates the token encryption key** when you leave that prompt empty,
+  so you never hand-write a secret.
+- **Validates as you go** (e.g. access level, transport, ports) and re-prompts on
+  invalid input, then loads the result through `Settings` before saving — so the
+  file it writes is always loadable.
+- **Never clobbers an existing `.env`**: it asks first and writes a timestamped
+  backup (`.env.bak-<timestamp>`) before overwriting.
+
+When it finishes, run `agentic-mail-mcp auth` (below) and then start the server.
+
+> `.env.example` remains the canonical reference for every key, its default, and
+> its purpose. The wizard writes the same keys; the tables further down document
+> them in full. You can always edit the generated `.env` by hand afterward.
+
 ## Getting your Google credentials (OAuth)
 
 > **You bring your own Google app.** This server is a local tool, not a hosted

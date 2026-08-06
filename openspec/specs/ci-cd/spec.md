@@ -1,4 +1,9 @@
-## ADDED Requirements
+# ci-cd Specification
+
+## Purpose
+Defines the CI/CD pipeline: automated lint, type-check, test, dependency vulnerability scanning, lockfile validation, and release publishing.
+
+## Requirements
 
 ### Requirement: GitHub Actions CI workflow
 The project SHALL include a GitHub Actions workflow that runs lint (ruff), type-check (mypy), and test (pytest with coverage) on every push and PR.

@@ -1,4 +1,9 @@
-## ADDED Requirements
+# project-structure Specification
+
+## Purpose
+Defines the DDD + vertical-slice directory layout for each bounded context and shared module.
+
+## Requirements
 
 ### Requirement: Bootstrap module structure
 The agentic_mail_mcp/Bootstrap/ directory SHALL contain __init__.py and stub modules for Settings.py, Logging.py, Lifespan.py, and DependencyContainer.py.

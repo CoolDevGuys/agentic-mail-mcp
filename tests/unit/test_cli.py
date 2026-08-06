@@ -122,7 +122,9 @@ class TestAuthCommand:
 
 
 class TestArgparse:
-    def test_default_command_is_serve(self, monkeypatch) -> None:
+    def test_no_subcommand_shows_help_and_does_not_serve(
+        self, monkeypatch, capsys
+    ) -> None:
         called = {}
         monkeypatch.setattr(cli.sys, "argv", ["agentic-mail-mcp"])
         monkeypatch.setattr(
@@ -134,7 +136,30 @@ class TestArgparse:
 
         cli.main()
 
-        assert called == {"serve": True}
+        assert called == {}  # the server is never started implicitly
+        out = capsys.readouterr().out
+        # help lists the available subcommands
+        for cmd in ("serve", "auth", "init"):
+            assert cmd in out
+
+    def test_init_command_dispatches(self, monkeypatch) -> None:
+        called = {}
+
+        def fake_init() -> int:
+            called["init"] = True
+            return 0
+
+        monkeypatch.setattr(cli.sys, "argv", ["agentic-mail-mcp", "init"])
+        monkeypatch.setattr(cli, "run_init", fake_init)
+        monkeypatch.setattr(
+            cli, "_serve", lambda settings: called.setdefault("serve", True)
+        )
+
+        with pytest.raises(SystemExit) as exc:
+            cli.main()
+
+        assert exc.value.code == 0
+        assert called == {"init": True}
 
     def test_auth_command_dispatches(self, monkeypatch) -> None:
         called = {}

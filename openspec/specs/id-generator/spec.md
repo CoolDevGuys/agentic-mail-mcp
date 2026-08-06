@@ -1,4 +1,9 @@
-## ADDED Requirements
+# id-generator Specification
+
+## Purpose
+Defines the IdGenerator abstraction for producing unique identifiers, decoupling identity creation from the domain.
+
+## Requirements
 
 ### Requirement: IdGenerator protocol defines generate()
 `IdGenerator` SHALL define a `generate() -> UUIDId` method.

@@ -1,4 +1,9 @@
-## ADDED Requirements
+# domain-events Specification
+
+## Purpose
+Defines the domain-event model and EventBus used for decoupled, in-process communication between bounded contexts.
+
+## Requirements
 
 ### Requirement: DomainEvent base carries metadata
 `DomainEvent` SHALL provide `event_id` (UUID), `occurred_at` (datetime), and `aggregate_id` fields.

@@ -1,4 +1,9 @@
-## ADDED Requirements
+# notification-domain Specification
+
+## Purpose
+Defines the Notification bounded context's domain model — inbox/digest events and the notification gateway port.
+
+## Requirements
 
 ### Requirement: ImportantEmailDetected event
 The system SHALL define ImportantEmailDetected domain event for high-priority email notifications.

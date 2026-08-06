@@ -1,4 +1,9 @@
-## ADDED Requirements
+# search-domain Specification
+
+## Purpose
+Defines the Search bounded context's domain model — the search document entity and the embedding/vector-search ports.
+
+## Requirements
 
 ### Requirement: SearchDocument entity
 The system SHALL model SearchDocument as an entity containing indexable text, embedding vector, and metadata.

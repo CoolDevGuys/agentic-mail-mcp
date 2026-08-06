@@ -1,4 +1,9 @@
-## ADDED Requirements
+# testing-infra Specification
+
+## Purpose
+Defines the testing infrastructure: pytest configuration, shared fixtures, fakes, directory layout, and coverage floors.
+
+## Requirements
 
 ### Requirement: pytest configuration
 The project SHALL include pytest.ini with asyncio_mode=auto, testpaths, and markers configuration.

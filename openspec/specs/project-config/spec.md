@@ -1,4 +1,9 @@
-## ADDED Requirements
+# project-config Specification
+
+## Purpose
+Defines the project packaging and configuration contract: metadata, build backend, dependencies, optional extras, and the console entry point.
+
+## Requirements
 
 ### Requirement: pyproject.toml exists with complete metadata
 The project SHALL have a pyproject.toml file containing name (agentic-mail-mcp), version, description, authors, license, and Python 3.11+ classifiers.

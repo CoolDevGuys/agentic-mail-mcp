@@ -1,4 +1,9 @@
-## ADDED Requirements
+# clock Specification
+
+## Purpose
+Defines the Clock abstraction that decouples the domain from the system time source, enabling deterministic time in tests.
+
+## Requirements
 
 ### Requirement: Clock protocol defines now()
 `Clock` SHALL define a `now() -> datetime` method.

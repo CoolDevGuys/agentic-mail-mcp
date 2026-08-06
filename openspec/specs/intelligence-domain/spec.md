@@ -1,4 +1,9 @@
-## ADDED Requirements
+# intelligence-domain Specification
+
+## Purpose
+Defines the Intelligence bounded context's domain model — summaries, classifications, suggestions, and the LLM gateway port.
+
+## Requirements
 
 ### Requirement: Summary entity
 The system SHALL model Summary as an entity containing an AI-generated email summary.

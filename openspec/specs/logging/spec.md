@@ -1,4 +1,9 @@
-## ADDED Requirements
+# logging Specification
+
+## Purpose
+Defines structured JSON logging with configurable levels and redaction of sensitive data.
+
+## Requirements
 
 ### Requirement: Structured JSON logging setup
 The Logging module SHALL provide a setup_logging(level, json_format) function that configures application-wide JSON logging.

@@ -1,4 +1,9 @@
-## ADDED Requirements
+# value-objects Specification
+
+## Purpose
+Defines the shared value-object base (value semantics) and the UUIDId identifier value object.
+
+## Requirements
 
 ### Requirement: ValueObject base provides value semantics
 The `ValueObject` base class SHALL provide structural equality, hashing, and string representation based on all attributes.

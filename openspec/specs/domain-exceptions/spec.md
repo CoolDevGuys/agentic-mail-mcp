@@ -1,4 +1,9 @@
-## ADDED Requirements
+# domain-exceptions Specification
+
+## Purpose
+Defines the typed domain exception hierarchy that expresses failure conditions independently of transport or framework.
+
+## Requirements
 
 ### Requirement: DomainError is the base exception
 `DomainError` SHALL be the base exception for all domain-layer errors and SHALL carry a `message` and optional `context` dict.

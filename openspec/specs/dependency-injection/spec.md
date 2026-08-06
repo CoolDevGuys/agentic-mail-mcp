@@ -1,4 +1,9 @@
-## ADDED Requirements
+# dependency-injection Specification
+
+## Purpose
+Defines the dependency-injection container used to register and resolve application services and factories.
+
+## Requirements
 
 ### Requirement: DI container with registration
 The DependencyContainer SHALL provide register(), resolve(), and singleton() methods for service management.

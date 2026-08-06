@@ -1,4 +1,9 @@
-## ADDED Requirements
+# lifespan Specification
+
+## Purpose
+Defines the application lifespan: async startup initialization and shutdown cleanup, integrated with the MCP server.
+
+## Requirements
 
 ### Requirement: Async lifespan context manager
 The Lifespan module SHALL provide an async def lifespan(app) context manager for application lifecycle management.

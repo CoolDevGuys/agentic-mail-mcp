@@ -1,4 +1,9 @@
-## ADDED Requirements
+# specifications Specification
+
+## Purpose
+Defines the Specification pattern (composable is_satisfied_by predicates with And/Or/Not) for expressing domain rules.
+
+## Requirements
 
 ### Requirement: Specification base defines is_satisfied_by
 `Specification[T]` SHALL define an abstract `is_satisfied_by(candidate: T) -> bool` method.

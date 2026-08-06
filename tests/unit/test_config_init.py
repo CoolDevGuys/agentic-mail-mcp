@@ -1,0 +1,204 @@
+from __future__ import annotations
+
+import io
+from pathlib import Path
+
+from dotenv import dotenv_values
+
+from agentic_mail_mcp.Bootstrap.config_init import run_init
+from agentic_mail_mcp.Bootstrap.Settings import Settings
+
+_ENV_EXAMPLE = Path(__file__).resolve().parents[2] / ".env.example"
+
+
+def _accept_defaults(_text: str) -> str:
+    return ""
+
+
+def _load(env_path: Path, monkeypatch) -> Settings:
+    """Load the written .env as Settings (conftest disables .env file reading, so
+    inject the file's values into the environment instead)."""
+    for key, value in dotenv_values(env_path).items():
+        if value is not None:
+            monkeypatch.setenv(key, value)
+    return Settings.from_env()
+
+
+class TestAcceptDefaults:
+    def test_writes_env_that_loads_via_settings(self, tmp_path, monkeypatch) -> None:
+        env = tmp_path / ".env"
+        code = run_init(
+            prompt=_accept_defaults,
+            out=io.StringIO(),
+            env_path=env,
+            key_factory=lambda: "generated-key",
+        )
+        assert code == 0
+        assert env.exists()
+
+        settings = _load(env, monkeypatch)
+        assert settings.railguards.access_level == "read_only"
+        assert settings.mcp.transport == "stdio"
+
+    def test_produces_every_key_in_env_example(self, tmp_path) -> None:
+        env = tmp_path / ".env"
+        run_init(
+            prompt=_accept_defaults,
+            out=io.StringIO(),
+            env_path=env,
+            key_factory=lambda: "generated-key",
+        )
+        written = {
+            line.split("=", 1)[0]
+            for line in env.read_text().splitlines()
+            if line.startswith("AGENTIC_MAIL_MCP_")
+        }
+        expected = {
+            line.strip().split("=", 1)[0]
+            for line in _ENV_EXAMPLE.read_text().splitlines()
+            if line.strip().startswith("AGENTIC_MAIL_MCP_")
+        }
+        missing = expected - written
+        assert not missing, f"wizard omits keys present in .env.example: {missing}"
+
+
+class TestEncryptionKey:
+    def test_generated_when_left_empty(self, tmp_path) -> None:
+        env = tmp_path / ".env"
+        run_init(
+            prompt=_accept_defaults,
+            out=io.StringIO(),
+            env_path=env,
+            key_factory=lambda: "AUTO-GENERATED-VALUE",
+        )
+        assert (
+            "AGENTIC_MAIL_MCP_GMAIL_TOKEN_ENCRYPTION_KEY=AUTO-GENERATED-VALUE"
+            in env.read_text()
+        )
+
+    def test_user_supplied_key_preserved_and_not_generated(self, tmp_path) -> None:
+        env = tmp_path / ".env"
+        generated = {"called": False}
+
+        def _factory() -> str:
+            generated["called"] = True
+            return "SHOULD-NOT-BE-USED"
+
+        def prompt(text: str) -> str:
+            return "my-own-key" if "Token encryption key" in text else ""
+
+        run_init(prompt=prompt, out=io.StringIO(), env_path=env, key_factory=_factory)
+
+        assert (
+            "AGENTIC_MAIL_MCP_GMAIL_TOKEN_ENCRYPTION_KEY=my-own-key" in env.read_text()
+        )
+        assert generated["called"] is False
+
+
+class TestValidationReprompt:
+    def test_invalid_enum_then_valid(self, tmp_path) -> None:
+        env = tmp_path / ".env"
+        out = io.StringIO()
+        seen = {"n": 0}
+
+        def prompt(text: str) -> str:
+            if "Access level" in text:
+                seen["n"] += 1
+                return "bogus" if seen["n"] == 1 else "read_write"
+            return ""
+
+        code = run_init(prompt=prompt, out=out, env_path=env, key_factory=lambda: "k")
+
+        assert code == 0
+        assert "AGENTIC_MAIL_MCP_RAILGUARDS_ACCESS_LEVEL=read_write" in env.read_text()
+        assert "✗" in out.getvalue()  # the error was surfaced before re-prompting
+
+    def test_non_numeric_port_then_valid(self, tmp_path, monkeypatch) -> None:
+        env = tmp_path / ".env"
+        seen = {"n": 0}
+
+        def prompt(text: str) -> str:
+            if "HTTP transport port" in text:  # specific: avoids matching "Transport"
+                seen["n"] += 1
+                return "not-a-number" if seen["n"] == 1 else "9090"
+            return ""
+
+        code = run_init(
+            prompt=prompt, out=io.StringIO(), env_path=env, key_factory=lambda: "k"
+        )
+
+        assert code == 0
+        assert _load(env, monkeypatch).mcp.port == 9090
+
+
+class TestExistingFile:
+    def test_confirming_overwrite_backs_up(self, tmp_path) -> None:
+        env = tmp_path / ".env"
+        env.write_text("AGENTIC_MAIL_MCP_MCP_PORT=1234\n")
+
+        def prompt(text: str) -> str:
+            return "y" if "Overwrite" in text else ""
+
+        code = run_init(
+            prompt=prompt, out=io.StringIO(), env_path=env, key_factory=lambda: "k"
+        )
+
+        assert code == 0
+        backups = list(tmp_path.glob(".env.bak-*"))
+        assert len(backups) == 1
+        assert "AGENTIC_MAIL_MCP_MCP_PORT=1234" in backups[0].read_text()
+        assert "# Generated by" in env.read_text()
+
+    def test_declining_overwrite_leaves_file_untouched(self, tmp_path) -> None:
+        env = tmp_path / ".env"
+        original = "AGENTIC_MAIL_MCP_MCP_PORT=1234\n"
+        env.write_text(original)
+
+        code = run_init(
+            prompt=lambda text: "n" if "Overwrite" in text else "",
+            out=io.StringIO(),
+            env_path=env,
+            key_factory=lambda: "k",
+        )
+
+        assert code == 1
+        assert env.read_text() == original
+        assert list(tmp_path.glob(".env.bak-*")) == []
+
+
+class TestSerialization:
+    def test_list_and_dict_defaults_round_trip(self, tmp_path, monkeypatch) -> None:
+        env = tmp_path / ".env"
+        run_init(
+            prompt=_accept_defaults,
+            out=io.StringIO(),
+            env_path=env,
+            key_factory=lambda: "k",
+        )
+
+        settings = _load(env, monkeypatch)
+        assert settings.gmail.scopes == ["https://www.googleapis.com/auth/gmail.modify"]
+        assert settings.railguards.rate_limits == {}
+        assert settings.railguards.allowed_recipients == []
+
+    def test_custom_list_is_json_encoded(self, tmp_path, monkeypatch) -> None:
+        env = tmp_path / ".env"
+
+        def prompt(text: str) -> str:
+            if "Allowed forward recipients" in text:
+                return "a@example.com, b@example.com"
+            return ""
+
+        run_init(
+            prompt=prompt, out=io.StringIO(), env_path=env, key_factory=lambda: "k"
+        )
+
+        assert (
+            'AGENTIC_MAIL_MCP_RAILGUARDS_ALLOWED_RECIPIENTS=["a@example.com", "b@example.com"]'
+            in env.read_text()
+        )
+        settings = _load(env, monkeypatch)
+        assert settings.railguards.allowed_recipients == [
+            "a@example.com",
+            "b@example.com",
+        ]

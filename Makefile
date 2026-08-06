@@ -48,6 +48,10 @@ env: ## Create a local .env from .env.example (if missing)
 		cp .env.example .env && echo "Created .env from .env.example — fill in the secrets"; \
 	fi
 
+.PHONY: init
+init: $(STAMP) ## Generate .env interactively (guided config wizard)
+	$(BIN)/agentic-mail-mcp init
+
 .PHONY: setup
 setup: install env migrate ## First-time setup: venv + deps + .env + database schema
 	@echo "Setup complete. Run 'make run' to start the server."
@@ -61,12 +65,12 @@ auth: $(STAMP) ## Authorize Gmail access (one-time browser consent)
 	$(BIN)/agentic-mail-mcp auth
 
 .PHONY: run
-run: $(STAMP) ## Run the MCP server (stdio transport, default)
-	$(BIN)/agentic-mail-mcp
+run: $(STAMP) ## Run the MCP server (stdio transport)
+	$(BIN)/agentic-mail-mcp serve
 
 .PHONY: run-http
 run-http: $(STAMP) ## Run the MCP server over HTTP (host/port from Settings)
-	AGENTIC_MAIL_MCP_MCP_TRANSPORT=http $(BIN)/agentic-mail-mcp
+	AGENTIC_MAIL_MCP_MCP_TRANSPORT=http $(BIN)/agentic-mail-mcp serve
 
 # ---------------------------------------------------------------------------
 # Tests

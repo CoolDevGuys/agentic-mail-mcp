@@ -32,4 +32,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD python -c "import os,socket; s=socket.socket(); s.settimeout(5); s.connect((os.getenv('AGENTIC_MAIL_MCP_MCP_HOST','127.0.0.1'), int(os.getenv('AGENTIC_MAIL_MCP_MCP_PORT','8080')))); s.close()" || exit 1
 
-CMD ["agentic-mail-mcp"]
+CMD ["agentic-mail-mcp", "serve"]

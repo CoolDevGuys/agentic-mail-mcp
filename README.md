@@ -46,10 +46,19 @@ API, make a **Desktop-app OAuth client**, and **download its `credentials.json`*
 Full walkthrough with the exact clicks:
 [Getting your Google credentials 👉](specs/docs/configuration.md#getting-your-google-credentials-oauth).
 
-**3. Configure** — copy `.env.example` to `.env` and point at your downloaded file:
+**3. Configure** — run the guided wizard, which writes a valid `.env` for you
+(and auto-generates the token encryption key):
 
 ```bash
-# Easiest: just point at the credentials.json you downloaded.
+agentic-mail-mcp init
+```
+
+Press Enter to accept each default; point it at the `credentials.json` you
+downloaded when asked. Prefer to do it by hand? Copy `.env.example` to `.env`
+and set at least:
+
+```bash
+# Point at the credentials.json you downloaded.
 AGENTIC_MAIL_MCP_GMAIL_CLIENT_SECRETS_FILE=/path/to/credentials.json
 AGENTIC_MAIL_MCP_GMAIL_TOKEN_ENCRYPTION_KEY=<any long random string>
 # 🔒 Writes are denied by default. Keep read_only until you trust the setup.
@@ -156,7 +165,7 @@ package directly — nothing to install globally:
   "mcpServers": {
     "gmail": {
       "command": "uvx",
-      "args": ["agentic-mail-mcp"],
+      "args": ["agentic-mail-mcp", "serve"],
       "env": {
         "AGENTIC_MAIL_MCP_GMAIL_OAUTH_CLIENT_ID": "...",
         "AGENTIC_MAIL_MCP_GMAIL_OAUTH_CLIENT_SECRET": "...",
@@ -168,7 +177,7 @@ package directly — nothing to install globally:
 }
 ```
 
-> If you installed with `pip`, use `"command": "agentic-mail-mcp"` and drop `args`.
+> If you installed with `pip`, use `"command": "agentic-mail-mcp"`, `"args": ["serve"]`.
 
 The agent then discovers the tools, resources, and prompts described in the
 [MCP API reference](specs/docs/api.md). Start with `read_only` and enable
@@ -180,7 +189,7 @@ Run a standalone streamable-HTTP server:
 
 ```bash
 AGENTIC_MAIL_MCP_MCP_TRANSPORT=http AGENTIC_MAIL_MCP_MCP_HOST=0.0.0.0 AGENTIC_MAIL_MCP_MCP_PORT=8080 \
-  agentic-mail-mcp
+  agentic-mail-mcp serve
 ```
 
 Or with Docker (the compose file already sets HTTP transport and a health check):

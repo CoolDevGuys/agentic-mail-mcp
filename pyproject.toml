@@ -125,10 +125,13 @@ source = ["src"]
 [tool.ruff]
 lint.ignore = ["N999"]
 
-# Pin the project package as first-party so import grouping is deterministic
-# across ruff versions (CI installs from the pinned dev dependency below).
+# Pin import groups explicitly so sorting is deterministic across ruff versions
+# AND across filesystems. On case-insensitive filesystems (macOS) ruff otherwise
+# resolves the third-party `mcp` package to the local `src/MCP/` directory and
+# treats it as first-party, disagreeing with case-sensitive CI (Linux).
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
+known-third-party = ["mcp"]
 
 [tool.mypy]
 ignore_missing_imports = true

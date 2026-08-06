@@ -49,7 +49,11 @@ class TestForwardEmailUseCase:
         bus = InMemoryEventBus()
         uc = ForwardEmailUseCase(gateway, _validator(), repo, bus)
 
-        uc.execute(ForwardEmailCommand(message_id=email.message_id.value, to_address="dest@corp.com"))
+        uc.execute(
+            ForwardEmailCommand(
+                message_id=email.message_id.value, to_address="dest@corp.com"
+            )
+        )
 
         assert len(gateway.sent) == 1
         events = [e for e in bus.published if isinstance(e, EmailForwarded)]
@@ -69,7 +73,11 @@ class TestForwardEmailUseCase:
             InMemoryEventBus(),
         )
         with pytest.raises(PermissionError):
-            uc.execute(ForwardEmailCommand(message_id=email.message_id.value, to_address="x@evil.com"))
+            uc.execute(
+                ForwardEmailCommand(
+                    message_id=email.message_id.value, to_address="x@evil.com"
+                )
+            )
         assert gateway.sent == []
 
     def test_rate_limit_exceeded_denied(self) -> None:
@@ -80,7 +88,9 @@ class TestForwardEmailUseCase:
         uc = ForwardEmailUseCase(
             gateway, _validator(rate_limits={"forward": 1}), repo, InMemoryEventBus()
         )
-        cmd = ForwardEmailCommand(message_id=email.message_id.value, to_address="a@b.com")
+        cmd = ForwardEmailCommand(
+            message_id=email.message_id.value, to_address="a@b.com"
+        )
         uc.execute(cmd)
         with pytest.raises(PermissionError):
             uc.execute(cmd)
@@ -97,7 +107,11 @@ class TestForwardEmailUseCase:
             InMemoryEventBus(),
         )
         with pytest.raises(PermissionError):
-            uc.execute(ForwardEmailCommand(message_id=email.message_id.value, to_address="a@b.com"))
+            uc.execute(
+                ForwardEmailCommand(
+                    message_id=email.message_id.value, to_address="a@b.com"
+                )
+            )
 
 
 class TestArchiveEmailUseCase:
@@ -168,7 +182,9 @@ class TestDeleteEmailUseCase:
             InMemoryEventBus(),
         )
         with pytest.raises(PermissionError):
-            uc.execute(DeleteEmailCommand(message_id=email.message_id.value, permanent=True))
+            uc.execute(
+                DeleteEmailCommand(message_id=email.message_id.value, permanent=True)
+            )
         assert gateway.deleted == []
 
     def test_archive_first_blocks_permanent_delete_of_inbox_email(self) -> None:
@@ -180,7 +196,9 @@ class TestDeleteEmailUseCase:
             gateway, _validator(archive_first_policy=True), repo, InMemoryEventBus()
         )
         with pytest.raises(PermissionError):
-            uc.execute(DeleteEmailCommand(message_id=email.message_id.value, permanent=True))
+            uc.execute(
+                DeleteEmailCommand(message_id=email.message_id.value, permanent=True)
+            )
 
     def test_permanent_delete_of_archived_email_succeeds(self) -> None:
         repo = InMemoryEmailRepository()
@@ -191,7 +209,9 @@ class TestDeleteEmailUseCase:
         uc = DeleteEmailUseCase(
             gateway, _validator(archive_first_policy=True), repo, bus
         )
-        uc.execute(DeleteEmailCommand(message_id=email.message_id.value, permanent=True))
+        uc.execute(
+            DeleteEmailCommand(message_id=email.message_id.value, permanent=True)
+        )
         assert gateway.deleted == ["m1"]
         assert any(isinstance(e, EmailDeleted) for e in bus.published)
 

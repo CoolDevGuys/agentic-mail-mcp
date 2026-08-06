@@ -32,7 +32,9 @@ class TestAddLabelUseCase:
         bus = InMemoryEventBus()
         uc = AddLabelUseCase(gateway, _validator(), repo, bus)
 
-        uc.execute(AddLabelCommand(message_id=email.message_id.value, label_name="Important"))
+        uc.execute(
+            AddLabelCommand(message_id=email.message_id.value, label_name="Important")
+        )
 
         assert gateway.modify_calls == [("m1", ["Important"], [])]
         events = [e for e in bus.published if isinstance(e, EmailLabeled)]
@@ -49,7 +51,11 @@ class TestAddLabelUseCase:
         uc = AddLabelUseCase(gateway, _validator("read_only"), repo, bus)
 
         with pytest.raises(PermissionError):
-            uc.execute(AddLabelCommand(message_id=email.message_id.value, label_name="Important"))
+            uc.execute(
+                AddLabelCommand(
+                    message_id=email.message_id.value, label_name="Important"
+                )
+            )
 
         assert gateway.modify_calls == []
         assert bus.published == []
@@ -76,6 +82,8 @@ class TestAddLabelUseCase:
         uc = AddLabelUseCase(FailingGateway(), _validator(), repo, bus)
 
         with pytest.raises(RuntimeError):
-            uc.execute(AddLabelCommand(message_id=email.message_id.value, label_name="X"))
+            uc.execute(
+                AddLabelCommand(message_id=email.message_id.value, label_name="X")
+            )
 
         assert bus.published == []

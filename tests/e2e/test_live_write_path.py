@@ -58,7 +58,9 @@ async def test_live_write_path() -> None:
         build_oauth_provider(base).load_credentials()
     )
     account = gateway._service.users().getProfile(userId="me").execute()["emailAddress"]
-    server = create_server(use_cases=build_use_cases(settings, gateway=gateway), settings=settings)
+    server = create_server(
+        use_cases=build_use_cases(settings, gateway=gateway), settings=settings
+    )
 
     async def call(name, args):
         return _tool_json(await server.call_tool(name, args))
@@ -69,7 +71,10 @@ async def test_live_write_path() -> None:
 
     try:
         # 1. create_draft -> send_draft (produces our own test message)
-        draft = await call("create_draft", {"to": account, "subject": subject, "body": "write-path test"})
+        draft = await call(
+            "create_draft",
+            {"to": account, "subject": subject, "body": "write-path test"},
+        )
         assert "error" not in draft, draft
         sent = await call("send_draft", {"draft_id": draft["draft_id"]})
         assert "error" not in sent, sent

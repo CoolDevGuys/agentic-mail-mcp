@@ -129,7 +129,9 @@ class TestBringYourOwnClientConfig:
 
         assert config["installed"]["client_id"].startswith("abc")
 
-    def test_from_downloaded_credentials_file(self, settings, tmp_path, monkeypatch) -> None:
+    def test_from_downloaded_credentials_file(
+        self, settings, tmp_path, monkeypatch
+    ) -> None:
         import json
 
         from src.Bootstrap.Composition import resolve_client_config
@@ -144,7 +146,9 @@ class TestBringYourOwnClientConfig:
 
         assert config["installed"]["client_id"] == "xyz"
 
-    def test_file_takes_precedence_over_id_secret(self, settings, tmp_path, monkeypatch) -> None:
+    def test_file_takes_precedence_over_id_secret(
+        self, settings, tmp_path, monkeypatch
+    ) -> None:
         import json
 
         from src.Bootstrap.Composition import resolve_client_config

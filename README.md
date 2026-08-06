@@ -123,6 +123,14 @@ Set environment variables with the `AGENTIC_MAIL_MCP_` prefix, or use a `.env` f
 with defaults and purpose — and the **Google OAuth walkthrough** — is in
 [`specs/docs/configuration.md`](specs/docs/configuration.md).
 
+> ℹ️ **`.env` is optional** — it's just a carrier for these variables, read from
+> the server's working directory. Env vars take precedence. **How you deliver
+> config differs by transport**: for **stdio** the MCP client launches the server
+> (put vars in its `env` block; a project `.env` usually isn't seen), while for
+> **HTTP** you launch it yourself (a `.env` or exported vars both work). Full
+> walkthrough:
+> [Configuration workflows: stdio vs HTTP](specs/docs/configuration.md#configuration-workflows-stdio-vs-http).
+
 | Variable | Description | Default |
 |---|---|---|
 | `AGENTIC_MAIL_MCP_GMAIL_CLIENT_SECRETS_FILE` | Path to your downloaded `credentials.json` (recommended) | (one of these two) |
@@ -178,6 +186,11 @@ package directly — nothing to install globally:
 ```
 
 > If you installed with `pip`, use `"command": "agentic-mail-mcp"`, `"args": ["serve"]`.
+
+> 💡 **Prefer a file over inline vars?** Run `agentic-mail-mcp init` to create a
+> `.env`, then point the server at it and leave `env` empty:
+> `"args": ["agentic-mail-mcp", "serve", "--env-file", "/abs/path/.env"]`. See
+> [Configuration workflows](specs/docs/configuration.md#configuration-workflows-stdio-vs-http).
 
 The agent then discovers the tools, resources, and prompts described in the
 [MCP API reference](specs/docs/api.md). Start with `read_only` and enable

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 import pytest
 
 from agentic_mail_mcp.Bootstrap import cli
@@ -145,7 +147,7 @@ class TestArgparse:
     def test_init_command_dispatches(self, monkeypatch) -> None:
         called = {}
 
-        def fake_init() -> int:
+        def fake_init(*, env_path) -> int:
             called["init"] = True
             return 0
 
@@ -174,3 +176,70 @@ class TestArgparse:
         cli.main()
 
         assert called == {"auth": True}
+
+
+class TestEnvFile:
+    def test_missing_env_file_exits(self, tmp_path) -> None:
+        with pytest.raises(SystemExit) as exc:
+            cli._load_env_file(str(tmp_path / "nope.env"))
+        assert exc.value.code == 1
+
+    def test_load_env_file_populates_environment(self, tmp_path) -> None:
+        f = tmp_path / "custom.env"
+        f.write_text("AGENTIC_MAIL_MCP_MCP_PORT=7799\n")
+        try:
+            cli._load_env_file(str(f))
+            assert os.environ.get("AGENTIC_MAIL_MCP_MCP_PORT") == "7799"
+        finally:
+            os.environ.pop("AGENTIC_MAIL_MCP_MCP_PORT", None)
+
+    def test_serve_loads_env_file_into_settings(self, tmp_path, monkeypatch) -> None:
+        f = tmp_path / "s.env"
+        f.write_text("AGENTIC_MAIL_MCP_MCP_PORT=7799\n")
+        captured = {}
+        monkeypatch.setattr(
+            cli.sys, "argv", ["agentic-mail-mcp", "serve", "--env-file", str(f)]
+        )
+        monkeypatch.setattr(
+            cli, "_serve", lambda settings: captured.setdefault("s", settings)
+        )
+        monkeypatch.setattr(cli, "setup_logging", lambda **kwargs: None)
+        try:
+            cli.main()
+            assert captured["s"].mcp.port == 7799
+        finally:
+            os.environ.pop("AGENTIC_MAIL_MCP_MCP_PORT", None)
+
+    def test_env_file_from_environment_variable(self, tmp_path, monkeypatch) -> None:
+        f = tmp_path / "e.env"
+        f.write_text("AGENTIC_MAIL_MCP_MCP_PORT=7788\n")
+        captured = {}
+        monkeypatch.setenv("AGENTIC_MAIL_MCP_ENV_FILE", str(f))
+        monkeypatch.setattr(cli.sys, "argv", ["agentic-mail-mcp", "serve"])
+        monkeypatch.setattr(
+            cli, "_serve", lambda settings: captured.setdefault("s", settings)
+        )
+        monkeypatch.setattr(cli, "setup_logging", lambda **kwargs: None)
+        try:
+            cli.main()
+            assert captured["s"].mcp.port == 7788
+        finally:
+            os.environ.pop("AGENTIC_MAIL_MCP_MCP_PORT", None)
+
+    def test_init_env_file_sets_output_path(self, monkeypatch) -> None:
+        captured = {}
+
+        def fake_init(*, env_path) -> int:
+            captured["path"] = env_path
+            return 0
+
+        monkeypatch.setattr(
+            cli.sys, "argv", ["agentic-mail-mcp", "init", "--env-file", "/tmp/out.env"]
+        )
+        monkeypatch.setattr(cli, "run_init", fake_init)
+
+        with pytest.raises(SystemExit) as exc:
+            cli.main()
+
+        assert exc.value.code == 0
+        assert str(captured["path"]) == "/tmp/out.env"

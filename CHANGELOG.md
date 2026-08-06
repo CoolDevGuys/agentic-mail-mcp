@@ -6,17 +6,17 @@ All notable changes to this project will be documented in this file.
 
 ### ⚠ Breaking
 
-- **Railguards default is now read-only** (Phase 6): `railguards.access_level` defaults to `read_only` (was `owner`), so all write operations (forward/archive/delete/draft) are denied until a deployment sets `GMAIL_MCP_RAILGUARDS_ACCESS_LEVEL=read_write`.
+- **Railguards default is now read-only** (Phase 6): `railguards.access_level` defaults to `read_only` (was `owner`), so all write operations (forward/archive/delete/draft) are denied until a deployment sets `AGENTIC_MAIL_MCP_RAILGUARDS_ACCESS_LEVEL=read_write`.
 
 ### Fixed
 
 - **Environment-variable configuration now works** (Phase 8): the `Settings`
   sub-sections (`gmail`, `database`, `railguards`, `mcp`, `llm`, `search`,
-  `notifications`, `logging`) previously ignored their `GMAIL_MCP_<SECTION>_<FIELD>`
+  `notifications`, `logging`) previously ignored their `AGENTIC_MAIL_MCP_<SECTION>_<FIELD>`
   environment variables and always used defaults. Each section now carries its
   own env prefix, so documented variables such as
-  `GMAIL_MCP_RAILGUARDS_ACCESS_LEVEL`, `GMAIL_MCP_MCP_TRANSPORT`, and
-  `GMAIL_MCP_DATABASE_URL` take effect — required for pip/Docker deployments to
+  `AGENTIC_MAIL_MCP_RAILGUARDS_ACCESS_LEVEL`, `AGENTIC_MAIL_MCP_MCP_TRANSPORT`, and
+  `AGENTIC_MAIL_MCP_DATABASE_URL` take effect — required for pip/Docker deployments to
   be configurable.
 
 ### Changed
@@ -27,13 +27,13 @@ All notable changes to this project will be documented in this file.
   runs — no server-side inference, no added latency, and **no LLM key required**
   for the core experience. Internal LLM inference is reserved for the digest tools
   (map-reduce over many emails), which register only when an LLM is configured;
-  set `GMAIL_MCP_LLM_INTERNAL_TOOLS=true` to also expose the per-email tools
+  set `AGENTIC_MAIL_MCP_LLM_INTERNAL_TOOLS=true` to also expose the per-email tools
   server-side. Embeddings for semantic search remain internal.
 
 ### Added
 
 - **Live write-path smoke test** (`tests/e2e/test_live_write_path.py`, opt-in via
-  `GMAIL_MCP_LIVE_WRITE_E2E=1`). Self-contained and safe: it creates its own
+  `AGENTIC_MAIL_MCP_LIVE_WRITE_E2E=1`). Self-contained and safe: it creates its own
   throwaway message and exercises `create_draft` → `send_draft` → `add_label` →
   `forward_email` (to self) → `archive_email` → `delete_email`, then trashes its
   own artifacts. Verified green against a real account. Documented finding:
@@ -42,7 +42,7 @@ All notable changes to this project will be documented in this file.
   `STARRED`), not arbitrary user-label names.
 - **Bring-your-own Google app** ([ADR 0008](specs/docs/adr/0008-bring-your-own-google-app.md)).
   The server is a local, bring-your-own-credentials tool — no central app, no
-  Google verification. Point `GMAIL_MCP_GMAIL_CLIENT_SECRETS_FILE` at the
+  Google verification. Point `AGENTIC_MAIL_MCP_GMAIL_CLIENT_SECRETS_FILE` at the
   `credentials.json` you download from your own Google Cloud project (or set the
   client id/secret directly); credentials and token stay on your machine. Docs
   now cover the full self-service Google setup, the unverified-app screen, and
@@ -51,28 +51,28 @@ All notable changes to this project will be documented in this file.
   Gmail is the source of truth; local persistence is a `CachedEmailRepository`, not
   a mirror: single-email reads are live (fresh, full body), the SQLite cache stores
   **metadata only — never bodies**, list views are served within a TTL
-  (`GMAIL_MCP_DATABASE_CACHE_TTL_SECONDS`, default 900s), and emails gone from the
+  (`AGENTIC_MAIL_MCP_DATABASE_CACHE_TTL_SECONDS`, default 900s), and emails gone from the
   server are evicted (no sync engine, no delete-propagation). Tools now identify an
   email by its Gmail **`message_id`** end to end (write commands carry `message_id`;
   the internal UUID is an implementation detail). The Gmail→domain mapper extracts
   bare addresses from display-name headers (`"Name <a@b.com>"`) instead of failing.
 - **Runtime composition root + auth** (makes the server usable end to end)
-  - `src/Bootstrap/Composition.py` assembles every use case from `Settings` —
+  - `agentic_mail_mcp/Bootstrap/Composition.py` assembles every use case from `Settings` —
     SQLite persistence (schema applied via Alembic), a lazy OAuth-backed Gmail
     gateway, railguard validator, event bus, LLM gateway, and optional semantic
     search — into the `McpUseCases` bundle the server registers. The launched
-    `gmail-mcp-server` now exposes its tools (previously zero).
+    `agentic-mail-mcp` now exposes its tools (previously zero).
   - `LazyGmailGateway` builds the authenticated Gmail client on first use, so
     tools register at startup and calls before authorization return a clear
-    "run `gmail-mcp-server auth`" error.
-  - `gmail-mcp-server auth` subcommand performs the one-time interactive Google
+    "run `agentic-mail-mcp auth`" error.
+  - `agentic-mail-mcp auth` subcommand performs the one-time interactive Google
     authorization and stores the encrypted token (`make auth`).
   - Semantic search degrades gracefully: `semantic_search` is registered only
     when the `search` extra (sentence-transformers + sqlite-vec) is installed.
 - **Distribution and polish** (Phase 8)
   - `LICENSE` (MIT); `pyproject.toml` distribution metadata (`readme`,
     `project.urls`, `license-files`) and a scoped sdist target producing a clean
-    source distribution + wheel with the `gmail-mcp-server` entry point
+    source distribution + wheel with the `agentic-mail-mcp` entry point
   - `specs/docs/api.md` — the MCP tool/resource/prompt reference with input
     schemas, output shapes, and the structured error format
   - Architecture ADRs `0002`–`0005` (DDD + vertical slicing, SQLite/PostgreSQL
@@ -84,10 +84,10 @@ All notable changes to this project will be documented in this file.
   - End-to-end MCP session tests (`tests/e2e/`) covering the read/write tool
     flow, railguard enforcement, and a container health-check smoke test
   - Removed the superseded pre-DDD `main.py` / `server.py` skeletons from the
-    repo root (replaced by `src/MCP/Server.py` and `src/Bootstrap/cli.py`)
+    repo root (replaced by `agentic_mail_mcp/MCP/Server.py` and `agentic_mail_mcp/Bootstrap/cli.py`)
 
 - **MCP server layer** (Phase 7)
-  - `create_server` bootstrap that assembles the server from the dependency container and integrates the application lifespan; configurable transport (`stdio` default, streamable HTTP) via `Settings.mcp.transport`; the `gmail-mcp-server` console entry point launches it
+  - `create_server` bootstrap that assembles the server from the dependency container and integrates the application lifespan; configurable transport (`stdio` default, streamable HTTP) via `Settings.mcp.transport`; the `agentic-mail-mcp` console entry point launches it
   - `ToolRegistry` with category-grouped tools (read/write/intelligence/search) and JSON-Schema input schemas; **defense-in-depth**: write-category tools are not registered when `railguards.access_level` is `read_only`, so they are never exposed to the agent
   - Read tools: `search_emails`, `get_email`, `get_thread`, `list_unread`, `list_labels`
   - Write tools (railguarded): `forward_email`, `archive_email`, `delete_email`, `create_draft`, `send_draft`, `add_label`
@@ -125,7 +125,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - `EventBus` is now generic over concrete event types: handlers are registered and dispatched by the event's exact type, so domain events are no longer required to inherit `DomainEvent` (it remains an optional base for standard metadata).
-- **Database default is now a synchronous SQLite driver** (`sqlite:///…`) to match the synchronous repository ports (Phase 5). Set `GMAIL_MCP_DATABASE_URL` to a `postgresql+psycopg2://…` URL for PostgreSQL.
+- **Database default is now a synchronous SQLite driver** (`sqlite:///…`) to match the synchronous repository ports (Phase 5). Set `AGENTIC_MAIL_MCP_DATABASE_URL` to a `postgresql+psycopg2://…` URL for PostgreSQL.
 
 ### Added (Phase 5 — Infrastructure Adapters)
 

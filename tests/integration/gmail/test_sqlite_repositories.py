@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import pytest
 
-from src.Common.Infrastructure.Persistence.database import (
+from agentic_mail_mcp.Common.Infrastructure.Persistence.database import (
     create_all,
     create_database_engine,
     create_session_factory,
 )
-from src.Gmail.Infrastructure.Persistence.SqlAlchemy.Repositories.sqlite_email_repository import (
+from agentic_mail_mcp.Gmail.Infrastructure.Persistence.SqlAlchemy.Repositories.sqlite_email_repository import (
     SqliteEmailRepository,
 )
-from src.Gmail.Infrastructure.Persistence.SqlAlchemy.Repositories.sqlite_thread_repository import (
+from agentic_mail_mcp.Gmail.Infrastructure.Persistence.SqlAlchemy.Repositories.sqlite_thread_repository import (
     SqliteThreadRepository,
 )
 from tests.integration.gmail.repository_contract import (

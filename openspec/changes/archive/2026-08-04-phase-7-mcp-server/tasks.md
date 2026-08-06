@@ -3,7 +3,7 @@
 - [x] 1.1 Implement `MCP/Server.py`: `create_server(container)` assembling the server from the DI container and resolving settings/services
 - [x] 1.2 Wire configurable transport — `stdio` default, HTTP when `Settings.mcp` provides host/port — isolating all `mcp`-library calls in this module
 - [x] 1.3 Integrate `Bootstrap/Lifespan.py` so startup/shutdown hooks run around the server lifecycle
-- [x] 1.4 Point the `gmail-mcp-server` console entry point at the server launch
+- [x] 1.4 Point the `agentic-mail-mcp` console entry point at the server launch
 - [x] 1.5 Write tests: server builds from container, starts/stops cleanly, default transport is stdio, HTTP selected when configured
 
 ## 2. Tool Registry with Access-Level Gating (7.2)

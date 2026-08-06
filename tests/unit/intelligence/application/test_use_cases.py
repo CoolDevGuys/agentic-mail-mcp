@@ -5,28 +5,34 @@ from datetime import UTC, datetime
 
 import pytest
 
-from src.Common.Domain.Events import InMemoryEventBus
-from src.Common.Domain.Exceptions import NotFoundError, ValidationError
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Common.Infrastructure.Clock import FrozenClock
-from src.Common.Infrastructure.IdGenerator import UuidIdGenerator
-from src.Gmail.Domain.Entities.email import Email
-from src.Intelligence.Application.DTO.dtos import (
+from agentic_mail_mcp.Common.Domain.Events import InMemoryEventBus
+from agentic_mail_mcp.Common.Domain.Exceptions import NotFoundError, ValidationError
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Common.Infrastructure.Clock import FrozenClock
+from agentic_mail_mcp.Common.Infrastructure.IdGenerator import UuidIdGenerator
+from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
+from agentic_mail_mcp.Intelligence.Application.DTO.dtos import (
     ClassificationDTO,
     SuggestionDTO,
     SummaryDTO,
 )
-from src.Intelligence.Application.UseCases.classify_email import ClassifyEmailUseCase
-from src.Intelligence.Application.UseCases.digest import (
+from agentic_mail_mcp.Intelligence.Application.UseCases.classify_email import (
+    ClassifyEmailUseCase,
+)
+from agentic_mail_mcp.Intelligence.Application.UseCases.digest import (
     DailyDigestUseCase,
     WeeklyDigestUseCase,
 )
-from src.Intelligence.Application.UseCases.extract_action_items import (
+from agentic_mail_mcp.Intelligence.Application.UseCases.extract_action_items import (
     ExtractActionItemsUseCase,
 )
-from src.Intelligence.Application.UseCases.suggest_reply import SuggestReplyUseCase
-from src.Intelligence.Application.UseCases.summarize_email import SummarizeEmailUseCase
-from src.Notification.Domain.Events.digest_ready import DigestReady
+from agentic_mail_mcp.Intelligence.Application.UseCases.suggest_reply import (
+    SuggestReplyUseCase,
+)
+from agentic_mail_mcp.Intelligence.Application.UseCases.summarize_email import (
+    SummarizeEmailUseCase,
+)
+from agentic_mail_mcp.Notification.Domain.Events.digest_ready import DigestReady
 from tests.fakes.ports import (
     InMemoryClassificationRepository,
     InMemoryEmailRepository,

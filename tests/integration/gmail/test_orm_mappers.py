@@ -4,18 +4,18 @@ from datetime import UTC, datetime
 
 import pytest
 
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Common.Infrastructure.Persistence.database import (
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Common.Infrastructure.Persistence.database import (
     create_all,
     create_database_engine,
     create_session_factory,
 )
-from src.Gmail.Domain.Entities.attachment import Attachment
-from src.Gmail.Domain.Entities.email import Email
-from src.Gmail.Domain.Entities.label import Label
-from src.Gmail.Domain.Entities.thread import Thread
-from src.Gmail.Domain.ValueObjects import GmailMessageId, ThreadId
-from src.Gmail.Infrastructure.Persistence.SqlAlchemy.Mappers.orm_mappers import (
+from agentic_mail_mcp.Gmail.Domain.Entities.attachment import Attachment
+from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
+from agentic_mail_mcp.Gmail.Domain.Entities.label import Label
+from agentic_mail_mcp.Gmail.Domain.Entities.thread import Thread
+from agentic_mail_mcp.Gmail.Domain.ValueObjects import GmailMessageId, ThreadId
+from agentic_mail_mcp.Gmail.Infrastructure.Persistence.SqlAlchemy.Mappers.orm_mappers import (
     AttachmentOrmMapper,
     EmailOrmMapper,
     LabelOrmMapper,
@@ -49,7 +49,7 @@ class TestEmailOrmMapper:
             session.commit()
 
         with session_factory() as session:
-            from src.Gmail.Infrastructure.Persistence.SqlAlchemy.Models.models import (
+            from agentic_mail_mcp.Gmail.Infrastructure.Persistence.SqlAlchemy.Models.models import (
                 EmailModel,
             )
 
@@ -93,7 +93,7 @@ class TestThreadOrmMapper:
             session.commit()
 
         with session_factory() as session:
-            from src.Gmail.Infrastructure.Persistence.SqlAlchemy.Models.models import (
+            from agentic_mail_mcp.Gmail.Infrastructure.Persistence.SqlAlchemy.Models.models import (
                 ThreadModel,
             )
 

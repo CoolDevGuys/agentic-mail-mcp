@@ -4,9 +4,9 @@ import json
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from src.Gmail.Domain.Entities.email import Email
-from src.MCP.errors import INVALID_INPUT, NOT_FOUND
-from src.MCP.Tools.intelligence_tools import build_intelligence_tools
+from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
+from agentic_mail_mcp.MCP.errors import INVALID_INPUT, NOT_FOUND
+from agentic_mail_mcp.MCP.Tools.intelligence_tools import build_intelligence_tools
 
 from .conftest import make_env
 

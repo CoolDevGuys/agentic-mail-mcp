@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from src.Bootstrap.Settings import RailguardsConfig
-from src.Common.Domain.Exceptions import ValidationError
-from src.Common.Railguards.config import READ_ONLY, RailguardConfig
+from agentic_mail_mcp.Bootstrap.Settings import RailguardsConfig
+from agentic_mail_mcp.Common.Domain.Exceptions import ValidationError
+from agentic_mail_mcp.Common.Railguards.config import READ_ONLY, RailguardConfig
 
 
 class TestRailguardConfig:

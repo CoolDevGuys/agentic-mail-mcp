@@ -4,10 +4,13 @@ from datetime import UTC, datetime
 
 import pytest
 
-from src.Common.Domain.Exceptions import PermissionError
-from src.Common.Infrastructure.Clock import FrozenClock
-from src.Common.Railguards.config import RailguardConfig
-from src.Common.Railguards.validator import RailguardRequest, RailguardValidator
+from agentic_mail_mcp.Common.Domain.Exceptions import PermissionError
+from agentic_mail_mcp.Common.Infrastructure.Clock import FrozenClock
+from agentic_mail_mcp.Common.Railguards.config import RailguardConfig
+from agentic_mail_mcp.Common.Railguards.validator import (
+    RailguardRequest,
+    RailguardValidator,
+)
 
 
 def _rw(**kw) -> RailguardConfig:

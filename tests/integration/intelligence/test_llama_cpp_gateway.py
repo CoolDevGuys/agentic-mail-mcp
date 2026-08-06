@@ -4,9 +4,9 @@ import httpx
 import pytest
 import respx
 
-from src.Common.Domain.Exceptions import DomainError
-from src.Intelligence.Domain.Gateway.llm_gateway import LlmResponse
-from src.Intelligence.Infrastructure.LlamaCpp.llama_cpp_gateway import (
+from agentic_mail_mcp.Common.Domain.Exceptions import DomainError
+from agentic_mail_mcp.Intelligence.Domain.Gateway.llm_gateway import LlmResponse
+from agentic_mail_mcp.Intelligence.Infrastructure.LlamaCpp.llama_cpp_gateway import (
     LlamaCppGateway,
 )
 

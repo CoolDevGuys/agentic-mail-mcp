@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from src.Common.Domain.Exceptions import DomainError
-from src.Gmail.Infrastructure.Google.lazy_gateway import LazyGmailGateway
+from agentic_mail_mcp.Common.Domain.Exceptions import DomainError
+from agentic_mail_mcp.Gmail.Infrastructure.Google.lazy_gateway import LazyGmailGateway
 from tests.fakes.ports import StubGmailGateway
 
 
@@ -27,7 +27,7 @@ class TestLazyGmailGateway:
         with pytest.raises(DomainError) as exc:
             gw.list_labels()
 
-        assert "gmail-mcp-server auth" in str(exc.value)
+        assert "agentic-mail-mcp auth" in str(exc.value)
 
     def test_builds_and_delegates_when_authorized(self) -> None:
         stub = StubGmailGateway()

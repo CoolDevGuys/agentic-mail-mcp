@@ -4,9 +4,9 @@ from datetime import UTC, datetime
 
 import pytest
 
-from src.Common.Domain.Exceptions import ValidationError
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Notification.Domain.Events import (
+from agentic_mail_mcp.Common.Domain.Exceptions import ValidationError
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Notification.Domain.Events import (
     DigestReady,
     ImportantEmailDetected,
     InboxChanged,

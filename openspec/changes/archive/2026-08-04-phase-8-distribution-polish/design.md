@@ -28,7 +28,7 @@ The plan lists ADR topics as "0001–0004", but `0001` is already taken by a rea
 The builder stage installs build deps and produces a wheel; the runtime stage is `python:3.11-slim`, copies and installs only the wheel, runs as a non-root user, and keeps the health check. This shrinks the image and removes build toolchain from the runtime. Multi-arch (amd64/arm64) is expressed via `docker buildx` documented in the README — the Dockerfile itself stays arch-agnostic. This modifies the existing `docker` capability (base image, non-root, health check, compose services all stay; the staging and multi-arch requirements are added/strengthened).
 
 **4. Health check probes the MCP port only when HTTP transport is enabled.**
-stdio is the default transport and has no port to probe. The container health check targets the HTTP transport (the deployment mode where a container is actually useful); the README documents that the health check assumes `GMAIL_MCP_MCP_TRANSPORT=http`. This keeps the existing `docker` "Health check" requirement satisfiable rather than aspirational.
+stdio is the default transport and has no port to probe. The container health check targets the HTTP transport (the deployment mode where a container is actually useful); the README documents that the health check assumes `AGENTIC_MAIL_MCP_MCP_TRANSPORT=http`. This keeps the existing `docker` "Health check" requirement satisfiable rather than aspirational.
 
 **5. E2E tests drive the real `MCPServer` with a mocked Gmail transport.**
 The E2E suite builds the server via `create_server` with an `McpUseCases` bundle wired to the real use cases but a mocked Gmail API (`pytest-httpserver`, already a dev dep, or the existing gateway fakes at the seam), then calls tools through the server's `call_tool` and asserts the flow: search → get → forward/archive/delete, plus that write tools are absent/denied under `read_only`. A separate, optionally-skipped test builds the image and asserts the container starts and its health check passes. This becomes the new `e2e-tests` capability; unit/integration coverage floors are unchanged.
@@ -37,7 +37,7 @@ The E2E suite builds the server via `create_server` with an `McpUseCases` bundle
 `token.json` and `credentials.json` are removed from the working tree and added to `.gitignore` alongside the default token-storage path. The proposal flags that these were committed; purging them from **git history** is called out as a follow-up the human must decide on (history rewrite is out of scope for an automated change), but they are removed going forward and can no longer be re-added.
 
 **7. `main.py` / `server.py` are deleted, not archived, unless they hold reference value.**
-Both are superseded by `MCP/Server.py` + `Bootstrap/cli.py`. Default is removal; if either contains a useful usage example it moves to `examples/legacy/`. The `gmail-mcp-server` entry point is already the real one, so nothing depends on them.
+Both are superseded by `MCP/Server.py` + `Bootstrap/cli.py`. Default is removal; if either contains a useful usage example it moves to `examples/legacy/`. The `agentic-mail-mcp` entry point is already the real one, so nothing depends on them.
 
 ## Risks / Trade-offs
 

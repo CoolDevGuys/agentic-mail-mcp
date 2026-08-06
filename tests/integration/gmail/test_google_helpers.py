@@ -4,11 +4,13 @@ import base64
 
 import pytest
 
-from src.Common.Domain.Exceptions import DomainError
-from src.Gmail.Infrastructure.Google.message_parser import to_gmail_message
-from src.Gmail.Infrastructure.Google.oauth_provider import GmailOAuthProvider
-from src.Gmail.Infrastructure.Google.rate_limiter import RateLimiter
-from src.Gmail.Infrastructure.Google.retry import retry_on_transient
+from agentic_mail_mcp.Common.Domain.Exceptions import DomainError
+from agentic_mail_mcp.Gmail.Infrastructure.Google.message_parser import to_gmail_message
+from agentic_mail_mcp.Gmail.Infrastructure.Google.oauth_provider import (
+    GmailOAuthProvider,
+)
+from agentic_mail_mcp.Gmail.Infrastructure.Google.rate_limiter import RateLimiter
+from agentic_mail_mcp.Gmail.Infrastructure.Google.retry import retry_on_transient
 from tests.integration.gmail.fake_gmail_service import FakeHttpError
 
 

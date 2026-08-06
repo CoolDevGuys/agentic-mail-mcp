@@ -25,7 +25,7 @@ Top-level directories represent **bounded contexts**, not technical layers.
 Example:
 
 ```text
-src/
+agentic_mail_mcp/
 
     Billing/
 

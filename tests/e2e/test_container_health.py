@@ -2,7 +2,7 @@
 
 Builds the image, starts the container in HTTP-transport mode, and waits for the
 Docker health check to report ``healthy``. Skipped when Docker is unavailable;
-also opt-in (set ``GMAIL_MCP_DOCKER_E2E=1``) so the default suite stays fast and
+also opt-in (set ``AGENTIC_MAIL_MCP_DOCKER_E2E=1``) so the default suite stays fast and
 does not build an image on every run.
 """
 
@@ -19,7 +19,7 @@ import pytest
 
 pytestmark = pytest.mark.e2e
 
-_IMAGE = "gmail-mcp-server:e2e-health"
+_IMAGE = "agentic-mail-mcp:e2e-health"
 
 
 def _docker_available() -> bool:
@@ -34,8 +34,8 @@ def _docker_available() -> bool:
 
 
 requires_docker = pytest.mark.skipif(
-    not os.getenv("GMAIL_MCP_DOCKER_E2E") or not _docker_available(),
-    reason="Docker not available or GMAIL_MCP_DOCKER_E2E not set",
+    not os.getenv("AGENTIC_MAIL_MCP_DOCKER_E2E") or not _docker_available(),
+    reason="Docker not available or AGENTIC_MAIL_MCP_DOCKER_E2E not set",
 )
 
 
@@ -49,7 +49,7 @@ def test_container_starts_and_reports_healthy() -> None:
     build = _run(["docker", "build", "-t", _IMAGE, repo_root])
     assert build.returncode == 0, build.stderr
 
-    name = f"gmail-mcp-e2e-{uuid.uuid4().hex[:8]}"
+    name = f"agentic-mail-mcp-e2e-{uuid.uuid4().hex[:8]}"
     run = _run(
         [
             "docker",
@@ -58,11 +58,11 @@ def test_container_starts_and_reports_healthy() -> None:
             "--name",
             name,
             "-e",
-            "GMAIL_MCP_MCP_TRANSPORT=http",
+            "AGENTIC_MAIL_MCP_MCP_TRANSPORT=http",
             "-e",
-            "GMAIL_MCP_MCP_HOST=0.0.0.0",
+            "AGENTIC_MAIL_MCP_MCP_HOST=0.0.0.0",
             "-e",
-            "GMAIL_MCP_MCP_PORT=8080",
+            "AGENTIC_MAIL_MCP_MCP_PORT=8080",
             _IMAGE,
         ]
     )

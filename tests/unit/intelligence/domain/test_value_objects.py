@@ -4,8 +4,11 @@ import dataclasses
 
 import pytest
 
-from src.Common.Domain.Exceptions import ValidationError
-from src.Intelligence.Domain.ValueObjects import ModelConfig, PromptTemplate
+from agentic_mail_mcp.Common.Domain.Exceptions import ValidationError
+from agentic_mail_mcp.Intelligence.Domain.ValueObjects import (
+    ModelConfig,
+    PromptTemplate,
+)
 
 
 class TestPromptTemplate:

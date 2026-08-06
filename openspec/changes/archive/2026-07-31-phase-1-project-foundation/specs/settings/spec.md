@@ -15,10 +15,10 @@ The Settings class SHALL define sections: gmail (OAuth client ID/secret, scopes,
 - **THEN** gmail, database, railguards, mcp, llm, and notifications sections exist
 
 ### Requirement: Environment variable support
-The Settings class SHALL support loading from .env files and environment variables prefixed with GMAIL_MCP_.
+The Settings class SHALL support loading from .env files and environment variables prefixed with AGENTIC_MAIL_MCP_.
 
 #### Scenario: ENV vars override defaults
-- **WHEN** GMAIL_MCP_DATABASE_URL is set
+- **WHEN** AGENTIC_MAIL_MCP_DATABASE_URL is set
 - **THEN** Settings.database.url reflects the environment value
 
 ### Requirement: Factory method

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.MCP.Resources import (
+from agentic_mail_mcp.MCP.Resources import (
     ACCOUNT_URI,
     INDEX_URI,
     WATCH_URI,

@@ -4,8 +4,10 @@ import json
 
 import pytest
 
-from src.Common.Domain.Exceptions import DomainError
-from src.Gmail.Infrastructure.Google.oauth_provider import GmailOAuthProvider
+from agentic_mail_mcp.Common.Domain.Exceptions import DomainError
+from agentic_mail_mcp.Gmail.Infrastructure.Google.oauth_provider import (
+    GmailOAuthProvider,
+)
 
 _CLIENT_CONFIG = {"installed": {"client_id": "id", "client_secret": "s"}}
 

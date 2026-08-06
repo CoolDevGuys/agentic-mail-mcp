@@ -1,8 +1,12 @@
 from __future__ import annotations
 
-from src.Gmail.Domain.Events import EmailArchived, EmailForwarded, EmailLabeled
-from src.MCP.errors import NOT_FOUND, PERMISSION_DENIED
-from src.MCP.Tools.write_tools import build_write_tools
+from agentic_mail_mcp.Gmail.Domain.Events import (
+    EmailArchived,
+    EmailForwarded,
+    EmailLabeled,
+)
+from agentic_mail_mcp.MCP.errors import NOT_FOUND, PERMISSION_DENIED
+from agentic_mail_mcp.MCP.Tools.write_tools import build_write_tools
 
 from .conftest import make_env
 

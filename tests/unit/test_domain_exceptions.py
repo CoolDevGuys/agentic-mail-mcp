@@ -1,4 +1,4 @@
-from src.Common.Domain.Exceptions import (
+from agentic_mail_mcp.Common.Domain.Exceptions import (
     ConcurrencyError,
     DomainError,
     NotFoundError,

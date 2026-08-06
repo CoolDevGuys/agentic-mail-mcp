@@ -2,8 +2,8 @@ from datetime import date
 
 import pytest
 
-from src.Common.Domain.Exceptions import ValidationError
-from src.Gmail.Domain.ValueObjects.gmail_query import GmailQuery
+from agentic_mail_mcp.Common.Domain.Exceptions import ValidationError
+from agentic_mail_mcp.Gmail.Domain.ValueObjects.gmail_query import GmailQuery
 
 
 class TestGmailQueryCreation:

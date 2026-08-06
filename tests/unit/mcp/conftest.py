@@ -11,34 +11,51 @@ from dataclasses import dataclass
 
 import pytest
 
-from src.Common.Domain.Events import InMemoryEventBus
-from src.Common.Infrastructure.Clock import SystemClock
-from src.Common.Infrastructure.IdGenerator import UuidIdGenerator
-from src.Common.Railguards.config import RailguardConfig
-from src.Common.Railguards.validator import RailguardValidator
-from src.Gmail.Application.UseCases.add_label import AddLabelUseCase
-from src.Gmail.Application.UseCases.archive_email import ArchiveEmailUseCase
-from src.Gmail.Application.UseCases.delete_email import DeleteEmailUseCase
-from src.Gmail.Application.UseCases.drafts import CreateDraftUseCase, SendDraftUseCase
-from src.Gmail.Application.UseCases.forward_email import ForwardEmailUseCase
-from src.Gmail.Application.UseCases.get_email import GetEmailUseCase
-from src.Gmail.Application.UseCases.get_thread import GetThreadUseCase
-from src.Gmail.Application.UseCases.list_labels import ListLabelsUseCase
-from src.Gmail.Application.UseCases.list_unread import ListUnreadUseCase
-from src.Gmail.Application.UseCases.search_emails import SearchEmailsUseCase
-from src.Gmail.Domain.Entities.email import Email
-from src.Intelligence.Application.UseCases.classify_email import ClassifyEmailUseCase
-from src.Intelligence.Application.UseCases.digest import (
+from agentic_mail_mcp.Common.Domain.Events import InMemoryEventBus
+from agentic_mail_mcp.Common.Infrastructure.Clock import SystemClock
+from agentic_mail_mcp.Common.Infrastructure.IdGenerator import UuidIdGenerator
+from agentic_mail_mcp.Common.Railguards.config import RailguardConfig
+from agentic_mail_mcp.Common.Railguards.validator import RailguardValidator
+from agentic_mail_mcp.Gmail.Application.UseCases.add_label import AddLabelUseCase
+from agentic_mail_mcp.Gmail.Application.UseCases.archive_email import (
+    ArchiveEmailUseCase,
+)
+from agentic_mail_mcp.Gmail.Application.UseCases.delete_email import DeleteEmailUseCase
+from agentic_mail_mcp.Gmail.Application.UseCases.drafts import (
+    CreateDraftUseCase,
+    SendDraftUseCase,
+)
+from agentic_mail_mcp.Gmail.Application.UseCases.forward_email import (
+    ForwardEmailUseCase,
+)
+from agentic_mail_mcp.Gmail.Application.UseCases.get_email import GetEmailUseCase
+from agentic_mail_mcp.Gmail.Application.UseCases.get_thread import GetThreadUseCase
+from agentic_mail_mcp.Gmail.Application.UseCases.list_labels import ListLabelsUseCase
+from agentic_mail_mcp.Gmail.Application.UseCases.list_unread import ListUnreadUseCase
+from agentic_mail_mcp.Gmail.Application.UseCases.search_emails import (
+    SearchEmailsUseCase,
+)
+from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
+from agentic_mail_mcp.Intelligence.Application.UseCases.classify_email import (
+    ClassifyEmailUseCase,
+)
+from agentic_mail_mcp.Intelligence.Application.UseCases.digest import (
     DailyDigestUseCase,
     WeeklyDigestUseCase,
 )
-from src.Intelligence.Application.UseCases.extract_action_items import (
+from agentic_mail_mcp.Intelligence.Application.UseCases.extract_action_items import (
     ExtractActionItemsUseCase,
 )
-from src.Intelligence.Application.UseCases.suggest_reply import SuggestReplyUseCase
-from src.Intelligence.Application.UseCases.summarize_email import SummarizeEmailUseCase
-from src.MCP.Tools.use_cases import McpUseCases
-from src.Search.Application.UseCases.semantic_search import SemanticSearchUseCase
+from agentic_mail_mcp.Intelligence.Application.UseCases.suggest_reply import (
+    SuggestReplyUseCase,
+)
+from agentic_mail_mcp.Intelligence.Application.UseCases.summarize_email import (
+    SummarizeEmailUseCase,
+)
+from agentic_mail_mcp.MCP.Tools.use_cases import McpUseCases
+from agentic_mail_mcp.Search.Application.UseCases.semantic_search import (
+    SemanticSearchUseCase,
+)
 from tests.fakes.ports import (
     InMemoryClassificationRepository,
     InMemoryEmailRepository,

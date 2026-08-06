@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Gmail.Domain.Gateway.gmail_gateway import GmailMessage
-from src.Gmail.Domain.Mapper.email_mapper import EmailMapper
-from src.Gmail.Domain.Mapper.thread_mapper import ThreadMapper
-from src.Gmail.Domain.ValueObjects import EmailAddress, GmailMessageId, ThreadId
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import GmailMessage
+from agentic_mail_mcp.Gmail.Domain.Mapper.email_mapper import EmailMapper
+from agentic_mail_mcp.Gmail.Domain.Mapper.thread_mapper import ThreadMapper
+from agentic_mail_mcp.Gmail.Domain.ValueObjects import (
+    EmailAddress,
+    GmailMessageId,
+    ThreadId,
+)
 
 
 class TestEmailMapper:

@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from src.Common.Domain.Exceptions import ValidationError
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Gmail.Domain.Entities.attachment import Attachment, AttachmentMetadata
+from agentic_mail_mcp.Common.Domain.Exceptions import ValidationError
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Gmail.Domain.Entities.attachment import (
+    Attachment,
+    AttachmentMetadata,
+)
 
 
 class TestAttachmentCreation:

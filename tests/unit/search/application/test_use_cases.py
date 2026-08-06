@@ -2,18 +2,24 @@ from __future__ import annotations
 
 import pytest
 
-from src.Common.Domain.Exceptions import NotFoundError, ValidationError
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Common.Infrastructure.IdGenerator import UuidIdGenerator
-from src.Gmail.Domain.Entities.email import Email
-from src.Search.Application.UseCases.dtos import SearchResultDTO
-from src.Search.Application.UseCases.index_email import (
+from agentic_mail_mcp.Common.Domain.Exceptions import NotFoundError, ValidationError
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Common.Infrastructure.IdGenerator import UuidIdGenerator
+from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
+from agentic_mail_mcp.Search.Application.UseCases.dtos import SearchResultDTO
+from agentic_mail_mcp.Search.Application.UseCases.index_email import (
     IndexEmailUseCase,
     extract_indexable_text,
 )
-from src.Search.Application.UseCases.rebuild_index import RebuildIndexUseCase
-from src.Search.Application.UseCases.semantic_search import SemanticSearchUseCase
-from src.Search.Domain.Repository.vector_search_repository import SearchResult
+from agentic_mail_mcp.Search.Application.UseCases.rebuild_index import (
+    RebuildIndexUseCase,
+)
+from agentic_mail_mcp.Search.Application.UseCases.semantic_search import (
+    SemanticSearchUseCase,
+)
+from agentic_mail_mcp.Search.Domain.Repository.vector_search_repository import (
+    SearchResult,
+)
 from tests.fakes.ports import (
     InMemoryEmailRepository,
     InMemoryVectorSearchRepository,

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from src.Gmail.Domain.Gateway.gmail_gateway import GmailLabel, GmailListResponse
-from src.MCP.errors import INVALID_INPUT, NOT_FOUND
-from src.MCP.Tools.read_tools import build_read_tools
+from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
+    GmailLabel,
+    GmailListResponse,
+)
+from agentic_mail_mcp.MCP.errors import INVALID_INPUT, NOT_FOUND
+from agentic_mail_mcp.MCP.Tools.read_tools import build_read_tools
 
 from .conftest import make_env
 

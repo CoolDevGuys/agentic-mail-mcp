@@ -7,9 +7,9 @@ mail and never emails a third party.
 
 Run it deliberately:
 
-    GMAIL_MCP_LIVE_WRITE_E2E=1 pytest tests/e2e/test_live_write_path.py -s
+    AGENTIC_MAIL_MCP_LIVE_WRITE_E2E=1 pytest tests/e2e/test_live_write_path.py -s
 
-Requires an authorized account (``.secrets/token.enc`` via ``gmail-mcp-server
+Requires an authorized account (``.secrets/token.enc`` via ``agentic-mail-mcp
 auth``) whose token has the ``gmail.modify`` scope. Skipped otherwise.
 """
 
@@ -22,16 +22,18 @@ import uuid
 
 import pytest
 
-from src.Bootstrap.Composition import build_oauth_provider, build_use_cases
-from src.Bootstrap.Settings import RailguardsConfig, Settings
-from src.Gmail.Infrastructure.Google.gmail_api_gateway import GmailApiGateway
-from src.MCP.Server import create_server
+from agentic_mail_mcp.Bootstrap.Composition import build_oauth_provider, build_use_cases
+from agentic_mail_mcp.Bootstrap.Settings import RailguardsConfig, Settings
+from agentic_mail_mcp.Gmail.Infrastructure.Google.gmail_api_gateway import (
+    GmailApiGateway,
+)
+from agentic_mail_mcp.MCP.Server import create_server
 
 pytestmark = [pytest.mark.e2e, pytest.mark.uses_real_env]
 
 
 def _enabled() -> bool:
-    if not os.getenv("GMAIL_MCP_LIVE_WRITE_E2E"):
+    if not os.getenv("AGENTIC_MAIL_MCP_LIVE_WRITE_E2E"):
         return False
     provider = build_oauth_provider(Settings.from_env())
     return provider.has_token()
@@ -39,7 +41,7 @@ def _enabled() -> bool:
 
 requires_live_write = pytest.mark.skipif(
     not _enabled(),
-    reason="set GMAIL_MCP_LIVE_WRITE_E2E=1 and authorize (make auth) to run",
+    reason="set AGENTIC_MAIL_MCP_LIVE_WRITE_E2E=1 and authorize (make auth) to run",
 )
 
 

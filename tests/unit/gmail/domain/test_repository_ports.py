@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Gmail.Domain.Entities.email import Email
-from src.Gmail.Domain.Entities.thread import Thread
-from src.Gmail.Domain.Repository.email_repository import EmailRepository
-from src.Gmail.Domain.Repository.thread_repository import ThreadRepository
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
+from agentic_mail_mcp.Gmail.Domain.Entities.thread import Thread
+from agentic_mail_mcp.Gmail.Domain.Repository.email_repository import EmailRepository
+from agentic_mail_mcp.Gmail.Domain.Repository.thread_repository import ThreadRepository
 
 
 class FakeEmailRepository:
@@ -143,7 +143,7 @@ class TestThreadRepositoryProtocol:
 
     def test_save_and_find_by_id(self) -> None:
         repo = FakeThreadRepository()
-        from src.Gmail.Domain.ValueObjects import ThreadId
+        from agentic_mail_mcp.Gmail.Domain.ValueObjects import ThreadId
 
         thread = Thread.create(
             thread_id=ThreadId("thread_1"),
@@ -162,7 +162,7 @@ class TestThreadRepositoryProtocol:
 
     def test_find_by_gmail_thread_id(self) -> None:
         repo = FakeThreadRepository()
-        from src.Gmail.Domain.ValueObjects import ThreadId
+        from agentic_mail_mcp.Gmail.Domain.ValueObjects import ThreadId
 
         thread = Thread.create(
             thread_id=ThreadId("thread_1"),
@@ -176,7 +176,7 @@ class TestThreadRepositoryProtocol:
 
     def test_delete(self) -> None:
         repo = FakeThreadRepository()
-        from src.Gmail.Domain.ValueObjects import ThreadId
+        from agentic_mail_mcp.Gmail.Domain.ValueObjects import ThreadId
 
         thread = Thread.create(
             thread_id=ThreadId("thread_1"),

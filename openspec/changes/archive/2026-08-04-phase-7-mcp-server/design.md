@@ -1,6 +1,6 @@
 ## Context
 
-Phases 1–6 built the full application stack: domain models, read use cases (Phase 4), intelligence and search use cases (4b/4c), infrastructure adapters (Phase 5), and the railguards framework with railguarded write use cases and `RailguardValidator` (Phase 6). The DI container (`Bootstrap/DependencyContainer.py`), async `Lifespan` (`Bootstrap/Lifespan.py`), and typed `Settings` (with `mcp` and `railguards` sections) already exist. The `mcp` package is declared in `pyproject.toml`, and `gmail-mcp-server` is registered as a console entry point.
+Phases 1–6 built the full application stack: domain models, read use cases (Phase 4), intelligence and search use cases (4b/4c), infrastructure adapters (Phase 5), and the railguards framework with railguarded write use cases and `RailguardValidator` (Phase 6). The DI container (`Bootstrap/DependencyContainer.py`), async `Lifespan` (`Bootstrap/Lifespan.py`), and typed `Settings` (with `mcp` and `railguards` sections) already exist. The `mcp` package is declared in `pyproject.toml`, and `agentic-mail-mcp` is registered as a console entry point.
 
 What is missing is the outermost layer. `src/MCP/` contains only stubs: `Server.py` returns a bare server, `ToolRegistry.py` is a dict wrapper, and `Resources.py`/`Prompts.py` are empty. Nothing wires the use cases to the MCP protocol, so no AI agent can call the server. Phase 7 closes that gap.
 
@@ -53,7 +53,7 @@ The account-info resource reports the connected account and current `access_leve
 
 ## Migration Plan
 
-Purely additive. Replace the four `src/MCP/` stubs with implementations and add `src/MCP/Tools/` modules; add `AddLabelUseCase` under `src/Gmail/Application/UseCases/`. No schema, data, or config-default changes. The `gmail-mcp-server` console entry point begins launching a functional server. Land in order: (1) `Server.py` + transport + lifespan, (2) `ToolRegistry` with access-level gating, (3) read tools, (4) `AddLabelUseCase` + write tools, (5) intelligence + search tools, (6) resources + prompts — each independently testable with the in-memory event bus and fakes. Rollback is reverting the change; Phases 1–6 remain intact and usable.
+Purely additive. Replace the four `src/MCP/` stubs with implementations and add `src/MCP/Tools/` modules; add `AddLabelUseCase` under `src/Gmail/Application/UseCases/`. No schema, data, or config-default changes. The `agentic-mail-mcp` console entry point begins launching a functional server. Land in order: (1) `Server.py` + transport + lifespan, (2) `ToolRegistry` with access-level gating, (3) read tools, (4) `AddLabelUseCase` + write tools, (5) intelligence + search tools, (6) resources + prompts — each independently testable with the in-memory event bus and fakes. Rollback is reverting the change; Phases 1–6 remain intact and usable.
 
 ## Open Questions
 

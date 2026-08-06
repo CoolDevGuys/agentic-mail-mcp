@@ -1,5 +1,5 @@
 ```
-gmail-mcp-server/
+agentic-mail-mcp/
 |
 |-- pyproject.toml
 |-- gmail-api.iml
@@ -47,7 +47,7 @@ gmail-mcp-server/
 |   |-- integration/
 |   |-- fakes/
 |
-`-- src/
+`-- agentic_mail_mcp/
     |
     |-- Bootstrap/
     |   |-- __init__.py

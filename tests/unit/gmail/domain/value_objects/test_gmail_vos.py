@@ -1,9 +1,9 @@
 import pytest
 
-from src.Common.Domain.Exceptions import ValidationError
-from src.Gmail.Domain.ValueObjects.gmail_message_id import GmailMessageId
-from src.Gmail.Domain.ValueObjects.history_id import HistoryId
-from src.Gmail.Domain.ValueObjects.thread_id import ThreadId
+from agentic_mail_mcp.Common.Domain.Exceptions import ValidationError
+from agentic_mail_mcp.Gmail.Domain.ValueObjects.gmail_message_id import GmailMessageId
+from agentic_mail_mcp.Gmail.Domain.ValueObjects.history_id import HistoryId
+from agentic_mail_mcp.Gmail.Domain.ValueObjects.thread_id import ThreadId
 
 
 class TestGmailMessageId:

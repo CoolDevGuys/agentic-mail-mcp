@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-from src.Common.Domain.Exceptions import ValidationError
-from src.Search.Infrastructure.BGE.bge_embedding_gateway import BgeEmbeddingGateway
+from agentic_mail_mcp.Common.Domain.Exceptions import ValidationError
+from agentic_mail_mcp.Search.Infrastructure.BGE.bge_embedding_gateway import (
+    BgeEmbeddingGateway,
+)
 
 
 def _fake_encoder(dimension: int):

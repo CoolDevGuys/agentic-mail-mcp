@@ -3,7 +3,11 @@ import logging
 
 import pytest
 
-from src.Bootstrap.Logging import JsonFormatter, RedactionFilter, setup_logging
+from agentic_mail_mcp.Bootstrap.Logging import (
+    JsonFormatter,
+    RedactionFilter,
+    setup_logging,
+)
 
 
 class TestRedactionFilter:

@@ -9,10 +9,10 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Gmail.Domain.Entities.email import Email
-from src.Gmail.Domain.Entities.thread import Thread
-from src.Gmail.Domain.ValueObjects import ThreadId
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
+from agentic_mail_mcp.Gmail.Domain.Entities.thread import Thread
+from agentic_mail_mcp.Gmail.Domain.ValueObjects import ThreadId
 
 
 def _make_email(

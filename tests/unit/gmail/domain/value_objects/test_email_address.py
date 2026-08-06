@@ -1,8 +1,8 @@
 import pytest
 
-from src.Common.Domain.Exceptions import ValidationError
-from src.Gmail.Domain.ValueObjects.email_address import EmailAddress
-from src.Gmail.Domain.ValueObjects.gmail_query import GmailQuery
+from agentic_mail_mcp.Common.Domain.Exceptions import ValidationError
+from agentic_mail_mcp.Gmail.Domain.ValueObjects.email_address import EmailAddress
+from agentic_mail_mcp.Gmail.Domain.ValueObjects.gmail_query import GmailQuery
 
 
 class TestEmailAddressCreation:

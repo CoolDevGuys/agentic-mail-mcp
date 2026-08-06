@@ -1,5 +1,5 @@
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Common.Infrastructure.IdGenerator import UuidIdGenerator
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Common.Infrastructure.IdGenerator import UuidIdGenerator
 
 
 class TestUuidIdGenerator:

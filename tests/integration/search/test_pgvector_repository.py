@@ -8,11 +8,11 @@ from tests.integration.search.vector_contract import (
     VectorSearchRepositoryContractTests,
 )
 
-_PG_DSN = os.environ.get("GMAIL_MCP_TEST_PG_DSN")
+_PG_DSN = os.environ.get("AGENTIC_MAIL_MCP_TEST_PG_DSN")
 
 pytestmark = pytest.mark.skipif(
     _PG_DSN is None,
-    reason="PostgreSQL not available; set GMAIL_MCP_TEST_PG_DSN to run pgvector tests",
+    reason="PostgreSQL not available; set AGENTIC_MAIL_MCP_TEST_PG_DSN to run pgvector tests",
 )
 
 
@@ -21,7 +21,7 @@ class TestPgVectorRepository(VectorSearchRepositoryContractTests):
     def vector_repo(self):
         pytest.importorskip("pgvector")
         pytest.importorskip("psycopg2")
-        from src.Search.Infrastructure.PgVector.pgvector_repository import (
+        from agentic_mail_mcp.Search.Infrastructure.PgVector.pgvector_repository import (
             PgVectorRepository,
         )
 

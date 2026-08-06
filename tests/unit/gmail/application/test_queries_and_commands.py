@@ -4,9 +4,9 @@ from datetime import date
 
 import pytest
 
-from src.Common.Domain.Exceptions import ValidationError
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Gmail.Application.Commands.commands import (
+from agentic_mail_mcp.Common.Domain.Exceptions import ValidationError
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Gmail.Application.Commands.commands import (
     AddLabelCommand,
     ArchiveEmailCommand,
     CreateDraftCommand,
@@ -15,14 +15,14 @@ from src.Gmail.Application.Commands.commands import (
     MarkReadCommand,
     SendDraftCommand,
 )
-from src.Gmail.Application.Queries.queries import (
+from agentic_mail_mcp.Gmail.Application.Queries.queries import (
     GetEmailQuery,
     GetThreadQuery,
     ListLabelsQuery,
     ListUnreadQuery,
     SearchEmailsQuery,
 )
-from src.Gmail.Domain.ValueObjects import GmailMessageId, ThreadId
+from agentic_mail_mcp.Gmail.Domain.ValueObjects import GmailMessageId, ThreadId
 
 
 class TestQueries:

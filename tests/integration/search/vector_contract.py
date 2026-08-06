@@ -7,8 +7,8 @@ interchangeability.
 
 from __future__ import annotations
 
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Search.Domain.Entities.search_document import SearchDocument
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Search.Domain.Entities.search_document import SearchDocument
 
 
 def _doc(email_seed: str, embedding: list[float]) -> SearchDocument:

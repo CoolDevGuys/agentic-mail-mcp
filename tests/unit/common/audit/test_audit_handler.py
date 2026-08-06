@@ -2,14 +2,20 @@ from __future__ import annotations
 
 import pytest
 
-from src.Common.Audit.correlation import (
+from agentic_mail_mcp.Common.Audit.correlation import (
     reset_correlation_id,
     set_correlation_id,
 )
-from src.Common.Domain.Events import InMemoryEventBus
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Gmail.Application.Handlers.audit_log_handler import AuditLogHandler
-from src.Gmail.Domain.Events import EmailArchived, EmailDeleted, EmailForwarded
+from agentic_mail_mcp.Common.Domain.Events import InMemoryEventBus
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Gmail.Application.Handlers.audit_log_handler import (
+    AuditLogHandler,
+)
+from agentic_mail_mcp.Gmail.Domain.Events import (
+    EmailArchived,
+    EmailDeleted,
+    EmailForwarded,
+)
 from tests.fakes.ports import InMemoryAuditLogRepository
 
 

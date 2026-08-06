@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from src.Common.Infrastructure.Clock import FrozenClock, SystemClock
+from agentic_mail_mcp.Common.Infrastructure.Clock import FrozenClock, SystemClock
 
 
 class TestSystemClock:

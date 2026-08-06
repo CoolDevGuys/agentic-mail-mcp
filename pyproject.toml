@@ -1,5 +1,5 @@
 [project]
-name = "gmail-mcp-server"
+name = "agentic-mail-mcp"
 version = "0.1.0"
 description = "A Model Context Protocol (MCP) server exposing Gmail operations for AI agents"
 readme = "README.md"
@@ -7,7 +7,7 @@ requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
-    { name = "Gmail MCP Server Team" },
+    { name = "Agentic Mail MCP Team" },
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -70,20 +70,20 @@ Documentation = "https://github.com/CoolDevGuys/agentic-mail-mcp/tree/main/specs
 Changelog = "https://github.com/CoolDevGuys/agentic-mail-mcp/blob/main/CHANGELOG.md"
 
 [project.scripts]
-gmail-mcp-server = "src.Bootstrap.cli:main"
+agentic-mail-mcp = "agentic_mail_mcp.Bootstrap.cli:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src"]
+packages = ["agentic_mail_mcp"]
 
 [tool.hatch.build.targets.sdist]
 # Ship only the package and what's needed to build/run it — keep editor,
 # tooling, and node_modules noise out of the release artifact.
 only-include = [
-    "src",
+    "agentic_mail_mcp",
     "migrations",
     "specs/docs",
     "README.md",
@@ -99,7 +99,7 @@ exclude = [
 ]
 
 [tool.coverage.run]
-source = ["src"]
+source = ["agentic_mail_mcp"]
 
 [tool.coverage.report]
 fail_under = 90
@@ -110,27 +110,27 @@ exclude_lines = [
 ]
 
 omit = [
-    "src/Notification/Domain/Gateway/*",
+    "agentic_mail_mcp/Notification/Domain/Gateway/*",
     # Native/optional adapters that require a SQLite build with extension
     # loading, PostgreSQL, or model weights — exercised via guarded integration
     # tests when those backends are available, skipped in the default suite.
-    "src/Search/Infrastructure/SqliteVec/*",
-    "src/Search/Infrastructure/PgVector/*",
-    "src/Gmail/Infrastructure/Persistence/PostgreSQL/*",
+    "agentic_mail_mcp/Search/Infrastructure/SqliteVec/*",
+    "agentic_mail_mcp/Search/Infrastructure/PgVector/*",
+    "agentic_mail_mcp/Gmail/Infrastructure/Persistence/PostgreSQL/*",
 ]
 
 [tool.coverage.paths]
-source = ["src"]
+source = ["agentic_mail_mcp"]
 
 [tool.ruff]
 lint.ignore = ["N999"]
 
 # Pin import groups explicitly so sorting is deterministic across ruff versions
 # AND across filesystems. On case-insensitive filesystems (macOS) ruff otherwise
-# resolves the third-party `mcp` package to the local `src/MCP/` directory and
+# resolves the third-party `mcp` package to the local `agentic_mail_mcp/MCP/` directory and
 # treats it as first-party, disagreeing with case-sensitive CI (Linux).
 [tool.ruff.lint.isort]
-known-first-party = ["src"]
+known-first-party = ["agentic_mail_mcp"]
 known-third-party = ["mcp"]
 
 [tool.mypy]

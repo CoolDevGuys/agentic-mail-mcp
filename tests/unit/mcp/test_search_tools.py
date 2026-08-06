@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.MCP.Tools.search_tools import build_search_tools
-from src.Search.Domain.Repository.vector_search_repository import SearchResult
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.MCP.Tools.search_tools import build_search_tools
+from agentic_mail_mcp.Search.Domain.Repository.vector_search_repository import (
+    SearchResult,
+)
 
 from .conftest import make_env
 

@@ -14,7 +14,7 @@ token.json
 *.sqlite
 *.sqlite3
 /models/
-.config/gmail-mcp-server/
+.config/agentic-mail-mcp/
 __pycache__/
 *.py[codz]
 *$py.class

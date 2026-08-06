@@ -4,15 +4,17 @@ from datetime import UTC, datetime
 
 import pytest
 
-from src.Common.Audit.audit_log import AuditLog
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Common.Infrastructure.Persistence import audit_models  # noqa: F401
-from src.Common.Infrastructure.Persistence.database import (
+from agentic_mail_mcp.Common.Audit.audit_log import AuditLog
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Common.Infrastructure.Persistence import (
+    audit_models,  # noqa: F401
+)
+from agentic_mail_mcp.Common.Infrastructure.Persistence.database import (
     create_all,
     create_database_engine,
     create_session_factory,
 )
-from src.Common.Infrastructure.Persistence.sqlite_audit_repository import (
+from agentic_mail_mcp.Common.Infrastructure.Persistence.sqlite_audit_repository import (
     SqliteAuditLogRepository,
 )
 

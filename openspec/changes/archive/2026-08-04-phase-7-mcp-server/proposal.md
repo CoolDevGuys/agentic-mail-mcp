@@ -27,5 +27,5 @@ Phases 1–6 delivered every domain, application use case, infrastructure adapte
 - Replaces the stubs in `src/MCP/` (`Server.py`, `ToolRegistry.py`, `Resources.py`, `Prompts.py`) with full implementations and adds tool modules under `src/MCP/Tools/` (one per tool, organized by category).
 - Adds `AddLabelUseCase` under `src/Gmail/Application/UseCases/`.
 - Consumes existing pieces without changing their contracts: the DI container (Phase 1.6), `Lifespan` (1.5), `Settings.railguards`/`Settings.mcp` (1.3), every read use case (Phase 4), the intelligence and search use cases (4b/4c), and the railguarded write use cases + `RailguardValidator` (Phase 6).
-- Depends on the `mcp` package already declared in `pyproject.toml`; the `gmail-mcp-server` console entry point is wired to launch this server.
+- Depends on the `mcp` package already declared in `pyproject.toml`; the `agentic-mail-mcp` console entry point is wired to launch this server.
 - Docs: `specs/docs/api.md` (tool/resource/prompt catalog) is Phase 8 and out of scope; this change adds unit tests for tool-to-use-case wiring, registry access-level gating, resource availability, and prompt rendering.

@@ -15,7 +15,7 @@ The `pyproject.toml` SHALL carry the metadata required for a PyPI release: name,
 - **THEN** it declares name, version, description, `readme`, license, authors, classifiers, and `project.urls`
 
 ### Requirement: Buildable distribution with console entry point
-The project SHALL build a valid source distribution and wheel that expose the `gmail-mcp-server` console entry point.
+The project SHALL build a valid source distribution and wheel that expose the `agentic-mail-mcp` console entry point.
 
 #### Scenario: Build produces sdist and wheel
 - **WHEN** the package is built
@@ -23,7 +23,7 @@ The project SHALL build a valid source distribution and wheel that expose the `g
 
 #### Scenario: Entry point is exposed
 - **WHEN** the built distribution's metadata is inspected
-- **THEN** it declares the `gmail-mcp-server` console script pointing at the MCP server CLI
+- **THEN** it declares the `agentic-mail-mcp` console script pointing at the MCP server CLI
 
 ### Requirement: Documented publish flow
 The project SHALL document the release flow to Test-PyPI and then production PyPI.

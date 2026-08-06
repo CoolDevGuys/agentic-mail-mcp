@@ -2,13 +2,15 @@ from __future__ import annotations
 
 import base64
 
-from src.Common.Domain.Events import InMemoryEventBus
-from src.Gmail.Domain.Events import EmailReceived, InboxSynchronized
-from src.Gmail.Infrastructure.Google.gmail_api_gateway import GmailApiGateway
-from src.Gmail.Infrastructure.Google.gmail_history_synchronizer import (
+from agentic_mail_mcp.Common.Domain.Events import InMemoryEventBus
+from agentic_mail_mcp.Gmail.Domain.Events import EmailReceived, InboxSynchronized
+from agentic_mail_mcp.Gmail.Infrastructure.Google.gmail_api_gateway import (
+    GmailApiGateway,
+)
+from agentic_mail_mcp.Gmail.Infrastructure.Google.gmail_history_synchronizer import (
     GmailHistorySynchronizer,
 )
-from src.Gmail.Infrastructure.Google.gmail_watcher import GmailWatcher
+from agentic_mail_mcp.Gmail.Infrastructure.Google.gmail_watcher import GmailWatcher
 from tests.fakes.ports import InMemoryEmailRepository
 from tests.integration.gmail.fake_gmail_service import (
     FakeGmailService,

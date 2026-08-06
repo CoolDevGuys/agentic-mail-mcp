@@ -49,7 +49,7 @@ Each use case validates → calls the gateway → then publishes its event. A fa
 
 ## Migration Plan
 
-Additive except the `access_level` default change. New Alembic migration adds the `audit_log` table (revision after Phase 5's `0001`). Existing deployments must set `GMAIL_MCP_RAILGUARDS_ACCESS_LEVEL=read_write` to retain write capability. No data migration. Railguard framework lands first (`src/Common/Railguards/`, `src/Common/Audit/`), then the write use cases, then the gateway draft methods and adapter, each independently testable with the in-memory event bus and fakes.
+Additive except the `access_level` default change. New Alembic migration adds the `audit_log` table (revision after Phase 5's `0001`). Existing deployments must set `AGENTIC_MAIL_MCP_RAILGUARDS_ACCESS_LEVEL=read_write` to retain write capability. No data migration. Railguard framework lands first (`src/Common/Railguards/`, `src/Common/Audit/`), then the write use cases, then the gateway draft methods and adapter, each independently testable with the in-memory event bus and fakes.
 
 ## Open Questions
 

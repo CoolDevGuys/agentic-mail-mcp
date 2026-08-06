@@ -4,12 +4,12 @@ import asyncio
 
 import pytest
 
-from src.Bootstrap.Composition import (
+from agentic_mail_mcp.Bootstrap.Composition import (
     build_resource_context,
     build_use_cases,
 )
-from src.Bootstrap.Settings import Settings
-from src.MCP.Server import create_server
+from agentic_mail_mcp.Bootstrap.Settings import Settings
+from agentic_mail_mcp.MCP.Server import create_server
 from tests.fakes.ports import StubGmailGateway
 
 _READ = {"search_emails", "get_email", "get_thread", "list_unread", "list_labels"}
@@ -33,10 +33,12 @@ _INTEL = {
 
 @pytest.fixture
 def settings(tmp_path, monkeypatch) -> Settings:
-    monkeypatch.setenv("GMAIL_MCP_DATABASE_URL", f"sqlite:///{tmp_path / 't.db'}")
-    monkeypatch.setenv("GMAIL_MCP_GMAIL_TOKEN_ENCRYPTION_KEY", "test-key")
     monkeypatch.setenv(
-        "GMAIL_MCP_GMAIL_TOKEN_STORAGE_PATH", str(tmp_path / "token.json")
+        "AGENTIC_MAIL_MCP_DATABASE_URL", f"sqlite:///{tmp_path / 't.db'}"
+    )
+    monkeypatch.setenv("AGENTIC_MAIL_MCP_GMAIL_TOKEN_ENCRYPTION_KEY", "test-key")
+    monkeypatch.setenv(
+        "AGENTIC_MAIL_MCP_GMAIL_TOKEN_STORAGE_PATH", str(tmp_path / "token.json")
     )
     return Settings.from_env()
 
@@ -56,7 +58,7 @@ class TestBuildUseCases:
         assert uses.daily_digest is None
 
     def test_digests_wired_when_llm_configured(self, settings, monkeypatch) -> None:
-        monkeypatch.setenv("GMAIL_MCP_LLM_API_KEY", "sk-real")
+        monkeypatch.setenv("AGENTIC_MAIL_MCP_LLM_API_KEY", "sk-real")
         settings = Settings.from_env()
         uses = build_use_cases(settings, gateway=StubGmailGateway())
         assert uses.daily_digest is not None
@@ -65,8 +67,8 @@ class TestBuildUseCases:
         assert uses.summarize_email is None
 
     def test_internal_tools_opt_in_wires_per_email(self, settings, monkeypatch) -> None:
-        monkeypatch.setenv("GMAIL_MCP_LLM_API_KEY", "sk-real")
-        monkeypatch.setenv("GMAIL_MCP_LLM_INTERNAL_TOOLS", "true")
+        monkeypatch.setenv("AGENTIC_MAIL_MCP_LLM_API_KEY", "sk-real")
+        monkeypatch.setenv("AGENTIC_MAIL_MCP_LLM_INTERNAL_TOOLS", "true")
         settings = Settings.from_env()
         uses = build_use_cases(settings, gateway=StubGmailGateway())
         assert uses.summarize_email is not None
@@ -82,7 +84,7 @@ class TestServerExposesTools:
     def test_read_write_registered_under_read_write(
         self, settings, monkeypatch
     ) -> None:
-        monkeypatch.setenv("GMAIL_MCP_RAILGUARDS_ACCESS_LEVEL", "read_write")
+        monkeypatch.setenv("AGENTIC_MAIL_MCP_RAILGUARDS_ACCESS_LEVEL", "read_write")
         settings = Settings.from_env()
         uses = build_use_cases(settings, gateway=StubGmailGateway())
         server = create_server(use_cases=uses, settings=settings)
@@ -118,12 +120,12 @@ class TestBringYourOwnClientConfig:
     file or explicit id/secret."""
 
     def test_from_client_id_and_secret(self, settings, monkeypatch) -> None:
-        from src.Bootstrap.Composition import resolve_client_config
+        from agentic_mail_mcp.Bootstrap.Composition import resolve_client_config
 
         monkeypatch.setenv(
-            "GMAIL_MCP_GMAIL_OAUTH_CLIENT_ID", "abc.apps.googleusercontent.com"
+            "AGENTIC_MAIL_MCP_GMAIL_OAUTH_CLIENT_ID", "abc.apps.googleusercontent.com"
         )
-        monkeypatch.setenv("GMAIL_MCP_GMAIL_OAUTH_CLIENT_SECRET", "secret")
+        monkeypatch.setenv("AGENTIC_MAIL_MCP_GMAIL_OAUTH_CLIENT_SECRET", "secret")
 
         config = resolve_client_config(Settings.from_env())
 
@@ -134,13 +136,13 @@ class TestBringYourOwnClientConfig:
     ) -> None:
         import json
 
-        from src.Bootstrap.Composition import resolve_client_config
+        from agentic_mail_mcp.Bootstrap.Composition import resolve_client_config
 
         creds = tmp_path / "credentials.json"
         creds.write_text(
             json.dumps({"installed": {"client_id": "xyz", "client_secret": "s"}})
         )
-        monkeypatch.setenv("GMAIL_MCP_GMAIL_CLIENT_SECRETS_FILE", str(creds))
+        monkeypatch.setenv("AGENTIC_MAIL_MCP_GMAIL_CLIENT_SECRETS_FILE", str(creds))
 
         config = resolve_client_config(Settings.from_env())
 
@@ -151,20 +153,20 @@ class TestBringYourOwnClientConfig:
     ) -> None:
         import json
 
-        from src.Bootstrap.Composition import resolve_client_config
+        from agentic_mail_mcp.Bootstrap.Composition import resolve_client_config
 
         creds = tmp_path / "credentials.json"
         creds.write_text(json.dumps({"installed": {"client_id": "from-file"}}))
-        monkeypatch.setenv("GMAIL_MCP_GMAIL_CLIENT_SECRETS_FILE", str(creds))
-        monkeypatch.setenv("GMAIL_MCP_GMAIL_OAUTH_CLIENT_ID", "from-env")
-        monkeypatch.setenv("GMAIL_MCP_GMAIL_OAUTH_CLIENT_SECRET", "s")
+        monkeypatch.setenv("AGENTIC_MAIL_MCP_GMAIL_CLIENT_SECRETS_FILE", str(creds))
+        monkeypatch.setenv("AGENTIC_MAIL_MCP_GMAIL_OAUTH_CLIENT_ID", "from-env")
+        monkeypatch.setenv("AGENTIC_MAIL_MCP_GMAIL_OAUTH_CLIENT_SECRET", "s")
 
         config = resolve_client_config(Settings.from_env())
 
         assert config["installed"]["client_id"] == "from-file"
 
     def test_none_when_nothing_configured(self, settings) -> None:
-        from src.Bootstrap.Composition import resolve_client_config
+        from agentic_mail_mcp.Bootstrap.Composition import resolve_client_config
 
         assert resolve_client_config(settings) is None
 

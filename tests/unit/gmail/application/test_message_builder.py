@@ -4,15 +4,15 @@ import base64
 from email import message_from_bytes
 from email.message import Message
 
-from src.Gmail.Application.Commands.commands import (
+from agentic_mail_mcp.Gmail.Application.Commands.commands import (
     CreateDraftCommand,
     ForwardEmailCommand,
 )
-from src.Gmail.Application.UseCases.message_builder import (
+from agentic_mail_mcp.Gmail.Application.UseCases.message_builder import (
     build_draft_message,
     build_forward_message,
 )
-from src.Gmail.Domain.Entities.email import Email
+from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
 
 
 def _decode(raw: str) -> Message:

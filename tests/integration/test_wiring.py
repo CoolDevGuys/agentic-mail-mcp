@@ -2,15 +2,17 @@ from __future__ import annotations
 
 import pytest
 
-from src.Bootstrap.DependencyContainer import Container
-from src.Bootstrap.Settings import DatabaseConfig, Settings
-from src.Bootstrap.wiring import register_infrastructure
-from src.Common.Domain.Events import EventBus, InMemoryEventBus
-from src.Gmail.Domain.Repository.email_repository import EmailRepository
-from src.Gmail.Domain.Repository.thread_repository import ThreadRepository
-from src.Intelligence.Domain.Gateway.llm_gateway import LlmGateway
-from src.Notification.Domain.Gateway.notification_gateway import NotificationGateway
-from src.Search.Domain.Gateway.embedding_gateway import EmbeddingGateway
+from agentic_mail_mcp.Bootstrap.DependencyContainer import Container
+from agentic_mail_mcp.Bootstrap.Settings import DatabaseConfig, Settings
+from agentic_mail_mcp.Bootstrap.wiring import register_infrastructure
+from agentic_mail_mcp.Common.Domain.Events import EventBus, InMemoryEventBus
+from agentic_mail_mcp.Gmail.Domain.Repository.email_repository import EmailRepository
+from agentic_mail_mcp.Gmail.Domain.Repository.thread_repository import ThreadRepository
+from agentic_mail_mcp.Intelligence.Domain.Gateway.llm_gateway import LlmGateway
+from agentic_mail_mcp.Notification.Domain.Gateway.notification_gateway import (
+    NotificationGateway,
+)
+from agentic_mail_mcp.Search.Domain.Gateway.embedding_gateway import EmbeddingGateway
 
 
 @pytest.fixture
@@ -20,7 +22,7 @@ def container() -> Container:
 
 
 async def test_email_repository_resolves_to_sqlite(container: Container) -> None:
-    from src.Gmail.Infrastructure.Persistence.SqlAlchemy.Repositories.sqlite_email_repository import (
+    from agentic_mail_mcp.Gmail.Infrastructure.Persistence.SqlAlchemy.Repositories.sqlite_email_repository import (
         SqliteEmailRepository,
     )
 
@@ -43,7 +45,7 @@ async def test_llm_and_notification_and_embedding_resolve(container: Container) 
 
 
 async def test_wired_repository_persists(container: Container) -> None:
-    from src.Gmail.Domain.Entities.email import Email
+    from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
 
     repo = await container.resolve(EmailRepository)
     email = Email.from_gmail_message(message_id="w1", thread_id="t1", subject="Wired")
@@ -52,16 +54,16 @@ async def test_wired_repository_persists(container: Container) -> None:
 
 
 async def test_railguard_validator_resolves(container: Container) -> None:
-    from src.Common.Railguards.validator import RailguardValidator
+    from agentic_mail_mcp.Common.Railguards.validator import RailguardValidator
 
     assert isinstance(await container.resolve(RailguardValidator), RailguardValidator)
 
 
 async def test_audit_handler_records_write_events(container: Container) -> None:
-    from src.Common.Audit.audit_log import AuditLogRepository
-    from src.Common.Domain.Events import EventBus
-    from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-    from src.Gmail.Domain.Events import EmailArchived
+    from agentic_mail_mcp.Common.Audit.audit_log import AuditLogRepository
+    from agentic_mail_mcp.Common.Domain.Events import EventBus
+    from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+    from agentic_mail_mcp.Gmail.Domain.Events import EmailArchived
 
     bus = await container.resolve(EventBus)
     bus.publish(EmailArchived(email_id=UUIDId.generate()))
@@ -77,7 +79,7 @@ async def test_file_database_wiring_applies_migrations(tmp_path) -> None:
     # migration-managed (an alembic_version table is present).
     from sqlalchemy import create_engine, inspect
 
-    from src.Gmail.Domain.Entities.email import Email
+    from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
 
     url = f"sqlite:///{tmp_path / 'wired.db'}"
     settings = Settings(database=DatabaseConfig(url=url))

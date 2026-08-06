@@ -9,17 +9,17 @@ from tests.integration.gmail.repository_contract import (
     ThreadRepositoryContractTests,
 )
 
-_PG_DSN = os.environ.get("GMAIL_MCP_TEST_PG_DSN")
+_PG_DSN = os.environ.get("AGENTIC_MAIL_MCP_TEST_PG_DSN")
 
 pytestmark = pytest.mark.skipif(
     _PG_DSN is None,
-    reason="PostgreSQL not available; set GMAIL_MCP_TEST_PG_DSN to run these",
+    reason="PostgreSQL not available; set AGENTIC_MAIL_MCP_TEST_PG_DSN to run these",
 )
 
 
 @pytest.fixture
 def session_factory():
-    from src.Common.Infrastructure.Persistence.database import (
+    from agentic_mail_mcp.Common.Infrastructure.Persistence.database import (
         create_all,
         create_database_engine,
         create_session_factory,
@@ -33,7 +33,7 @@ def session_factory():
 class TestPostgresEmailRepository(EmailRepositoryContractTests):
     @pytest.fixture
     def email_repo(self, session_factory):
-        from src.Gmail.Infrastructure.Persistence.PostgreSQL.postgres_repositories import (
+        from agentic_mail_mcp.Gmail.Infrastructure.Persistence.PostgreSQL.postgres_repositories import (
             PostgresEmailRepository,
         )
 
@@ -43,7 +43,7 @@ class TestPostgresEmailRepository(EmailRepositoryContractTests):
 class TestPostgresThreadRepository(ThreadRepositoryContractTests):
     @pytest.fixture
     def thread_repo(self, session_factory):
-        from src.Gmail.Infrastructure.Persistence.PostgreSQL.postgres_repositories import (
+        from agentic_mail_mcp.Gmail.Infrastructure.Persistence.PostgreSQL.postgres_repositories import (
             PostgresThreadRepository,
         )
 

@@ -4,33 +4,33 @@ from datetime import UTC, datetime
 
 import pytest
 
-from src.Common.Domain.Exceptions import NotFoundError
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Gmail.Application.DTO.dtos import EmailDTO, LabelDTO, ThreadDTO
-from src.Gmail.Application.Queries.queries import (
+from agentic_mail_mcp.Common.Domain.Exceptions import NotFoundError
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Gmail.Application.DTO.dtos import EmailDTO, LabelDTO, ThreadDTO
+from agentic_mail_mcp.Gmail.Application.Queries.queries import (
     GetEmailQuery,
     GetThreadQuery,
     ListLabelsQuery,
     ListUnreadQuery,
     SearchEmailsQuery,
 )
-from src.Gmail.Application.UseCases.get_email import GetEmailUseCase
-from src.Gmail.Application.UseCases.get_thread import GetThreadUseCase
-from src.Gmail.Application.UseCases.list_labels import ListLabelsUseCase
-from src.Gmail.Application.UseCases.list_unread import ListUnreadUseCase
-from src.Gmail.Application.UseCases.search_emails import (
+from agentic_mail_mcp.Gmail.Application.UseCases.get_email import GetEmailUseCase
+from agentic_mail_mcp.Gmail.Application.UseCases.get_thread import GetThreadUseCase
+from agentic_mail_mcp.Gmail.Application.UseCases.list_labels import ListLabelsUseCase
+from agentic_mail_mcp.Gmail.Application.UseCases.list_unread import ListUnreadUseCase
+from agentic_mail_mcp.Gmail.Application.UseCases.search_emails import (
     SearchEmailsUseCase,
     build_gmail_query,
 )
-from src.Gmail.Domain.Entities.email import Email
-from src.Gmail.Domain.Entities.thread import Thread
-from src.Gmail.Domain.Gateway.gmail_gateway import (
+from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
+from agentic_mail_mcp.Gmail.Domain.Entities.thread import Thread
+from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     GmailLabel,
     GmailListResponse,
     GmailMessage,
     GmailMessageHeader,
 )
-from src.Gmail.Domain.ValueObjects import GmailMessageId, ThreadId
+from agentic_mail_mcp.Gmail.Domain.ValueObjects import GmailMessageId, ThreadId
 from tests.fakes.ports import (
     InMemoryEmailRepository,
     InMemoryThreadRepository,
@@ -266,7 +266,7 @@ class TestDTOMapping:
         assert dto.to_addresses == []
 
     def test_label_dto_from_entity(self) -> None:
-        from src.Gmail.Domain.Entities.label import Label
+        from agentic_mail_mcp.Gmail.Domain.Entities.label import Label
 
         label = Label(
             id=UUIDId.generate(), label_id="INBOX", name="INBOX", type="system"

@@ -1,8 +1,8 @@
 import uuid
 from dataclasses import dataclass
 
-from src.Common.Domain.ValueObjects.base import ValueObject
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Common.Domain.ValueObjects.base import ValueObject
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
 
 
 @dataclass(frozen=True)

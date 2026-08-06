@@ -4,8 +4,8 @@ import re
 
 import pytest
 
-from src.Common.Domain.Exceptions import ValidationError
-from src.MCP.Prompts import build_prompts
+from agentic_mail_mcp.Common.Domain.Exceptions import ValidationError
+from agentic_mail_mcp.MCP.Prompts import build_prompts
 
 
 def _prompt(name):

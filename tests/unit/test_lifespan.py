@@ -1,6 +1,6 @@
 import pytest
 
-from src.Bootstrap.Lifespan import lifespan
+from agentic_mail_mcp.Bootstrap.Lifespan import lifespan
 
 
 class TestLifespan:
@@ -17,7 +17,7 @@ class TestLifespan:
     @pytest.mark.asyncio
     async def test_lifespan_provides_settings(self):
         async with lifespan(None) as state:
-            from src.Bootstrap.Settings import Settings
+            from agentic_mail_mcp.Bootstrap.Settings import Settings
 
             assert isinstance(state["settings"], Settings)
 
@@ -26,7 +26,7 @@ class TestLifespan:
         startup_called = []
         shutdown_called = []
 
-        import src.Bootstrap.Lifespan as lifespan_module
+        import agentic_mail_mcp.Bootstrap.Lifespan as lifespan_module
 
         original_startup = lifespan_module._startup
         original_shutdown = lifespan_module._shutdown

@@ -16,11 +16,11 @@ The Dockerfile SHALL be a multi-stage build: a builder stage that installs build
 - **THEN** it copies the built artifact from the builder rather than installing build tools
 
 ### Requirement: docker-compose with services
-The docker-compose.yml SHALL define a gmail-mcp-server service and an optional postgres service for testing.
+The docker-compose.yml SHALL define a agentic-mail-mcp service and an optional postgres service for testing.
 
 #### Scenario: Services defined
 - **WHEN** docker-compose.yml is parsed
-- **THEN** gmail-mcp-server and postgres services exist
+- **THEN** agentic-mail-mcp and postgres services exist
 
 ### Requirement: Health check
 The MCP server container SHALL include a health check on the MCP server port.

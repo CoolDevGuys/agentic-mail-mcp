@@ -1,4 +1,4 @@
-from src.Common.Domain.Specifications import (
+from agentic_mail_mcp.Common.Domain.Specifications import (
     AndSpecification,
     NotSpecification,
     OrSpecification,

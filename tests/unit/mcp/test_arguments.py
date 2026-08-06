@@ -5,10 +5,10 @@ from uuid import uuid4
 
 import pytest
 
-from src.Common.Domain.Exceptions import ValidationError
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Gmail.Domain.ValueObjects import GmailMessageId
-from src.MCP.Tools.arguments import (
+from agentic_mail_mcp.Common.Domain.Exceptions import ValidationError
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Gmail.Domain.ValueObjects import GmailMessageId
+from agentic_mail_mcp.MCP.Tools.arguments import (
     parse_date,
     parse_date_anchor,
     parse_email_identifier,

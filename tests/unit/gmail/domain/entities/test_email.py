@@ -4,16 +4,20 @@ from datetime import UTC, datetime
 
 import pytest
 
-from src.Common.Domain.Exceptions import DomainError
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Gmail.Domain.Entities.email import Email
-from src.Gmail.Domain.Events import (
+from agentic_mail_mcp.Common.Domain.Exceptions import DomainError
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
+from agentic_mail_mcp.Gmail.Domain.Events import (
     EmailArchived,
     EmailDeleted,
     EmailLabeled,
     EmailRead,
 )
-from src.Gmail.Domain.ValueObjects import EmailAddress, GmailMessageId, ThreadId
+from agentic_mail_mcp.Gmail.Domain.ValueObjects import (
+    EmailAddress,
+    GmailMessageId,
+    ThreadId,
+)
 
 
 class TestEmailFactory:

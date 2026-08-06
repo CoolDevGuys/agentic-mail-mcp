@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from src.Bootstrap.DependencyContainer import Container
-from src.Bootstrap.Settings import MCPConfig, RailguardsConfig, Settings
-from src.MCP.Resources import ResourceContext
-from src.MCP.Server import create_server, resolve_transport, run_server
-from src.MCP.Tools.use_cases import McpUseCases
+from agentic_mail_mcp.Bootstrap.DependencyContainer import Container
+from agentic_mail_mcp.Bootstrap.Settings import MCPConfig, RailguardsConfig, Settings
+from agentic_mail_mcp.MCP.Resources import ResourceContext
+from agentic_mail_mcp.MCP.Server import create_server, resolve_transport, run_server
+from agentic_mail_mcp.MCP.Tools.use_cases import McpUseCases
 
 from .conftest import make_env
 
@@ -74,7 +74,7 @@ class TestCreateServer:
         assert result is not None
 
     def test_integrates_bootstrap_lifespan(self) -> None:
-        from src.Bootstrap.Lifespan import lifespan
+        from agentic_mail_mcp.Bootstrap.Lifespan import lifespan
 
         server = create_server(settings=Settings(), name="T")
         assert server.settings.lifespan is lifespan
@@ -86,9 +86,9 @@ class TestCreateServer:
             assert "settings" in state
 
     def test_uses_server_name_from_settings(self) -> None:
-        settings = Settings(mcp=MCPConfig(server_name="My-Gmail-MCP"))
+        settings = Settings(mcp=MCPConfig(server_name="My-Agentic-Mail-MCP"))
         server = create_server(settings=settings)
-        assert server.name == "My-Gmail-MCP"
+        assert server.name == "My-Agentic-Mail-MCP"
 
 
 class TestTransport:

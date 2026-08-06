@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: pip install --no-cache-dir .[dev]
       - name: Run ruff
-        run: ruff check src/ tests/
+        run: ruff check agentic_mail_mcp/ tests/
 
   type-check:
     name: Type Check (mypy)
@@ -40,7 +40,7 @@ jobs:
       - name: Install dependencies
         run: pip install --no-cache-dir .[dev]
       - name: Run mypy
-        run: mypy src/
+        run: mypy agentic_mail_mcp/
 
   test:
     name: Test (pytest)
@@ -54,17 +54,17 @@ jobs:
       - name: Install dependencies
         run: pip install --no-cache-dir .[dev]
       - name: Run pytest (collect coverage)
-        run: pytest --cov=src --cov-config=pyproject.toml
+        run: pytest --cov=agentic_mail_mcp --cov-config=pyproject.toml
       - name: Check overall coverage (>=80%)
         run: coverage report --fail-under=80
       - name: Check Domain coverage (>=90%)
         run: |
           coverage report \
-            --include="src/Common/Domain/*" \
-            --include="src/Gmail/Domain/*" \
-            --include="src/Intelligence/Domain/*" \
-            --include="src/Search/Domain/*" \
-            --include="src/Notification/Domain/*" \
+            --include="agentic_mail_mcp/Common/Domain/*" \
+            --include="agentic_mail_mcp/Gmail/Domain/*" \
+            --include="agentic_mail_mcp/Intelligence/Domain/*" \
+            --include="agentic_mail_mcp/Search/Domain/*" \
+            --include="agentic_mail_mcp/Notification/Domain/*" \
             --fail-under=90
 
   security:
@@ -102,7 +102,7 @@ jobs:
     if: github.event_name == 'release'
     environment:
       name: pypi
-      url: https://pypi.org/p/gmail-mcp-server
+      url: https://pypi.org/p/agentic-mail-mcp
     permissions:
       id-token: write # OIDC token for PyPI Trusted Publishing (no stored secret)
     steps:

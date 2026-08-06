@@ -4,7 +4,7 @@ Status: accepted
 
 Context: Phase 2 introduces shared primitives used by every bounded context: value objects, domain events, exceptions, specifications, clock, and ID generation. Each primitive needs to be testable, framework-agnostic, and swappable without affecting dependent code.
 
-Decision: Shared primitives are implemented as `typing.Protocol` abstractions with default implementations in `src/Common/`. Key choices:
+Decision: Shared primitives are implemented as `typing.Protocol` abstractions with default implementations in `agentic_mail_mcp/Common/`. Key choices:
 
 - **ValueObject** inherits from `dataclasses.dataclass(frozen=True)` to enforce immutability and provide structural equality, hashing, and repr out of the box.
 - **UUIDId** wraps `uuid.UUID` (not `str`) to leverage built-in validation and formatting, with a `generate()` factory method.

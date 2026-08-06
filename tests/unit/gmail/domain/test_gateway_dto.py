@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.Gmail.Domain.Gateway.gmail_gateway import (
+from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     GmailAttachment,
     GmailHistory,
     GmailLabel,

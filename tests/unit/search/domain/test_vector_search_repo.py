@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Search.Domain.Entities.search_document import SearchDocument
-from src.Search.Domain.Repository.vector_search_repository import SearchResult
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Search.Domain.Entities.search_document import SearchDocument
+from agentic_mail_mcp.Search.Domain.Repository.vector_search_repository import (
+    SearchResult,
+)
 
 
 @dataclass

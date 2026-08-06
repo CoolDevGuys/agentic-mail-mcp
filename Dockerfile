@@ -9,7 +9,7 @@ RUN pip install --no-cache-dir build
 
 # Copy the sources needed to build the distribution.
 COPY pyproject.toml README.md LICENSE ./
-COPY src/ src/
+COPY agentic_mail_mcp/ agentic_mail_mcp/
 
 RUN python -m build --wheel --outdir /dist
 
@@ -26,10 +26,10 @@ RUN pip install --no-cache-dir /tmp/*.whl && rm -rf /tmp/*.whl
 RUN useradd --create-home --uid 10001 appuser
 USER appuser
 
-# Health check applies to HTTP transport (GMAIL_MCP_MCP_TRANSPORT=http); a stdio
+# Health check applies to HTTP transport (AGENTIC_MAIL_MCP_MCP_TRANSPORT=http); a stdio
 # container is a foreground process whose liveness is the process itself.
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD python -c "import os,socket; s=socket.socket(); s.settimeout(5); s.connect((os.getenv('GMAIL_MCP_MCP_HOST','127.0.0.1'), int(os.getenv('GMAIL_MCP_MCP_PORT','8080')))); s.close()" || exit 1
+    CMD python -c "import os,socket; s=socket.socket(); s.settimeout(5); s.connect((os.getenv('AGENTIC_MAIL_MCP_MCP_HOST','127.0.0.1'), int(os.getenv('AGENTIC_MAIL_MCP_MCP_PORT','8080')))); s.close()" || exit 1
 
-CMD ["gmail-mcp-server"]
+CMD ["agentic-mail-mcp"]

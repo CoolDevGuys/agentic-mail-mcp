@@ -34,7 +34,7 @@ A single `migrations/` directory with `alembic.ini` at the repo root serves both
 The adapter implements `GmailGateway`, returning the plain gateway dataclasses (`GmailMessage`, `GmailListResponse`, …) already defined in the port. Retries use exponential backoff on 429/5xx; a token-bucket limiter caps request rate. HTTP is fully mockable so tests need no network. Mapping gateway DTOs → domain entities stays in the existing `EmailMapper`/`ThreadMapper`.
 
 **4. OAuth tokens encrypted at rest, stored outside the repo.**
-`GmailOAuthProvider` persists refresh tokens to `Settings.gmail.token_storage_path` (default outside the project dir, e.g. `~/.config/gmail-mcp-server/`), encrypted with `Settings.gmail.token_encryption_key` (symmetric, e.g. Fernet). Token values are never logged (relies on the Bootstrap logging redaction filter). Supports both interactive browser flow and headless pre-authorized tokens.
+`GmailOAuthProvider` persists refresh tokens to `Settings.gmail.token_storage_path` (default outside the project dir, e.g. `~/.config/agentic-mail-mcp/`), encrypted with `Settings.gmail.token_encryption_key` (symmetric, e.g. Fernet). Token values are never logged (relies on the Bootstrap logging redaction filter). Supports both interactive browser flow and headless pre-authorized tokens.
 
 **5. `VectorSearchRepository` interchangeability enforced by a shared contract test.**
 sqlite-vss (default) and pgvector (optional) implement the same port. A single parametrized contract-test module runs the identical assertions against both backends (index → search → score ordering → delete → count), so either can be swapped without changing callers. The `BgeEmbeddingGateway` is shared by both and produces vectors matching `dimension()`.

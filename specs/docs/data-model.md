@@ -1,11 +1,11 @@
 # Data Model
 
 > Persistence schema for the Gmail bounded context. The synchronous SQLAlchemy
-> models live in `src/Gmail/Infrastructure/Persistence/SqlAlchemy/Models/` and
+> models live in `agentic_mail_mcp/Gmail/Infrastructure/Persistence/SqlAlchemy/Models/` and
 > are created by the initial Alembic migration (`migrations/versions/0001`).
 > A single portable schema serves SQLite (default) and PostgreSQL (optional).
 
-Timestamps use `UtcDateTime` (see `src/Common/Infrastructure/Persistence/database.py`),
+Timestamps use `UtcDateTime` (see `agentic_mail_mcp/Common/Infrastructure/Persistence/database.py`),
 which normalizes values to timezone-aware UTC on write and read so behavior is
 identical across SQLite and PostgreSQL.
 
@@ -83,9 +83,9 @@ audit trail. Created by migration `0002`.
 Embeddings are **not** stored in the relational schema above. The
 `VectorSearchRepository` implementations own their own storage:
 - **sqlite-vec** (default): a `vec0` virtual table plus a `documents` table
-  keyed by rowid (`src/Search/Infrastructure/SqliteVec/`).
+  keyed by rowid (`agentic_mail_mcp/Search/Infrastructure/SqliteVec/`).
 - **pgvector** (optional): a `search_documents` table with a `vector` column
-  (`src/Search/Infrastructure/PgVector/`).
+  (`agentic_mail_mcp/Search/Infrastructure/PgVector/`).
 
 ## Migrations
 

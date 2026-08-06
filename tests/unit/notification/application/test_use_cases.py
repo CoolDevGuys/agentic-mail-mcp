@@ -3,18 +3,18 @@ from __future__ import annotations
 import logging
 from contextlib import contextmanager
 
-from src.Common.Domain.Events import InMemoryEventBus
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Notification.Application.UseCases.notify_important_email import (
+from agentic_mail_mcp.Common.Domain.Events import InMemoryEventBus
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Notification.Application.UseCases.notify_important_email import (
     NotifyImportantEmailUseCase,
 )
-from src.Notification.Application.UseCases.publish_inbox_event import (
+from agentic_mail_mcp.Notification.Application.UseCases.publish_inbox_event import (
     PublishInboxEventUseCase,
 )
-from src.Notification.Domain.Events.important_email_detected import (
+from agentic_mail_mcp.Notification.Domain.Events.important_email_detected import (
     ImportantEmailDetected,
 )
-from src.Notification.Domain.Events.inbox_changed import InboxChanged
+from agentic_mail_mcp.Notification.Domain.Events.inbox_changed import InboxChanged
 from tests.fakes.ports import RecordingNotificationGateway
 
 
@@ -71,7 +71,7 @@ class TestNotifyImportantEmailUseCase:
         uc.register(bus)
 
         with capture_logs(
-            "src.Notification.Application.UseCases.notify_important_email"
+            "agentic_mail_mcp.Notification.Application.UseCases.notify_important_email"
         ) as records:
             # Must not raise into the bus / producer.
             bus.publish(
@@ -144,7 +144,7 @@ class TestPublishInboxEventUseCase:
         uc.register(bus)
 
         with capture_logs(
-            "src.Notification.Application.UseCases.publish_inbox_event"
+            "agentic_mail_mcp.Notification.Application.UseCases.publish_inbox_event"
         ) as records:
             bus.publish(
                 InboxChanged(event_type="email_added", email_id=UUIDId.generate())

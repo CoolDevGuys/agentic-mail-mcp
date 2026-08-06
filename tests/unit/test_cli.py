@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from src.Bootstrap import cli
-from src.Bootstrap.Settings import Settings
+from agentic_mail_mcp.Bootstrap import cli
+from agentic_mail_mcp.Bootstrap.Settings import Settings
 
 
 class _FakeProvider:
@@ -18,7 +18,7 @@ class _FakeProvider:
 def _settings(**env) -> Settings:
     # build a Settings with explicit sections (env isolation is handled by the
     # autouse conftest fixture)
-    from src.Bootstrap.Settings import GmailConfig
+    from agentic_mail_mcp.Bootstrap.Settings import GmailConfig
 
     return Settings(gmail=GmailConfig(**env))
 
@@ -77,7 +77,7 @@ class TestAuthCommand:
         assert "Authorized" in capsys.readouterr().out
 
     def test_canceled_or_denied_exits_with_guidance(self, monkeypatch, capsys) -> None:
-        from src.Common.Domain.Exceptions import DomainError
+        from agentic_mail_mcp.Common.Domain.Exceptions import DomainError
 
         class _Denied:
             def authorize_interactive(self) -> str:
@@ -124,7 +124,7 @@ class TestAuthCommand:
 class TestArgparse:
     def test_default_command_is_serve(self, monkeypatch) -> None:
         called = {}
-        monkeypatch.setattr(cli.sys, "argv", ["gmail-mcp-server"])
+        monkeypatch.setattr(cli.sys, "argv", ["agentic-mail-mcp"])
         monkeypatch.setattr(
             cli, "_serve", lambda settings: called.setdefault("serve", True)
         )
@@ -138,7 +138,7 @@ class TestArgparse:
 
     def test_auth_command_dispatches(self, monkeypatch) -> None:
         called = {}
-        monkeypatch.setattr(cli.sys, "argv", ["gmail-mcp-server", "auth"])
+        monkeypatch.setattr(cli.sys, "argv", ["agentic-mail-mcp", "auth"])
         monkeypatch.setattr(
             cli, "_serve", lambda settings: called.setdefault("serve", True)
         )

@@ -5,12 +5,12 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from src.Bootstrap.Settings import Settings
+from agentic_mail_mcp.Bootstrap.Settings import Settings
 
 # Import models so their tables register on Base.metadata.
-from src.Common.Infrastructure.Persistence import audit_models  # noqa: F401
-from src.Common.Infrastructure.Persistence.database import Base
-from src.Gmail.Infrastructure.Persistence.SqlAlchemy.Models import models  # noqa: F401
+from agentic_mail_mcp.Common.Infrastructure.Persistence import audit_models  # noqa: F401
+from agentic_mail_mcp.Common.Infrastructure.Persistence.database import Base
+from agentic_mail_mcp.Gmail.Infrastructure.Persistence.SqlAlchemy.Models import models  # noqa: F401
 
 config = context.config
 

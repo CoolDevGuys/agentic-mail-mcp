@@ -2,8 +2,8 @@ from datetime import UTC
 
 import pytest
 
-from src.Bootstrap.DependencyContainer import Container
-from src.Bootstrap.Settings import (
+from agentic_mail_mcp.Bootstrap.DependencyContainer import Container
+from agentic_mail_mcp.Bootstrap.Settings import (
     DatabaseConfig,
     GmailConfig,
     LLMConfig,

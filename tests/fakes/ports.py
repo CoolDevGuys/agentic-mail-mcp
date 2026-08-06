@@ -8,10 +8,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Gmail.Domain.Entities.email import Email
-from src.Gmail.Domain.Entities.thread import Thread
-from src.Gmail.Domain.Gateway.gmail_gateway import (
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
+from agentic_mail_mcp.Gmail.Domain.Entities.thread import Thread
+from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     DraftResult,
     GmailLabel,
     GmailListResponse,
@@ -19,9 +19,11 @@ from src.Gmail.Domain.Gateway.gmail_gateway import (
     ModifyResult,
     SentMessageResult,
 )
-from src.Intelligence.Domain.Gateway.llm_gateway import LlmResponse, Usage
-from src.Search.Domain.Entities.search_document import SearchDocument
-from src.Search.Domain.Repository.vector_search_repository import SearchResult
+from agentic_mail_mcp.Intelligence.Domain.Gateway.llm_gateway import LlmResponse, Usage
+from agentic_mail_mcp.Search.Domain.Entities.search_document import SearchDocument
+from agentic_mail_mcp.Search.Domain.Repository.vector_search_repository import (
+    SearchResult,
+)
 
 
 class InMemoryEmailRepository:

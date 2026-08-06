@@ -10,12 +10,12 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from src.Bootstrap.Settings import RailguardsConfig, Settings
-from src.Gmail.Domain.Gateway.gmail_gateway import (
+from agentic_mail_mcp.Bootstrap.Settings import RailguardsConfig, Settings
+from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     GmailListResponse,
     GmailMessageHeader,
 )
-from src.MCP.Server import create_server
+from agentic_mail_mcp.MCP.Server import create_server
 from tests.unit.mcp.conftest import McpEnv, make_env
 
 

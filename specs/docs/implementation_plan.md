@@ -13,11 +13,11 @@
 
 ### 1.1 - pyproject.toml
 Create a complete pyproject.toml with:
-- Project metadata (name: gmail-mcp-server, version, description, authors)
+- Project metadata (name: agentic-mail-mcp, version, description, authors)
 - Build system: hatchling
 - Dependencies: mcp, google-api-python-client, google-auth-oauthlib, pydantic, pydantic-settings, aiosqlite, asyncpg (optional), sqlalchemy, alembic, httpx, python-dotenv
 - Optional extras: [postgresql] for asyncpg + psycopg2, [dev] for pytest, pytest-asyncio, pytest-cov, ruff, mypy
-- Entry point: console script gmail-mcp-server pointing to the MCP server CLI
+- Entry point: console script agentic-mail-mcp pointing to the MCP server CLI
 - Classifiers: Python 3.11+
 
 ### 1.2 - Bootstrap src/ folder structure
@@ -43,7 +43,7 @@ Create the full directory tree per specs/docs/project_structure.md:
 Implement a pydantic-settings based configuration layer. This is the single configuration entry point for the project (supersedes the separate `Configuration.py` originally sketched in `project_structure.md`, which has been removed to avoid two competing config-loading paths):
 - Settings class inheriting from pydantic_settings.BaseSettings
 - Sections: gmail (OAuth client ID/secret, scopes, token_storage_path, token_encryption_key), database (URL, driver), railguards (access_level, allowed recipients, blocked actions, rate limits), mcp (server name, host, port), llm (provider, model, API key), notifications (webhook URL, Redis URL)
-- Supports .env file and environment variables with prefix GMAIL_MCP_
+- Supports .env file and environment variables with prefix AGENTIC_MAIL_MCP_
 - Settings.from_env() class method as factory
 - .env.example with all keys documented, no real secrets
 
@@ -78,7 +78,7 @@ Set up:
 
 ### 1.8 - Docker setup
 - Dockerfile: Python 3.11 slim base, copy pyproject.toml, install deps, copy source, run as non-root user
-- docker-compose.yml: gmail-mcp-server service + postgres service (optional, for PG testing)
+- docker-compose.yml: agentic-mail-mcp service + postgres service (optional, for PG testing)
 - Health check on MCP server port
 - .dockerignore excluding .venv, __pycache__, .git
 
@@ -376,7 +376,7 @@ Set up:
 ## Phase 5 - Infrastructure Adapters [DONE]
 
 ### 5.1 - Gmail/Infrastructure/Google/ (OAuth, API Gateway, Watcher)
-- GmailOAuthProvider: OAuth2 flow (interactive browser + headless with pre-authorized tokens); persists refresh tokens outside the repo (path from Settings.gmail.token_storage_path, default outside the project directory e.g. ~/.config/gmail-mcp-server/), encrypted at rest using Settings.gmail.token_encryption_key; never logs token values (relies on Bootstrap/Logging.py redaction filter, 1.4)
+- GmailOAuthProvider: OAuth2 flow (interactive browser + headless with pre-authorized tokens); persists refresh tokens outside the repo (path from Settings.gmail.token_storage_path, default outside the project directory e.g. ~/.config/agentic-mail-mcp/), encrypted at rest using Settings.gmail.token_encryption_key; never logs token values (relies on Bootstrap/Logging.py redaction filter, 1.4)
 - GmailApiGateway: implements GmailGateway port using google-api-python-client; wraps all API calls with retry logic and rate limiting
 - GmailWatcher: manages Gmail push notifications (watch/stop-watch); processes webhook callbacks
 - GmailHistorySynchronizer: processes history changes, updates local cache, emits domain events
@@ -559,7 +559,7 @@ Set up:
 ### 8.6 - PyPI packaging
 - pyproject.toml with complete build configuration
 - License file (MIT or Apache 2.0)
-- Console script entry point: gmail-mcp-server
+- Console script entry point: agentic-mail-mcp
 - Test PyPI publish (test.pypi.org)
 - Production PyPI publish
 

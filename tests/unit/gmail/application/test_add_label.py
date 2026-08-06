@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import pytest
 
-from src.Common.Domain.Events import InMemoryEventBus
-from src.Common.Domain.Exceptions import NotFoundError, PermissionError
-from src.Common.Railguards.config import RailguardConfig
-from src.Common.Railguards.validator import RailguardValidator
-from src.Gmail.Application.Commands.commands import AddLabelCommand
-from src.Gmail.Application.UseCases.add_label import AddLabelUseCase
-from src.Gmail.Domain.Entities.email import Email
-from src.Gmail.Domain.Events import EmailLabeled
+from agentic_mail_mcp.Common.Domain.Events import InMemoryEventBus
+from agentic_mail_mcp.Common.Domain.Exceptions import NotFoundError, PermissionError
+from agentic_mail_mcp.Common.Railguards.config import RailguardConfig
+from agentic_mail_mcp.Common.Railguards.validator import RailguardValidator
+from agentic_mail_mcp.Gmail.Application.Commands.commands import AddLabelCommand
+from agentic_mail_mcp.Gmail.Application.UseCases.add_label import AddLabelUseCase
+from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
+from agentic_mail_mcp.Gmail.Domain.Events import EmailLabeled
 from tests.fakes.ports import InMemoryEmailRepository, StubGmailGateway
 
 

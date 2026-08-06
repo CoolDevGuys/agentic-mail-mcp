@@ -163,7 +163,7 @@ they register **only when an LLM is configured** (`llm.api_key` or `model_path`)
 | `daily_digest` | | `date` (`YYYY-MM-DD`, defaults to today) | `Digest` (digest_type, digest_period, email_count, summary_text, items) |
 | `weekly_digest` | | `week_start` (any `YYYY-MM-DD` in the target week, defaults to this week) | `Digest` |
 
-Setting `GMAIL_MCP_LLM_INTERNAL_TOOLS=true` *also* registers server-side
+Setting `AGENTIC_MAIL_MCP_LLM_INTERNAL_TOOLS=true` *also* registers server-side
 `summarize_email`, `classify_email`, `suggest_reply`, and `extract_action_items`
 tools (each takes `email_id`) for deployments that want that — at the cost of
 extra latency. `classify_email` categories are `urgent`/`normal`/`spam`/`promo`,

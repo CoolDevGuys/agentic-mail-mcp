@@ -27,7 +27,7 @@
 
 - [x] 6.1 Add a top-level `LICENSE` file (MIT) matching the `pyproject.toml` license
 - [x] 6.2 Complete `pyproject.toml` distribution metadata: `readme = "README.md"`, `[project.urls]`, verify license/authors/classifiers/entry point
-- [x] 6.3 Build the package (`python -m build` or `hatch build`) and confirm a valid sdist + wheel with the `gmail-mcp-server` entry point
+- [x] 6.3 Build the package (`python -m build` or `hatch build`) and confirm a valid sdist + wheel with the `agentic-mail-mcp` entry point
 - [x] 6.4 Document the Test-PyPI → production PyPI publish flow (in README or a release doc)
 
 ## 7. Docker multi-stage build (8.7)

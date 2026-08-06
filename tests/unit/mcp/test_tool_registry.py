@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.MCP.ToolRegistry import (
+from agentic_mail_mcp.MCP.ToolRegistry import (
     CATEGORIES,
     INTELLIGENCE,
     READ,
@@ -12,7 +12,7 @@ from src.MCP.ToolRegistry import (
     ToolRegistry,
     build_schema,
 )
-from src.MCP.Tools.builder import build_registry
+from agentic_mail_mcp.MCP.Tools.builder import build_registry
 
 from .conftest import make_env
 

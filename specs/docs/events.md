@@ -8,7 +8,7 @@
 
 ## Infrastructure
 
-Domain events are plain dataclasses. The `EventBus` (`src/Common/Domain/Events/`)
+Domain events are plain dataclasses. The `EventBus` (`agentic_mail_mcp/Common/Domain/Events/`)
 is generic over concrete event types: handlers are registered and dispatched by
 the event's exact type, so events are **not** required to share a common base
 class.

@@ -1,9 +1,9 @@
 ## 1. Project Configuration
 
-- [x] 1.1 Create pyproject.toml with project metadata (name: gmail-mcp-server, version, description, authors, Python 3.11+ classifiers)
+- [x] 1.1 Create pyproject.toml with project metadata (name: agentic-mail-mcp, version, description, authors, Python 3.11+ classifiers)
 - [x] 1.2 Add build system configuration (hatchling) and core dependencies (mcp, google-api-python-client, google-auth-oauthlib, pydantic, pydantic-settings, aiosqlite, sqlalchemy, alembic, httpx, python-dotenv)
 - [x] 1.3 Add optional extras: [postgresql] (asyncpg, psycopg2) and [dev] (pytest, pytest-asyncio, pytest-cov, ruff, mypy)
-- [x] 1.4 Define console script entry point: gmail-mcp-server
+- [x] 1.4 Define console script entry point: agentic-mail-mcp
 
 ## 2. Project Structure
 
@@ -20,7 +20,7 @@
 
 - [x] 3.1 Implement Settings class inheriting from pydantic_settings.BaseSettings
 - [x] 3.2 Define configuration sections: gmail, database, railguards, mcp, llm, notifications
-- [x] 3.3 Add .env file support with GMAIL_MCP_ prefix environment variables
+- [x] 3.3 Add .env file support with AGENTIC_MAIL_MCP_ prefix environment variables
 - [x] 3.4 Implement Settings.from_env() factory method
 - [x] 3.5 Create .env.example with all keys documented and placeholder values
 
@@ -56,7 +56,7 @@
 ## 8. Docker
 
 - [x] 8.1 Create Dockerfile: Python 3.11 slim base, copy pyproject.toml, install deps, copy source, non-root user
-- [x] 8.2 Create docker-compose.yml: gmail-mcp-server service + optional postgres service
+- [x] 8.2 Create docker-compose.yml: agentic-mail-mcp service + optional postgres service
 - [x] 8.3 Add health check on MCP server port
 - [x] 8.4 Create .dockerignore excluding .venv, __pycache__, .git
 

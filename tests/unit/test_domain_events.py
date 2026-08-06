@@ -1,7 +1,7 @@
 from collections.abc import Callable
 
-from src.Common.Domain.Events import DomainEvent, InMemoryEventBus
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Common.Domain.Events import DomainEvent, InMemoryEventBus
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
 
 
 class _TestEvent(DomainEvent):

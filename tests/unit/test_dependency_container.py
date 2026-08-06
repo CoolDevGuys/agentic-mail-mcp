@@ -1,7 +1,7 @@
 import pytest
 
-from src.Bootstrap.DependencyContainer import Container
-from src.Bootstrap.Settings import Settings
+from agentic_mail_mcp.Bootstrap.DependencyContainer import Container
+from agentic_mail_mcp.Bootstrap.Settings import Settings
 
 
 class TestContainer:

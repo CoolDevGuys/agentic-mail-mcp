@@ -7,8 +7,8 @@ Context: To talk to Gmail the server needs a Google OAuth client and a per-user 
 Decision: **Distribute as a local, bring-your-own-credentials tool.** There is no central Google app. Each user:
 
 1. Creates their own Google Cloud project and Desktop-app OAuth client, and downloads its `credentials.json`.
-2. Points the server at it (`GMAIL_MCP_GMAIL_CLIENT_SECRETS_FILE`, or `client_id`/`client_secret`).
-3. Runs `gmail-mcp-server auth` once to grant their own account access; the encrypted token is stored locally.
+2. Points the server at it (`AGENTIC_MAIL_MCP_GMAIL_CLIENT_SECRETS_FILE`, or `client_id`/`client_secret`).
+3. Runs `agentic-mail-mcp auth` once to grant their own account access; the encrypted token is stored locally.
 
 Because each app only ever authorizes its own owner (as a test user, or in an unverified production app), **Google's verification requirement does not apply**. Credentials and tokens never leave the user's machine; the project ships no service that touches anyone's mail.
 

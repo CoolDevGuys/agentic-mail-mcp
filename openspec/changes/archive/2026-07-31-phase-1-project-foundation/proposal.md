@@ -19,7 +19,7 @@ The Gmail MCP Server project needs a solid foundation before any domain logic ca
 ### New Capabilities
 - `project-config`: pyproject.toml with metadata, dependencies, build system (hatchling), entry points, and optional extras
 - `project-structure`: Full src/ directory tree with DDD bounded contexts (Bootstrap, Common, Gmail, Intelligence, Search, Notification, MCP)
-- `settings`: Pydantic-settings based configuration with .env support, GMAIL_MCP_ prefix, and documented .env.example
+- `settings`: Pydantic-settings based configuration with .env support, AGENTIC_MAIL_MCP_ prefix, and documented .env.example
 - `logging`: Structured JSON logging with correlation IDs, timestamps, and sensitive data redaction
 - `lifespan`: Async application lifecycle management (startup/shutdown) with DB, OAuth, and event bus integration
 - `dependency-injection`: Lightweight dict-based DI container with factory/async-factory support

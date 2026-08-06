@@ -3,12 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from src.Common.Domain.Exceptions import (
+from agentic_mail_mcp.Common.Domain.Exceptions import (
     NotFoundError,
     PermissionError,
     ValidationError,
 )
-from src.MCP.errors import (
+from agentic_mail_mcp.MCP.errors import (
     INTERNAL_ERROR,
     INVALID_INPUT,
     NOT_FOUND,
@@ -16,7 +16,7 @@ from src.MCP.errors import (
     error_result,
     is_error_result,
 )
-from src.MCP.serialization import to_jsonable
+from agentic_mail_mcp.MCP.serialization import to_jsonable
 
 
 @dataclass(frozen=True)

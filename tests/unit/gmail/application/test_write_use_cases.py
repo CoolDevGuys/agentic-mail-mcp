@@ -2,26 +2,34 @@ from __future__ import annotations
 
 import pytest
 
-from src.Common.Domain.Events import InMemoryEventBus
-from src.Common.Domain.Exceptions import PermissionError
-from src.Common.Railguards.config import RailguardConfig
-from src.Common.Railguards.validator import RailguardValidator
-from src.Gmail.Application.Commands.commands import (
+from agentic_mail_mcp.Common.Domain.Events import InMemoryEventBus
+from agentic_mail_mcp.Common.Domain.Exceptions import PermissionError
+from agentic_mail_mcp.Common.Railguards.config import RailguardConfig
+from agentic_mail_mcp.Common.Railguards.validator import RailguardValidator
+from agentic_mail_mcp.Gmail.Application.Commands.commands import (
     ArchiveEmailCommand,
     CreateDraftCommand,
     DeleteEmailCommand,
     ForwardEmailCommand,
     SendDraftCommand,
 )
-from src.Gmail.Application.UseCases.archive_email import ArchiveEmailUseCase
-from src.Gmail.Application.UseCases.delete_email import DeleteEmailUseCase
-from src.Gmail.Application.UseCases.drafts import (
+from agentic_mail_mcp.Gmail.Application.UseCases.archive_email import (
+    ArchiveEmailUseCase,
+)
+from agentic_mail_mcp.Gmail.Application.UseCases.delete_email import DeleteEmailUseCase
+from agentic_mail_mcp.Gmail.Application.UseCases.drafts import (
     CreateDraftUseCase,
     SendDraftUseCase,
 )
-from src.Gmail.Application.UseCases.forward_email import ForwardEmailUseCase
-from src.Gmail.Domain.Entities.email import Email
-from src.Gmail.Domain.Events import EmailArchived, EmailDeleted, EmailForwarded
+from agentic_mail_mcp.Gmail.Application.UseCases.forward_email import (
+    ForwardEmailUseCase,
+)
+from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
+from agentic_mail_mcp.Gmail.Domain.Events import (
+    EmailArchived,
+    EmailDeleted,
+    EmailForwarded,
+)
 from tests.fakes.ports import InMemoryEmailRepository, StubGmailGateway
 
 

@@ -6,10 +6,10 @@ import httpx
 import pytest
 import respx
 
-from src.Notification.Infrastructure.Redis.redis_notification_gateway import (
+from agentic_mail_mcp.Notification.Infrastructure.Redis.redis_notification_gateway import (
     RedisNotificationGateway,
 )
-from src.Notification.Infrastructure.Webhook.webhook_notification_gateway import (
+from agentic_mail_mcp.Notification.Infrastructure.Webhook.webhook_notification_gateway import (
     WebhookNotificationGateway,
 )
 
@@ -52,7 +52,7 @@ class TestRedisNotificationGateway:
     def test_publish_delivers_to_subscriber(self) -> None:
         client = fakeredis.FakeStrictRedis()
         pubsub = client.pubsub()
-        pubsub.subscribe("gmail-mcp:email_added")
+        pubsub.subscribe("agentic-mail-mcp:email_added")
         # Drain the subscribe confirmation message.
         pubsub.get_message(timeout=1)
 

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from src.Common.Domain.ValueObjects.uuid_id import UUIDId
-from src.Gmail.Domain.Gateway.gmail_gateway import GmailMessage
-from src.Gmail.Infrastructure.Persistence.cached_email_repository import (
+from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
+from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import GmailMessage
+from agentic_mail_mcp.Gmail.Infrastructure.Persistence.cached_email_repository import (
     CachedEmailRepository,
 )
 from tests.fakes.ports import InMemoryEmailRepository, StubGmailGateway

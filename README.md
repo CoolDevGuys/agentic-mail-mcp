@@ -1,4 +1,4 @@
-# 📧 Gmail MCP Server
+# 📧 Agentic Mail MCP
 
 > A [Model Context Protocol](https://modelcontextprotocol.io) server that lets AI
 > agents work with a Gmail account **safely** — read, search, summarize, and
@@ -11,7 +11,7 @@
 > service and no Google verification to wait for.**
 
 > **ℹ️ Status:** pre-release (`0.1.0`), fully functional locally. Not yet on PyPI —
-> install from source (below). See the [Roadmap](#-roadmap-to-10).
+> install from source (below).
 
 ## ✨ Features
 
@@ -31,7 +31,7 @@ You need **Python 3.11+** and a Google account. Five minutes end to end.
 flowchart LR
     A[1. Install] --> B[2. Google<br/>credentials]
     B --> C[3. Configure<br/>.env]
-    C --> D[4. Authorize<br/>gmail-mcp-server auth]
+    C --> D[4. Authorize<br/>agentic-mail-mcp auth]
     D --> E[5. Connect agent<br/>or run HTTP]
 ```
 
@@ -50,16 +50,16 @@ Full walkthrough with the exact clicks:
 
 ```bash
 # Easiest: just point at the credentials.json you downloaded.
-GMAIL_MCP_GMAIL_CLIENT_SECRETS_FILE=/path/to/credentials.json
-GMAIL_MCP_GMAIL_TOKEN_ENCRYPTION_KEY=<any long random string>
+AGENTIC_MAIL_MCP_GMAIL_CLIENT_SECRETS_FILE=/path/to/credentials.json
+AGENTIC_MAIL_MCP_GMAIL_TOKEN_ENCRYPTION_KEY=<any long random string>
 # 🔒 Writes are denied by default. Keep read_only until you trust the setup.
-GMAIL_MCP_RAILGUARDS_ACCESS_LEVEL=read_only
+AGENTIC_MAIL_MCP_RAILGUARDS_ACCESS_LEVEL=read_only
 ```
 
 **4. Authorize** (one-time browser consent — stores an encrypted token):
 
 ```bash
-gmail-mcp-server auth
+agentic-mail-mcp auth
 ```
 
 **5. Use it** — connect an AI agent over **stdio** or run the **HTTP** server.
@@ -95,27 +95,27 @@ pip install .
 **Docker:** `docker compose up --build` (see [HTTP server](#http-server-deployment)).
 
 > 💡 Once published to PyPI, the recommended install for MCP clients will be
-> `uvx gmail-mcp-server` / `pipx run gmail-mcp-server` — no virtualenv to manage.
+> `uvx agentic-mail-mcp` / `pipx run agentic-mail-mcp` — no virtualenv to manage.
 
 ## ⚙️ Configuration
 
-Set environment variables with the `GMAIL_MCP_` prefix, or use a `.env` file
+Set environment variables with the `AGENTIC_MAIL_MCP_` prefix, or use a `.env` file
 (copy `.env.example`). The table below covers the essentials; **every** setting,
 with defaults and purpose — and the **Google OAuth walkthrough** — is in
 [`specs/docs/configuration.md`](specs/docs/configuration.md).
 
 | Variable | Description | Default |
 |---|---|---|
-| `GMAIL_MCP_GMAIL_CLIENT_SECRETS_FILE` | Path to your downloaded `credentials.json` (recommended) | (one of these two) |
-| `GMAIL_MCP_GMAIL_OAUTH_CLIENT_ID` / `_SECRET` | …or the OAuth client id/secret directly | (one of these two) |
-| `GMAIL_MCP_GMAIL_TOKEN_ENCRYPTION_KEY` | Secret used to encrypt the stored token | (required to store tokens) |
-| `GMAIL_MCP_GMAIL_TOKEN_STORAGE_PATH` | Encrypted token file path (set outside the repo in prod) | `token.json` |
-| `GMAIL_MCP_DATABASE_URL` | SQLAlchemy URL (synchronous driver) | `sqlite:///./gmail_mcp.db` |
-| `GMAIL_MCP_RAILGUARDS_ACCESS_LEVEL` | `read_only` or `read_write` — **writes denied by default** | `read_only` |
-| `GMAIL_MCP_LLM_PROVIDER` | `openai` (HTTP) or `llamacpp` (local) | `openai` |
-| `GMAIL_MCP_LLM_API_KEY` | LLM API key | (required for intelligence) |
-| `GMAIL_MCP_MCP_TRANSPORT` | `stdio` (default) or `http` | `stdio` |
-| `GMAIL_MCP_MCP_HOST` / `GMAIL_MCP_MCP_PORT` | HTTP transport bind address | `127.0.0.1` / `8080` |
+| `AGENTIC_MAIL_MCP_GMAIL_CLIENT_SECRETS_FILE` | Path to your downloaded `credentials.json` (recommended) | (one of these two) |
+| `AGENTIC_MAIL_MCP_GMAIL_OAUTH_CLIENT_ID` / `_SECRET` | …or the OAuth client id/secret directly | (one of these two) |
+| `AGENTIC_MAIL_MCP_GMAIL_TOKEN_ENCRYPTION_KEY` | Secret used to encrypt the stored token | (required to store tokens) |
+| `AGENTIC_MAIL_MCP_GMAIL_TOKEN_STORAGE_PATH` | Encrypted token file path (set outside the repo in prod) | `token.json` |
+| `AGENTIC_MAIL_MCP_DATABASE_URL` | SQLAlchemy URL (synchronous driver) | `sqlite:///./agentic_mail_mcp.db` |
+| `AGENTIC_MAIL_MCP_RAILGUARDS_ACCESS_LEVEL` | `read_only` or `read_write` — **writes denied by default** | `read_only` |
+| `AGENTIC_MAIL_MCP_LLM_PROVIDER` | `openai` (HTTP) or `llamacpp` (local) | `openai` |
+| `AGENTIC_MAIL_MCP_LLM_API_KEY` | LLM API key | (required for intelligence) |
+| `AGENTIC_MAIL_MCP_MCP_TRANSPORT` | `stdio` (default) or `http` | `stdio` |
+| `AGENTIC_MAIL_MCP_MCP_HOST` / `AGENTIC_MAIL_MCP_MCP_PORT` | HTTP transport bind address | `127.0.0.1` / `8080` |
 
 ## 🔌 Usage
 
@@ -126,25 +126,30 @@ The server speaks MCP over two transports:
 | **stdio** (default) | one user on a laptop (Claude Desktop, IDE agents) | agent launches the process |
 | **HTTP** (streamable) | shared / containerized deployments | long-running server on a port |
 
-> ⚠️ **Authorize first.** Run `gmail-mcp-server auth` once (browser consent) before
+> ⚠️ **Authorize first.** Run `agentic-mail-mcp auth` once (browser consent) before
 > starting the server — it stores the encrypted token the server reads on every
 > start. Details:
 > [Authorize](specs/docs/configuration.md#6-authorize-one-time-consent).
+>
+> **Headless server (no browser)?** `auth` needs a browser + loopback redirect,
+> so you don't run it on the server. Authorize once on a machine that has a
+> browser, then copy the encrypted token file across — see
+> [Headless / server deployment](specs/docs/configuration.md#7-headless--server-deployment-no-browser).
 
 ### 💻 Local (stdio) — connect an AI agent
 
-Point your MCP client at the `gmail-mcp-server` command. Example client config:
+Point your MCP client at the `agentic-mail-mcp` command. Example client config:
 
 ```json
 {
   "mcpServers": {
     "gmail": {
-      "command": "gmail-mcp-server",
+      "command": "agentic-mail-mcp",
       "env": {
-        "GMAIL_MCP_GMAIL_OAUTH_CLIENT_ID": "...",
-        "GMAIL_MCP_GMAIL_OAUTH_CLIENT_SECRET": "...",
-        "GMAIL_MCP_GMAIL_TOKEN_ENCRYPTION_KEY": "...",
-        "GMAIL_MCP_RAILGUARDS_ACCESS_LEVEL": "read_only"
+        "AGENTIC_MAIL_MCP_GMAIL_OAUTH_CLIENT_ID": "...",
+        "AGENTIC_MAIL_MCP_GMAIL_OAUTH_CLIENT_SECRET": "...",
+        "AGENTIC_MAIL_MCP_GMAIL_TOKEN_ENCRYPTION_KEY": "...",
+        "AGENTIC_MAIL_MCP_RAILGUARDS_ACCESS_LEVEL": "read_only"
       }
     }
   }
@@ -160,8 +165,8 @@ The agent then discovers the tools, resources, and prompts described in the
 Run a standalone streamable-HTTP server:
 
 ```bash
-GMAIL_MCP_MCP_TRANSPORT=http GMAIL_MCP_MCP_HOST=0.0.0.0 GMAIL_MCP_MCP_PORT=8080 \
-  gmail-mcp-server
+AGENTIC_MAIL_MCP_MCP_TRANSPORT=http AGENTIC_MAIL_MCP_MCP_HOST=0.0.0.0 AGENTIC_MAIL_MCP_MCP_PORT=8080 \
+  agentic-mail-mcp
 ```
 
 Or with Docker (the compose file already sets HTTP transport and a health check):
@@ -169,6 +174,11 @@ Or with Docker (the compose file already sets HTTP transport and a health check)
 ```bash
 docker compose up --build           # server on http://localhost:8080
 ```
+
+> 🔑 **Auth on a headless host:** authorize on your laptop and mount the
+> encrypted token into the container (e.g. `-v /etc/agentic-mail-mcp:/secrets:ro`)
+> — full steps under
+> [Headless / server deployment](specs/docs/configuration.md#7-headless--server-deployment-no-browser).
 
 Point an HTTP-capable MCP client at `http://<host>:8080`. Keep the server behind
 your own auth/TLS if it's reachable beyond localhost.
@@ -207,7 +217,7 @@ Internal LLM inference is reserved for where it pays off (map-reduce over many
 emails), and registers **only when an LLM is configured**:
 
 - tools: `daily_digest` · `weekly_digest`
-- *(opt-in)* set `GMAIL_MCP_LLM_INTERNAL_TOOLS=true` to also expose the per-email
+- *(opt-in)* set `AGENTIC_MAIL_MCP_LLM_INTERNAL_TOOLS=true` to also expose the per-email
   ones as server-side tools. See [ADR 0006](specs/docs/adr/0006-caller-first-intelligence.md).
 
 ### Search Tools
@@ -217,7 +227,7 @@ emails), and registers **only when an LLM is configured**:
 ## Project Structure
 
 ```
-src/
+agentic_mail_mcp/
   Bootstrap/           CLI, Settings, Logging, Lifespan, DI Container
   Common/              Shared domain primitives
   Gmail/               Gmail bounded context
@@ -270,7 +280,7 @@ make migrate      # apply DB migrations; make migration m="..." to autogenerate
 make build        # build the sdist + wheel and validate metadata
 ```
 
-Prefer raw tools? They work too: `pytest`, `ruff check src tests`, `mypy src`,
+Prefer raw tools? They work too: `pytest`, `ruff check agentic_mail_mcp tests`, `mypy agentic_mail_mcp`,
 `alembic upgrade head`. All `make` targets run inside a local `.venv`.
 
 ## Contributing
@@ -281,7 +291,7 @@ Prefer raw tools? They work too: `pytest`, `ruff check src tests`, `mypy src`,
 - Changes follow the OpenSpec workflow under `openspec/` — propose a change,
   generate its spec deltas, implement, then archive.
 - Keep the tiered coverage floors green (≥90% on `Domain/`, ≥80% overall) and
-  ensure `ruff check` and `mypy src/` pass before opening a PR.
+  ensure `ruff check` and `mypy agentic_mail_mcp/` pass before opening a PR.
 
 ## 📤 Distribution
 
@@ -304,7 +314,7 @@ PyPI via **Trusted Publishing (OIDC)**, so no API token is stored in the repo.
 
 1. On [PyPI](https://pypi.org/manage/account/publishing/) → *Publishing* → add a
    **pending trusted publisher** with:
-   - **PyPI Project Name**: `gmail-mcp-server`
+   - **PyPI Project Name**: `agentic-mail-mcp`
    - **Owner**: your GitHub org/user · **Repository**: this repo
    - **Workflow name**: `ci.yml` · **Environment name**: `pypi`
 2. In GitHub → *Settings → Environments* → create an environment named **`pypi`**
@@ -317,11 +327,7 @@ PyPI via **Trusted Publishing (OIDC)**, so no API token is stored in the repo.
 2. On GitHub → *Releases → Draft a new release* → create a tag (e.g. `v0.1.0`)
    → **Publish release**.
 3. CI runs lint / type-check / tests / audit, then the `publish` job builds and
-   uploads to PyPI. Done — `uvx gmail-mcp-server` now resolves the new version.
-
-> The distribution currently exposes a top-level `src` import package. Before the
-> first public PyPI release, rename it to `gmail_mcp_server` (imports, `packages`,
-> and the console entry point) so it doesn't pollute shared environments.
+   uploads to PyPI. Done — `uvx agentic-mail-mcp` now resolves the new version.
 
 ## License
 

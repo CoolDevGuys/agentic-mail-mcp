@@ -33,7 +33,7 @@ pytestmark = pytest.mark.skipif(
 class TestSqliteVecRepository(VectorSearchRepositoryContractTests):
     @pytest.fixture
     def vector_repo(self):
-        from src.Search.Infrastructure.SqliteVec.sqlite_vec_repository import (
+        from agentic_mail_mcp.Search.Infrastructure.SqliteVec.sqlite_vec_repository import (
             SqliteVecRepository,
         )
 

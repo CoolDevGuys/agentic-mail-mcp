@@ -4,7 +4,7 @@ Status: accepted
 
 Context: The server's primary consumer is an AI agent harness (Claude Desktop, IDE agents, and similar), not a browser or a public API client. MCP defines multiple transports — stdio and streamable HTTP. We must pick a default that matches how the server is actually launched and keeps the common case zero-configuration and secure.
 
-Decision: **stdio is the default transport; HTTP is opt-in** via `Settings.mcp.transport`. Agent harnesses launch the server as a child process and speak MCP over stdin/stdout, so stdio needs no ports, no bind address, and no network exposure — the transport is the process pipe. HTTP (streamable) is available for shared, always-on deployments and is selected with `GMAIL_MCP_MCP_TRANSPORT=http` plus `host`/`port`. The transport choice is isolated in `MCP/Server.py` (`run_server`); tools, resources, and prompts are transport-agnostic.
+Decision: **stdio is the default transport; HTTP is opt-in** via `Settings.mcp.transport`. Agent harnesses launch the server as a child process and speak MCP over stdin/stdout, so stdio needs no ports, no bind address, and no network exposure — the transport is the process pipe. HTTP (streamable) is available for shared, always-on deployments and is selected with `AGENTIC_MAIL_MCP_MCP_TRANSPORT=http` plus `host`/`port`. The transport choice is isolated in `MCP/Server.py` (`run_server`); tools, resources, and prompts are transport-agnostic.
 
 Consequences:
 

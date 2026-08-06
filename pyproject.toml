@@ -84,7 +84,6 @@ packages = ["agentic_mail_mcp"]
 # tooling, and node_modules noise out of the release artifact.
 only-include = [
     "agentic_mail_mcp",
-    "migrations",
     "specs/docs",
     "README.md",
     "LICENSE",

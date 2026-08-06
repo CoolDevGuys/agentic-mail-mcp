@@ -108,7 +108,9 @@ class TestModelConfig:
             )
 
     def test_temperature_below_range_raises(self) -> None:
-        with pytest.raises(ValidationError, match="temperature must be between 0.0 and 1.0"):
+        with pytest.raises(
+            ValidationError, match="temperature must be between 0.0 and 1.0"
+        ):
             ModelConfig(
                 provider="openai",
                 model_id="gpt-4",
@@ -117,7 +119,9 @@ class TestModelConfig:
             )
 
     def test_temperature_above_range_raises(self) -> None:
-        with pytest.raises(ValidationError, match="temperature must be between 0.0 and 1.0"):
+        with pytest.raises(
+            ValidationError, match="temperature must be between 0.0 and 1.0"
+        ):
             ModelConfig(
                 provider="openai",
                 model_id="gpt-4",

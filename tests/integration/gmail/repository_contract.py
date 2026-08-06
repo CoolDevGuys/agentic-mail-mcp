@@ -15,7 +15,9 @@ from src.Gmail.Domain.Entities.thread import Thread
 from src.Gmail.Domain.ValueObjects import ThreadId
 
 
-def _make_email(message_id: str, *, read: bool = False, subject: str = "Hello") -> Email:
+def _make_email(
+    message_id: str, *, read: bool = False, subject: str = "Hello"
+) -> Email:
     email = Email.from_gmail_message(
         message_id=message_id,
         thread_id="thread_1",

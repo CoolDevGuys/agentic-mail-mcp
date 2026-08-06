@@ -116,7 +116,9 @@ class TestMessageParser:
                 "parts": [
                     {
                         "mimeType": "text/plain",
-                        "body": {"data": base64.urlsafe_b64encode(b"hello body").decode()},
+                        "body": {
+                            "data": base64.urlsafe_b64encode(b"hello body").decode()
+                        },
                     },
                     {
                         "mimeType": "application/pdf",

@@ -84,7 +84,9 @@ class InMemoryThreadRepository:
 
 class StubGmailGateway:
     def __init__(self) -> None:
-        self.list_response = GmailListResponse(messages=[], next_page_token=None, result_size_estimate=0)
+        self.list_response = GmailListResponse(
+            messages=[], next_page_token=None, result_size_estimate=0
+        )
         self.messages: dict[str, GmailMessage] = {}
         self.labels: list[GmailLabel] = []
         self.list_calls: list[tuple[str, str | None, int]] = []
@@ -142,7 +144,9 @@ class StubGmailGateway:
 
 
 class StubLlmGateway:
-    def __init__(self, response_text: str = "stub summary", model: str = "stub-model") -> None:
+    def __init__(
+        self, response_text: str = "stub summary", model: str = "stub-model"
+    ) -> None:
         self.response_text = response_text
         self.model = model
         self.calls: list[dict[str, Any]] = []

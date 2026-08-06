@@ -1,4 +1,11 @@
-"""Intelligence-category MCP tools wrapping the LLM-backed use cases."""
+"""Intelligence-category MCP tools wrapping the LLM-backed use cases.
+
+Caller-first by default: per-email reasoning is exposed as MCP *prompts* the
+calling agent runs (see ``Prompts.py``), not as internal-inference tools. A tool
+is only built when its backing use case has actually been wired by the
+composition root — per-email tools require ``llm.internal_tools=true``, digests
+require a configured LLM. Unwired use cases are ``None`` and simply skipped.
+"""
 
 from __future__ import annotations
 
@@ -17,9 +24,12 @@ _INTEL_ERRORS = (ValidationError, NotFoundError, PermissionError)
 
 
 def build_summarize_email_tool(uses: McpUseCases) -> ToolDefinition:
+    use_case = uses.summarize_email
+    assert use_case is not None
+
     async def summarize_email(email_id: str) -> dict:
         try:
-            return to_jsonable(uses.summarize_email.execute(parse_uuid(email_id)))
+            return to_jsonable(use_case.execute(parse_uuid(email_id)))
         except _INTEL_ERRORS as exc:
             return error_result(exc)
 
@@ -32,9 +42,12 @@ def build_summarize_email_tool(uses: McpUseCases) -> ToolDefinition:
 
 
 def build_classify_email_tool(uses: McpUseCases) -> ToolDefinition:
+    use_case = uses.classify_email
+    assert use_case is not None
+
     async def classify_email(email_id: str) -> dict:
         try:
-            return to_jsonable(uses.classify_email.execute(parse_uuid(email_id)))
+            return to_jsonable(use_case.execute(parse_uuid(email_id)))
         except _INTEL_ERRORS as exc:
             return error_result(exc)
 
@@ -50,9 +63,12 @@ def build_classify_email_tool(uses: McpUseCases) -> ToolDefinition:
 
 
 def build_suggest_reply_tool(uses: McpUseCases) -> ToolDefinition:
+    use_case = uses.suggest_reply
+    assert use_case is not None
+
     async def suggest_reply(email_id: str) -> dict:
         try:
-            return to_jsonable(uses.suggest_reply.execute(parse_uuid(email_id)))
+            return to_jsonable(use_case.execute(parse_uuid(email_id)))
         except _INTEL_ERRORS as exc:
             return error_result(exc)
 
@@ -65,9 +81,12 @@ def build_suggest_reply_tool(uses: McpUseCases) -> ToolDefinition:
 
 
 def build_extract_action_items_tool(uses: McpUseCases) -> ToolDefinition:
+    use_case = uses.extract_action_items
+    assert use_case is not None
+
     async def extract_action_items(email_id: str) -> dict:
         try:
-            items = uses.extract_action_items.execute(parse_uuid(email_id))
+            items = use_case.execute(parse_uuid(email_id))
             return {"action_items": to_jsonable(items)}
         except _INTEL_ERRORS as exc:
             return error_result(exc)
@@ -81,11 +100,14 @@ def build_extract_action_items_tool(uses: McpUseCases) -> ToolDefinition:
 
 
 def build_daily_digest_tool(uses: McpUseCases) -> ToolDefinition:
+    use_case = uses.daily_digest
+    assert use_case is not None
+
     async def daily_digest(date: str | None = None) -> dict:
         # ``date`` (YYYY-MM-DD) selects the day to summarize; the server clock's
         # current day is used when omitted.
         try:
-            return to_jsonable(uses.daily_digest.execute(parse_date_anchor(date)))
+            return to_jsonable(use_case.execute(parse_date_anchor(date)))
         except _INTEL_ERRORS as exc:
             return error_result(exc)
 
@@ -101,11 +123,14 @@ def build_daily_digest_tool(uses: McpUseCases) -> ToolDefinition:
 
 
 def build_weekly_digest_tool(uses: McpUseCases) -> ToolDefinition:
+    use_case = uses.weekly_digest
+    assert use_case is not None
+
     async def weekly_digest(week_start: str | None = None) -> dict:
         # ``week_start`` (YYYY-MM-DD) selects any date within the target week; the
         # current week is used when omitted.
         try:
-            return to_jsonable(uses.weekly_digest.execute(parse_date_anchor(week_start)))
+            return to_jsonable(use_case.execute(parse_date_anchor(week_start)))
         except _INTEL_ERRORS as exc:
             return error_result(exc)
 
@@ -121,11 +146,17 @@ def build_weekly_digest_tool(uses: McpUseCases) -> ToolDefinition:
 
 
 def build_intelligence_tools(uses: McpUseCases) -> list[ToolDefinition]:
-    return [
-        build_summarize_email_tool(uses),
-        build_classify_email_tool(uses),
-        build_suggest_reply_tool(uses),
-        build_extract_action_items_tool(uses),
-        build_daily_digest_tool(uses),
-        build_weekly_digest_tool(uses),
-    ]
+    tools: list[ToolDefinition] = []
+    if uses.summarize_email is not None:
+        tools.append(build_summarize_email_tool(uses))
+    if uses.classify_email is not None:
+        tools.append(build_classify_email_tool(uses))
+    if uses.suggest_reply is not None:
+        tools.append(build_suggest_reply_tool(uses))
+    if uses.extract_action_items is not None:
+        tools.append(build_extract_action_items_tool(uses))
+    if uses.daily_digest is not None:
+        tools.append(build_daily_digest_tool(uses))
+    if uses.weekly_digest is not None:
+        tools.append(build_weekly_digest_tool(uses))
+    return tools

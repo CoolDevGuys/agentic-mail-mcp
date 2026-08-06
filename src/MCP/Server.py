@@ -16,6 +16,7 @@ import inspect
 import logging
 
 from mcp.server import MCPServer
+
 from src.Bootstrap.DependencyContainer import Container
 from src.Bootstrap.Lifespan import lifespan
 from src.Bootstrap.Settings import Settings

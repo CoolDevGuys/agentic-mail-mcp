@@ -51,8 +51,6 @@ class GmailHistorySynchronizer:
             new_count += 1
 
         self._event_bus.publish(
-            InboxSynchronized(
-                history_id=history.history_id, email_count=new_count
-            )
+            InboxSynchronized(history_id=history.history_id, email_count=new_count)
         )
         return new_count

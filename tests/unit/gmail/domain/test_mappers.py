@@ -94,6 +94,48 @@ class TestEmailMapper:
         assert email.to_addresses[0] == EmailAddress("one@example.com")
         assert email.to_addresses[1] == EmailAddress("two@example.com")
 
+    def test_to_domain_extracts_address_from_display_name(self) -> None:
+        # Real Gmail headers carry display names — the mapper must extract the
+        # bare address instead of choking on the RFC 5322 form.
+        gateway_message = GmailMessage(
+            id="msg_1",
+            thread_id="thread_1",
+            snippet="",
+            subject="Hi",
+            from_="LinkedIn <messages-noreply@linkedin.com>",
+            to="Alex <alex@example.com>, Sam <sam@example.com>",
+            date="",
+            labels=[],
+            body="",
+            attachments=[],
+        )
+
+        email = EmailMapper.to_domain(gateway_message)
+
+        assert email.from_address == EmailAddress("messages-noreply@linkedin.com")
+        assert email.to_addresses == [
+            EmailAddress("alex@example.com"),
+            EmailAddress("sam@example.com"),
+        ]
+
+    def test_to_domain_drops_unparseable_sender(self) -> None:
+        gateway_message = GmailMessage(
+            id="msg_1",
+            thread_id="thread_1",
+            snippet="",
+            subject="",
+            from_="not-an-email",
+            to="",
+            date="",
+            labels=[],
+            body="",
+            attachments=[],
+        )
+
+        email = EmailMapper.to_domain(gateway_message)
+
+        assert email.from_address is None
+
     def test_to_domain_empty_to(self) -> None:
         gateway_message = GmailMessage(
             id="msg_1",

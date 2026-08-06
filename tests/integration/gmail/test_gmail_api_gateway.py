@@ -74,9 +74,7 @@ class TestGmailApiGateway:
 
     def test_transient_error_is_retried(self) -> None:
         service = FakeGmailService()
-        service.set_outcomes(
-            "messages.get", [FakeHttpError(503), _full_message("m2")]
-        )
+        service.set_outcomes("messages.get", [FakeHttpError(503), _full_message("m2")])
         message = _gateway(service).get_message("m2", "full")
         assert message is not None
         assert service.executed.count("messages.get") == 2
@@ -123,9 +121,7 @@ class TestGmailApiGateway:
 
     def test_create_draft_maps_response(self) -> None:
         service = FakeGmailService()
-        service.set_result(
-            "drafts.create", {"id": "draft1", "message": {"id": "msg1"}}
-        )
+        service.set_result("drafts.create", {"id": "draft1", "message": {"id": "msg1"}})
         result = _gateway(service).create_draft("cmF3")
         assert result.draft_id == "draft1"
         assert result.message_id == "msg1"
@@ -149,7 +145,9 @@ class TestGmailApiGateway:
             "history.list",
             {
                 "historyId": "999",
-                "history": [{"messagesAdded": [{"message": {"id": "m1", "threadId": "t1"}}]}],
+                "history": [
+                    {"messagesAdded": [{"message": {"id": "m1", "threadId": "t1"}}]}
+                ],
             },
         )
         history = _gateway(service).get_history("100", "100")
@@ -188,7 +186,9 @@ class TestGmailHistorySynchronizer:
             "history.list",
             {
                 "historyId": "999",
-                "history": [{"messagesAdded": [{"message": {"id": "m1", "threadId": "t1"}}]}],
+                "history": [
+                    {"messagesAdded": [{"message": {"id": "m1", "threadId": "t1"}}]}
+                ],
             },
         )
         service.set_result("messages.get", _full_message("m1"))
@@ -208,7 +208,9 @@ class TestGmailHistorySynchronizer:
             "history.list",
             {
                 "historyId": "999",
-                "history": [{"messagesAdded": [{"message": {"id": "m1", "threadId": "t1"}}]}],
+                "history": [
+                    {"messagesAdded": [{"message": {"id": "m1", "threadId": "t1"}}]}
+                ],
             },
         )
         service.set_result("messages.get", _full_message("m1"))

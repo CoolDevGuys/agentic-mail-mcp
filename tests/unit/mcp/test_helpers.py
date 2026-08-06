@@ -28,7 +28,9 @@ class _Sample:
 
 class TestSerialization:
     def test_dataclass_datetime_and_nested(self) -> None:
-        sample = _Sample(name="x", when=datetime(2026, 1, 2, tzinfo=UTC), tags=["a", "b"])
+        sample = _Sample(
+            name="x", when=datetime(2026, 1, 2, tzinfo=UTC), tags=["a", "b"]
+        )
         result = to_jsonable([sample])
         assert result == [
             {"name": "x", "when": "2026-01-02T00:00:00+00:00", "tags": ["a", "b"]}

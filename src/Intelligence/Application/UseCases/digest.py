@@ -107,4 +107,6 @@ class WeeklyDigestUseCase(_BaseDigestUseCase):
         return start, start + timedelta(days=7)
 
     def _period_label(self, start: datetime, end: datetime) -> str:
-        return f"{start.date().isoformat()}/{(end - timedelta(days=1)).date().isoformat()}"
+        return (
+            f"{start.date().isoformat()}/{(end - timedelta(days=1)).date().isoformat()}"
+        )

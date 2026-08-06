@@ -21,16 +21,10 @@ class FakeEmailRepository:
         return None
 
     def find_by_thread_id(self, thread_id: str) -> list[Email]:
-        return [
-            e for e in self._store.values()
-            if e.thread_id.value == thread_id
-        ]
+        return [e for e in self._store.values() if e.thread_id.value == thread_id]
 
     def search(self, query: str) -> list[Email]:
-        return [
-            e for e in self._store.values()
-            if query.lower() in e.subject.lower()
-        ]
+        return [e for e in self._store.values() if query.lower() in e.subject.lower()]
 
     def list_unread(self, limit: int) -> list[Email]:
         unread = [e for e in self._store.values() if not e.is_read]

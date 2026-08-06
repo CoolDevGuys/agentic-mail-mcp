@@ -97,9 +97,7 @@ class TestEmailBehaviors:
         assert "Important" in email.labels
 
     def test_remove_label(self) -> None:
-        email = Email.from_gmail_message(
-            "msg_1", "thread_1", labels=["Important"]
-        )
+        email = Email.from_gmail_message("msg_1", "thread_1", labels=["Important"])
         email.remove_label("Important")
 
         assert "Important" not in email.labels

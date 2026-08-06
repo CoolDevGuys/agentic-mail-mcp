@@ -18,7 +18,9 @@ class TestSemanticSearchTool:
                 metadata={"subject": "Invoice"},
             )
         ]
-        tool = next(t for t in build_search_tools(env.uses) if t.name == "semantic_search")
+        tool = next(
+            t for t in build_search_tools(env.uses) if t.name == "semantic_search"
+        )
 
         result = await tool.handler(query="unpaid invoices", limit=5, min_score=0.5)
 
@@ -36,7 +38,9 @@ class TestSemanticSearchTool:
                 metadata={},
             )
         ]
-        tool = next(t for t in build_search_tools(env.uses) if t.name == "semantic_search")
+        tool = next(
+            t for t in build_search_tools(env.uses) if t.name == "semantic_search"
+        )
 
         result = await tool.handler(query="x", min_score=0.5)
 

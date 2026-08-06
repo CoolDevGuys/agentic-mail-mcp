@@ -29,13 +29,13 @@ class ForwardEmailUseCase:
         self._validator.validate(
             RailguardRequest(action="forward", recipient=command.to_address)
         )
-        original = self._email_repository.find_by_id(command.email_id)
+        original = self._email_repository.find_by_gmail_message_id(command.message_id)
         if original is None:
-            raise NotFoundError(f"Email not found: {command.email_id}")
+            raise NotFoundError(f"Email not found: {command.message_id}")
 
         raw = build_forward_message(original, command)
         result = self._gateway.send_message(raw)
         self._event_bus.publish(
-            EmailForwarded(email_id=command.email_id, forwarded_to=command.to_address)
+            EmailForwarded(email_id=original.id, forwarded_to=command.to_address)
         )
         return result

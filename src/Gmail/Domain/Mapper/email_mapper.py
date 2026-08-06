@@ -1,20 +1,47 @@
 from __future__ import annotations
 
 from datetime import datetime
+from email.utils import getaddresses, parseaddr
 
+from src.Common.Domain.Exceptions import ValidationError
 from src.Gmail.Domain.Entities.email import Email
 from src.Gmail.Domain.Gateway.gmail_gateway import GmailMessage
+from src.Gmail.Domain.ValueObjects.email_address import EmailAddress
+
+
+def _valid_address(raw: str) -> str | None:
+    """Extract a bare, valid address from an RFC 5322 header value.
+
+    Gmail headers carry display names (``"Name <a@b.com>"``); this pulls out the
+    address. Anything that is not a valid address becomes ``None`` rather than
+    breaking the whole mapping — real inboxes contain malformed senders.
+    """
+    address = parseaddr(raw or "")[1]
+    if not address:
+        return None
+    try:
+        EmailAddress(address)
+    except ValidationError:
+        return None
+    return address
 
 
 class EmailMapper:
     @staticmethod
     def to_domain(gateway_message: GmailMessage) -> Email:
-        to_addresses = gateway_message.to.split(",") if gateway_message.to else []
+        from_address = _valid_address(gateway_message.from_)
+        to_addresses = [
+            addr
+            for _, raw in getaddresses([gateway_message.to or ""])
+            if (addr := _valid_address(raw)) is not None
+        ]
 
         date_sent = None
         if gateway_message.date:
             try:
-                date_sent = datetime.fromisoformat(gateway_message.date.removesuffix("Z"))
+                date_sent = datetime.fromisoformat(
+                    gateway_message.date.removesuffix("Z")
+                )
             except (ValueError, AttributeError):
                 date_sent = None
 
@@ -23,7 +50,7 @@ class EmailMapper:
             thread_id=gateway_message.thread_id,
             snippet=gateway_message.snippet,
             subject=gateway_message.subject,
-            from_address=gateway_message.from_ or None,
+            from_address=from_address,
             to_addresses=to_addresses,
             date_sent=date_sent,
             body=gateway_message.body,

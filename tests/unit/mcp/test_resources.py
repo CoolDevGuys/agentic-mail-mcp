@@ -15,12 +15,16 @@ def _resource(context, uri):
 
 class TestResources:
     def test_account_info_reports_access_level(self) -> None:
-        context = ResourceContext(account_email="me@example.com", access_level="read_write")
+        context = ResourceContext(
+            account_email="me@example.com", access_level="read_write"
+        )
         payload = _resource(context, ACCOUNT_URI).read()
         assert payload == {"email": "me@example.com", "access_level": "read_write"}
 
     def test_watch_status_default_inactive(self) -> None:
-        context = ResourceContext(account_email="me@example.com", access_level="read_only")
+        context = ResourceContext(
+            account_email="me@example.com", access_level="read_only"
+        )
         payload = _resource(context, WATCH_URI).read()
         assert payload["active"] is False
 
@@ -43,6 +47,8 @@ class TestResources:
         assert payload == {"document_count": 7}
 
     def test_three_resources_registered(self) -> None:
-        context = ResourceContext(account_email="me@example.com", access_level="read_only")
+        context = ResourceContext(
+            account_email="me@example.com", access_level="read_only"
+        )
         uris = {r.uri for r in build_resources(context)}
         assert uris == {ACCOUNT_URI, WATCH_URI, INDEX_URI}

@@ -28,10 +28,48 @@ _EMAIL_MANAGEMENT = PromptTemplate(
     template=(
         "Inbox management workflow:\n"
         "1. list_unread to see what needs attention.\n"
-        "2. classify_email to prioritize (urgent/normal/spam/promo).\n"
-        "3. summarize_email or extract_action_items for long threads.\n"
-        "4. Draft replies with create_draft, then send_draft after human review.\n"
-        "5. archive_email once a message is handled; forward_email when delegating."
+        "2. Use the classify/summarize prompts to prioritize and digest.\n"
+        "3. Draft replies with create_draft, then send_draft after human review.\n"
+        "4. archive_email once a message is handled; forward_email when delegating."
+    ),
+)
+
+# Caller-first intelligence: the calling agent is itself an LLM, so per-email
+# reasoning is a prompt the agent runs on data it fetches with get_email —
+# no extra server-side inference, no latency, no LLM key required.
+_SUMMARIZE_EMAIL = PromptTemplate(
+    name="summarize_email",
+    template=(
+        "Fetch the email with id {email_id} using the get_email tool, then write a "
+        "concise 2-3 sentence summary of what it says and what (if anything) it asks "
+        "of the reader."
+    ),
+)
+
+_CLASSIFY_EMAIL = PromptTemplate(
+    name="classify_email",
+    template=(
+        "Fetch the email with id {email_id} using the get_email tool, then classify "
+        "it: category (one of urgent, normal, spam, promo), priority (1-5, 5 = most "
+        "urgent), and a one-line justification."
+    ),
+)
+
+_DRAFT_REPLY = PromptTemplate(
+    name="draft_reply",
+    template=(
+        "Fetch the email with id {email_id} using the get_email tool, then draft a "
+        "reply in the user's voice. Do NOT send it — propose the draft for review, "
+        "and offer to save it with create_draft."
+    ),
+)
+
+_EXTRACT_ACTION_ITEMS = PromptTemplate(
+    name="extract_action_items",
+    template=(
+        "Fetch the email with id {email_id} using the get_email tool, then list any "
+        "action items as bullets, each with an owner and a due date if stated "
+        "(otherwise 'no due date')."
     ),
 )
 
@@ -60,5 +98,29 @@ def build_prompts() -> list[PromptDefinition]:
             description="A workflow for triaging and managing the inbox.",
             template=_EMAIL_MANAGEMENT,
             arguments=[],
+        ),
+        PromptDefinition(
+            name="summarize_email",
+            description="Summarize an email (run by the calling agent).",
+            template=_SUMMARIZE_EMAIL,
+            arguments=["email_id"],
+        ),
+        PromptDefinition(
+            name="classify_email",
+            description="Classify an email by category and priority (caller-run).",
+            template=_CLASSIFY_EMAIL,
+            arguments=["email_id"],
+        ),
+        PromptDefinition(
+            name="draft_reply",
+            description="Draft a reply to an email for review (caller-run).",
+            template=_DRAFT_REPLY,
+            arguments=["email_id"],
+        ),
+        PromptDefinition(
+            name="extract_action_items",
+            description="Extract action items from an email (caller-run).",
+            template=_EXTRACT_ACTION_ITEMS,
+            arguments=["email_id"],
         ),
     ]

@@ -16,7 +16,7 @@ class TestRedactionFilter:
 
     def test_redacts_passwords(self):
         filter_ = RedactionFilter()
-        text = 'password: mysecretpass'
+        text = "password: mysecretpass"
         result = filter_._redact(text)
         assert "mysecretpass" not in result
         assert "[REDACTED]" in result
@@ -44,14 +44,26 @@ class TestRedactionFilter:
     def test_filter_returns_true(self):
         filter_ = RedactionFilter()
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="", lineno=0, msg="test", args=(), exc_info=None
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="test",
+            args=(),
+            exc_info=None,
         )
         assert filter_.filter(record) is True
 
     def test_redacts_msg(self):
         filter_ = RedactionFilter()
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="", lineno=0, msg="Bearer secret123", args=(), exc_info=None
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="Bearer secret123",
+            args=(),
+            exc_info=None,
         )
         filter_.filter(record)
         assert "secret123" not in str(record.msg)
@@ -59,7 +71,13 @@ class TestRedactionFilter:
     def test_redacts_tuple_args(self):
         filter_ = RedactionFilter()
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="", lineno=0, msg="%s", args=("Bearer secret123",), exc_info=None
+            name="test",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="%s",
+            args=("Bearer secret123",),
+            exc_info=None,
         )
         filter_.filter(record)
         assert "secret123" not in str(record.args)
@@ -69,7 +87,13 @@ class TestJsonFormatter:
     def test_produces_valid_json(self):
         formatter = JsonFormatter()
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="test.py", lineno=0, msg="hello", args=(), exc_info=None
+            name="test",
+            level=logging.INFO,
+            pathname="test.py",
+            lineno=0,
+            msg="hello",
+            args=(),
+            exc_info=None,
         )
         output = formatter.format(record)
         parsed = json.loads(output)
@@ -78,7 +102,13 @@ class TestJsonFormatter:
     def test_contains_required_fields(self):
         formatter = JsonFormatter()
         record = logging.LogRecord(
-            name="test", level=logging.WARNING, pathname="test.py", lineno=0, msg="hello", args=(), exc_info=None
+            name="test",
+            level=logging.WARNING,
+            pathname="test.py",
+            lineno=0,
+            msg="hello",
+            args=(),
+            exc_info=None,
         )
         output = formatter.format(record)
         parsed = json.loads(output)
@@ -91,7 +121,13 @@ class TestJsonFormatter:
     def test_correlation_id_is_uuid(self):
         formatter = JsonFormatter()
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="test.py", lineno=0, msg="hello", args=(), exc_info=None
+            name="test",
+            level=logging.INFO,
+            pathname="test.py",
+            lineno=0,
+            msg="hello",
+            args=(),
+            exc_info=None,
         )
         output = formatter.format(record)
         parsed = json.loads(output)
@@ -101,7 +137,13 @@ class TestJsonFormatter:
     def test_level_name(self):
         formatter = JsonFormatter()
         record = logging.LogRecord(
-            name="test", level=logging.ERROR, pathname="test.py", lineno=0, msg="hello", args=(), exc_info=None
+            name="test",
+            level=logging.ERROR,
+            pathname="test.py",
+            lineno=0,
+            msg="hello",
+            args=(),
+            exc_info=None,
         )
         output = formatter.format(record)
         parsed = json.loads(output)
@@ -110,7 +152,13 @@ class TestJsonFormatter:
     def test_message_content(self):
         formatter = JsonFormatter()
         record = logging.LogRecord(
-            name="test", level=logging.INFO, pathname="test.py", lineno=0, msg="test-message", args=(), exc_info=None
+            name="test",
+            level=logging.INFO,
+            pathname="test.py",
+            lineno=0,
+            msg="test-message",
+            args=(),
+            exc_info=None,
         )
         output = formatter.format(record)
         parsed = json.loads(output)

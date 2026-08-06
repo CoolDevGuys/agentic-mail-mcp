@@ -1,13 +1,35 @@
-FROM python:3.11-slim
+# syntax=docker/dockerfile:1
+
+# --- Builder stage: build a wheel from the source tree ---
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+RUN pip install --no-cache-dir build
+
+# Copy the sources needed to build the distribution.
+COPY pyproject.toml README.md LICENSE ./
+COPY src/ src/
+
+RUN python -m build --wheel --outdir /dist
+
+# --- Runtime stage: install only the built wheel, no build toolchain ---
+FROM python:3.11-slim AS runtime
 
 WORKDIR /app
 
-COPY pyproject.toml .
-RUN pip install --no-cache-dir .
+# Install the package (and its dependencies) from the wheel produced above.
+COPY --from=builder /dist/*.whl /tmp/
+RUN pip install --no-cache-dir /tmp/*.whl && rm -rf /tmp/*.whl
 
-COPY src/ src/
-
-RUN useradd --create-home appuser
+# Run as a non-root user.
+RUN useradd --create-home --uid 10001 appuser
 USER appuser
+
+# Health check applies to HTTP transport (GMAIL_MCP_MCP_TRANSPORT=http); a stdio
+# container is a foreground process whose liveness is the process itself.
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD python -c "import os,socket; s=socket.socket(); s.settimeout(5); s.connect((os.getenv('GMAIL_MCP_MCP_HOST','127.0.0.1'), int(os.getenv('GMAIL_MCP_MCP_PORT','8080')))); s.close()" || exit 1
 
 CMD ["gmail-mcp-server"]

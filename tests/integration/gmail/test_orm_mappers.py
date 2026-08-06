@@ -61,7 +61,10 @@ class TestEmailOrmMapper:
         assert restored.thread_id == ThreadId("thread_1")
         assert restored.subject == "Hello"
         assert restored.from_address == email.from_address
-        assert [a.value for a in restored.to_addresses] == ["a@example.com", "b@example.com"]
+        assert [a.value for a in restored.to_addresses] == [
+            "a@example.com",
+            "b@example.com",
+        ]
         assert restored.labels == frozenset({"INBOX", "Work"})
         assert restored.is_read is True
         assert restored.body == "Body text"

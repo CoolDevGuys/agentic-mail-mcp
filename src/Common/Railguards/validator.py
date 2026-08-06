@@ -77,9 +77,7 @@ class RailguardValidator:
 
         limit = self._config.rate_limit_for(request.action)
         if limit is not None and self._count_in_window(request.action) >= limit:
-            return RailguardResult(
-                False, f"rate limit exceeded for {request.action!r}"
-            )
+            return RailguardResult(False, f"rate limit exceeded for {request.action!r}")
 
         return RailguardResult(True)
 

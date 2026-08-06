@@ -23,7 +23,10 @@ def _container(settings: Settings, uses: McpUseCases) -> Container:
     container.singleton(McpUseCases, uses)
     container.singleton(
         ResourceContext,
-        ResourceContext(account_email="me@example.com", access_level=settings.railguards.access_level),
+        ResourceContext(
+            account_email="me@example.com",
+            access_level=settings.railguards.access_level,
+        ),
     )
     return container
 
@@ -59,7 +62,7 @@ class TestCreateServer:
         resources = {str(r.uri) for r in await server.list_resources()}
         prompts = {p.name for p in await server.list_prompts()}
         assert resources == {"gmail://account", "gmail://watch", "search://index"}
-        assert prompts == {"search_strategy", "email_management"}
+        assert {"search_strategy", "email_management", "summarize_email"} <= prompts
 
     async def test_tool_is_callable_end_to_end(self) -> None:
         env = make_env(access_level="read_write")

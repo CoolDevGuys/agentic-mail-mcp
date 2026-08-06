@@ -25,7 +25,9 @@ class _Request:
     def execute(self) -> Any:
         self._service.executed.append(self._key)
         outcomes = self._service.outcomes.get(self._key)
-        outcome = outcomes.popleft() if outcomes else self._service.results.get(self._key, {})
+        outcome = (
+            outcomes.popleft() if outcomes else self._service.results.get(self._key, {})
+        )
         if isinstance(outcome, Exception):
             raise outcome
         return outcome

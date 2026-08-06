@@ -28,13 +28,12 @@ class DeleteEmailUseCase:
         self._event_bus = event_bus
 
     def execute(self, command: DeleteEmailCommand) -> None:
-        email = self._email_repository.find_by_id(command.email_id)
+        email = self._email_repository.find_by_gmail_message_id(command.message_id)
         if email is None:
-            raise NotFoundError(f"Email not found: {command.email_id}")
+            raise NotFoundError(f"Email not found: {command.message_id}")
 
-        # Archived state comes from the locally cached labels. The repository is
-        # a cache of Gmail kept current by GmailHistorySynchronizer; the
-        # archive-first gate therefore relies on that cache being up to date.
+        # Labels come from the read-through repository, which resolves the email
+        # live from Gmail, so the archive-first gate sees the current state.
         is_archived = _INBOX not in email.labels
         action = "permanent_delete" if command.permanent else "delete"
         self._validator.validate(
@@ -45,4 +44,4 @@ class DeleteEmailUseCase:
             self._gateway.delete_message(email.message_id.value)
         else:
             self._gateway.trash_message(email.message_id.value)
-        self._event_bus.publish(EmailDeleted(email_id=command.email_id))
+        self._event_bus.publish(EmailDeleted(email_id=email.id))

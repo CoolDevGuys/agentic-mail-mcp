@@ -76,7 +76,9 @@ def build_get_email_tool(uses: McpUseCases) -> ToolDefinition:
     async def get_email(email_id: str) -> dict:
         try:
             identifier = parse_email_identifier(email_id)
-            return to_jsonable(uses.get_email.execute(GetEmailQuery(email_id=identifier)))
+            return to_jsonable(
+                uses.get_email.execute(GetEmailQuery(email_id=identifier))
+            )
         except _READ_ERRORS as exc:
             return error_result(exc)
 
@@ -94,7 +96,9 @@ def build_get_email_tool(uses: McpUseCases) -> ToolDefinition:
 def build_get_thread_tool(uses: McpUseCases) -> ToolDefinition:
     async def get_thread(thread_id: str) -> dict:
         try:
-            return to_jsonable(uses.get_thread.execute(GetThreadQuery(thread_id=thread_id)))
+            return to_jsonable(
+                uses.get_thread.execute(GetThreadQuery(thread_id=thread_id))
+            )
         except _READ_ERRORS as exc:
             return error_result(exc)
 

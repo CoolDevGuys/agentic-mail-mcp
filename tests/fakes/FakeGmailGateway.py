@@ -3,7 +3,9 @@ class FakeGmailGateway:
         self._messages: list[dict] = []
         self._watched = False
 
-    async def list_messages(self, query: str = "", max_results: int = 100) -> list[dict]:
+    async def list_messages(
+        self, query: str = "", max_results: int = 100
+    ) -> list[dict]:
         return self._messages[:max_results]
 
     async def get_message(self, message_id: str) -> dict | None:

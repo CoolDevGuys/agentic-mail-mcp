@@ -33,7 +33,9 @@ class WebhookNotificationGateway:
             return False
         if response.is_success:
             return True
-        logger.warning("Webhook returned non-2xx", extra={"status": response.status_code})
+        logger.warning(
+            "Webhook returned non-2xx", extra={"status": response.status_code}
+        )
         return False
 
     def send(self, title: str, body: str, channel: str) -> bool:

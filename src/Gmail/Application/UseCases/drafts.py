@@ -12,9 +12,7 @@ from src.Gmail.Domain.Gateway.gmail_gateway import GmailGateway, SentMessageResu
 class CreateDraftUseCase:
     """Creates a draft for human review without sending it."""
 
-    def __init__(
-        self, gateway: GmailGateway, validator: RailguardValidator
-    ) -> None:
+    def __init__(self, gateway: GmailGateway, validator: RailguardValidator) -> None:
         self._gateway = gateway
         self._validator = validator
 
@@ -27,9 +25,7 @@ class CreateDraftUseCase:
 class SendDraftUseCase:
     """Sends a previously created, human-reviewed draft."""
 
-    def __init__(
-        self, gateway: GmailGateway, validator: RailguardValidator
-    ) -> None:
+    def __init__(self, gateway: GmailGateway, validator: RailguardValidator) -> None:
         self._gateway = gateway
         self._validator = validator
 

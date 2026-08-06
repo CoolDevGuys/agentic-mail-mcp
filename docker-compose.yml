@@ -7,9 +7,11 @@ services:
       - "8080:8080"
     env_file:
       - .env
-    depends_on:
-      postgres:
-        condition: service_healthy
+    environment:
+      # HTTP transport so the container exposes a port to health-check.
+      GMAIL_MCP_MCP_TRANSPORT: http
+      GMAIL_MCP_MCP_HOST: 0.0.0.0
+      GMAIL_MCP_MCP_PORT: "8080"
     healthcheck:
       test: ["CMD", "python", "-c", "import socket; s = socket.socket(); s.connect(('localhost', 8080)); s.close()"]
       interval: 30s

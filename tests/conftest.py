@@ -3,7 +3,44 @@ from datetime import UTC
 import pytest
 
 from src.Bootstrap.DependencyContainer import Container
-from src.Bootstrap.Settings import Settings
+from src.Bootstrap.Settings import (
+    DatabaseConfig,
+    GmailConfig,
+    LLMConfig,
+    LoggingConfig,
+    MCPConfig,
+    NotificationsConfig,
+    RailguardsConfig,
+    SearchConfig,
+    Settings,
+)
+
+# Every settings class (parent + sections) reads a `.env` file by default. Tests
+# must be deterministic regardless of a developer's local `.env` (created by
+# `make env`), so we disable `.env` loading for the whole test session. Env-var
+# based tests use `monkeypatch.setenv`, which sets `os.environ` and is unaffected.
+_SETTINGS_CLASSES = (
+    Settings,
+    GmailConfig,
+    DatabaseConfig,
+    RailguardsConfig,
+    MCPConfig,
+    LLMConfig,
+    SearchConfig,
+    NotificationsConfig,
+    LoggingConfig,
+)
+
+
+@pytest.fixture(autouse=True)
+def _isolate_settings_from_dotenv(request, monkeypatch):
+    # Live tests marked `uses_real_env` deliberately read the developer's .env
+    # (e.g. the write-path smoke test needs real credentials); everything else
+    # is isolated for determinism.
+    if request.node.get_closest_marker("uses_real_env"):
+        return
+    for cls in _SETTINGS_CLASSES:
+        monkeypatch.setitem(cls.model_config, "env_file", None)
 
 
 @pytest.fixture

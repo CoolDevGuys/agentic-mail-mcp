@@ -162,6 +162,12 @@ class GmailApiGateway:
     def delete_message(self, message_id: str) -> None:
         self._execute(self._messages().delete(userId=_USER, id=message_id))
 
+    def get_profile(self) -> str:
+        """Return the authorized account's email address (a lightweight,
+        authenticated call — used as a token liveness probe)."""
+        result = self._execute(self._service.users().getProfile(userId=_USER))
+        return str(result.get("emailAddress", ""))
+
     def list_labels(self) -> list[GmailLabel]:
         result = self._execute(self._service.users().labels().list(userId=_USER))
         return [

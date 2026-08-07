@@ -4,12 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-08-07
+
 ### ⚠ Breaking
 
+- **Renamed the project to `agentic-mail-mcp`.** The distribution name, the
+  import package (`src` → `agentic_mail_mcp`), the console command, and the
+  environment-variable prefix (`GMAIL_MCP_` → `AGENTIC_MAIL_MCP_`) all changed.
+  Update your install, imports, MCP client `command`, and every
+  `AGENTIC_MAIL_MCP_*` variable.
+- **Running `agentic-mail-mcp` with no subcommand now prints help** instead of
+  starting the server. Start it explicitly with `agentic-mail-mcp serve` (update
+  MCP client `args`, the Docker `CMD`, and any scripts).
 - **Railguards default is now read-only** (Phase 6): `railguards.access_level` defaults to `read_only` (was `owner`), so all write operations (forward/archive/delete/draft) are denied until a deployment sets `AGENTIC_MAIL_MCP_RAILGUARDS_ACCESS_LEVEL=read_write`.
 
 ### Fixed
 
+- **Alembic migrations are now packaged.** The migration scripts moved inside the
+  `agentic_mail_mcp` package, fixing `agentic-mail-mcp serve` crashing with
+  `Path doesn't exist: …/site-packages/migrations` on pip / `uvx` installs (they
+  previously resolved only from a source checkout).
+- **Deterministic import-order linting across macOS and Linux** (ruff
+  `known-first-party` / `known-third-party` pinned), fixing a CI lint failure that
+  could not be reproduced or fixed on a case-insensitive filesystem.
 - **Environment-variable configuration now works** (Phase 8): the `Settings`
   sub-sections (`gmail`, `database`, `railguards`, `mcp`, `llm`, `search`,
   `notifications`, `logging`) previously ignored their `AGENTIC_MAIL_MCP_<SECTION>_<FIELD>`
@@ -21,6 +38,12 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- **Automated PyPI releases** via GitHub Actions using **Trusted Publishing**
+  (OIDC — no stored token): publishing a GitHub Release builds and uploads the
+  package. `RELEASING.md` was removed in favor of a README section.
+- **Expanded documentation**: configuration precedence and the **stdio vs HTTP**
+  workflows, the HTTP endpoint URL (`/mcp`), headless / token-copy deployment,
+  and the configuration wizard.
 - **Caller-first intelligence** ([ADR 0006](specs/docs/adr/0006-caller-first-intelligence.md)):
   the calling agent is itself an LLM, so per-email reasoning (summarize, classify,
   draft reply, extract action items) is now exposed as **MCP prompts** the agent
@@ -32,6 +55,17 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **`init` command** — an interactive wizard that generates a valid `.env`,
+  auto-creating the token encryption key, validating input, and backing up any
+  existing file (`make init`).
+- **`verify-auth` command** — validates the Google client, encryption key, and
+  stored token with a **live Gmail call**, printing the authorized account and
+  exiting non-zero on failure. The **HTTP server runs the same check at startup**,
+  logging a warning (but still starting) when auth is not ready.
+- **`--env-file PATH` option** (and the `AGENTIC_MAIL_MCP_ENV_FILE` variable) on
+  `serve` / `auth` / `init` — load configuration from (or, for `init`, write it
+  to) a specific `.env`, so a client-launched stdio server can be pointed at a
+  config file regardless of its working directory.
 - **Live write-path smoke test** (`tests/e2e/test_live_write_path.py`, opt-in via
   `AGENTIC_MAIL_MCP_LIVE_WRITE_E2E=1`). Self-contained and safe: it creates its own
   throwaway message and exercises `create_draft` → `send_draft` → `add_label` →

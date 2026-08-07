@@ -20,7 +20,8 @@ this case.
 #### Scenario: Help lists the available subcommands
 
 - **WHEN** the no-subcommand help is printed
-- **THEN** it lists `serve`, `auth`, and `init` as available subcommands
+- **THEN** it lists `serve`, `auth`, `init`, and `verify-auth` as available
+  subcommands
 
 ### Requirement: Server starts only via the serve subcommand
 

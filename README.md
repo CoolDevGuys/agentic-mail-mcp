@@ -71,6 +71,14 @@ AGENTIC_MAIL_MCP_RAILGUARDS_ACCESS_LEVEL=read_only
 agentic-mail-mcp auth
 ```
 
+Confirm it worked at any time — this checks the token against Gmail and prints
+the authorized account (exit code `0` on success, non-zero on failure, so it's
+scriptable):
+
+```bash
+agentic-mail-mcp verify-auth
+```
+
 **5. Use it** — connect an AI agent over **stdio** or run the **HTTP** server.
 See [Usage](#-usage).
 
@@ -160,7 +168,9 @@ The server speaks MCP over two transports:
 >
 > **Headless server (no browser)?** `auth` needs a browser + loopback redirect,
 > so you don't run it on the server. Authorize once on a machine that has a
-> browser, then copy the encrypted token file across — see
+> browser, then copy the encrypted token file across with **`scp`** — it's a
+> **binary** file, so a clipboard copy-paste (`cat token.json | pbcopy`) corrupts
+> it and the server can't decrypt it. See
 > [Headless / server deployment](specs/docs/configuration.md#7-headless--server-deployment-no-browser).
 
 ### 💻 Local (stdio) — connect an AI agent
@@ -216,8 +226,32 @@ docker compose up --build           # server on http://localhost:8080
 > — full steps under
 > [Headless / server deployment](specs/docs/configuration.md#7-headless--server-deployment-no-browser).
 
-Point an HTTP-capable MCP client at `http://<host>:8080`. Keep the server behind
-your own auth/TLS if it's reachable beyond localhost.
+The server exposes the streamable-HTTP endpoint at the **`/mcp`** path, so the
+URL is `http://<host>:<port>/mcp` — by default **`http://localhost:8080/mcp`**.
+Point an HTTP-capable MCP client at it:
+
+```json
+{
+  "mcpServers": {
+    "gmail": {
+      "type": "http",
+      "url": "http://localhost:8080/mcp"
+    }
+  }
+}
+```
+
+Notes:
+- Swap host/port to match `AGENTIC_MAIL_MCP_MCP_HOST` / `_PORT`. Binding
+  `0.0.0.0` makes it reachable on all interfaces; clients still connect via a
+  concrete hostname/IP, and the path is always `/mcp`.
+- Config comes from the **server's** environment here (not the client) — so a
+  `.env` (via `agentic-mail-mcp init`) or exported vars, and run
+  `agentic-mail-mcp auth` once first.
+- Some clients name the field differently (`"transport": "http"` /
+  `"streamable-http"`); a stdio-only client (e.g. classic Claude Desktop) needs a
+  bridge such as `mcp-remote` pointed at the same `/mcp` URL.
+- Keep the server behind your own auth/TLS if it's reachable beyond localhost.
 
 ## 🧰 MCP Tools
 

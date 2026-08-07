@@ -122,6 +122,8 @@ class GmailGateway(Protocol):
 
     def list_labels(self) -> list[GmailLabel]: ...
 
+    def get_profile(self) -> str: ...
+
     def watch(
         self,
         notification_url: str,

@@ -101,6 +101,9 @@ class LazyGmailGateway(GmailGateway):
     def list_labels(self) -> list[GmailLabel]:
         return self._resolve().list_labels()
 
+    def get_profile(self) -> str:
+        return self._resolve().get_profile()
+
     def watch(self, notification_url: str, webhook_token: str) -> WatchResponse:
         return self._resolve().watch(notification_url, webhook_token)
 

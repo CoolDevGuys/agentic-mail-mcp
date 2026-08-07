@@ -68,6 +68,15 @@ The same settings drive both transports; only *how you deliver them* differs.
 `init` is **optional** — it only generates a `.env` and auto-creates the
 encryption key. Skip it if you provide the variables another way.
 
+**Verify auth at any time** with `agentic-mail-mcp verify-auth` (accepts
+`--env-file`). It checks the client config and encryption key, then makes a live
+Gmail call to confirm the stored token still works, printing the authorized
+account on success. It exits `0` on success and non-zero on failure — each
+failure says exactly what to fix (configure a client, set the key, run `auth`, or
+re-`auth` for an expired/revoked token). The **HTTP server also runs this check
+at startup**: on failure it logs a prominent warning with the fix but **still
+starts** (stdio startup skips the network check).
+
 ### 🧩 stdio — the MCP client launches the server
 
 Here the client spawns `agentic-mail-mcp serve` as a subprocess **and controls
@@ -148,6 +157,17 @@ Both a `.env` and exported environment variables work; pick one.
    absolute `TOKEN_STORAGE_PATH`); the token file must be the one produced by
    `auth` (see [Headless](#7-headless--server-deployment-no-browser) to authorize
    on a machine with a browser and copy the token in).
+
+4. **Point your MCP client at the streamable-HTTP endpoint**, which is served at
+   the **`/mcp`** path — `http://<host>:<port>/mcp`, by default
+   `http://localhost:8080/mcp`:
+
+   ```json
+   { "mcpServers": { "gmail": { "type": "http", "url": "http://localhost:8080/mcp" } } }
+   ```
+
+   Unlike stdio, config lives with the **server** (steps 1–3), not the client;
+   the client only needs the URL.
 
 > **Rule of thumb:** if *something else* starts the server (an MCP client),
 > deliver config through its `env` block. If *you* start the server (HTTP,
@@ -274,12 +294,30 @@ never needs a browser again, it just refreshes silently.
    ```
 
 2. This writes the **encrypted** token file to `token_storage_path`
-   (`./token.json` above). Copy it to the server at the path the server uses,
-   over a secure channel:
+   (`./token.json` above). Copy it to the server at the path the server uses.
+
+   > ⚠️ **The token file is binary — transfer it byte-for-byte, never by
+   > copy-paste.** Despite the `.json` name it is *not* text: it starts with 16
+   > raw random bytes (an encryption salt). Piping it through a clipboard
+   > (`cat token.json | pbcopy`) or a chat window corrupts those bytes, and the
+   > server then fails with `Stored OAuth token could not be decrypted…` even
+   > though the key is correct. Use one of these instead:
 
    ```bash
+   # Best — copies the exact bytes over a secure channel:
    scp ./token.json you@server:/etc/agentic-mail-mcp/token.json
    ```
+
+   ```bash
+   # If you must use a clipboard, base64-encode it so it survives as text:
+   base64 -i ./token.json | pbcopy                 # on the machine with the token
+   # …then on the server, paste where PASTED is:
+   echo 'PASTED' | base64 -d > /etc/agentic-mail-mcp/token.json
+   ```
+
+   Verify the transfer was exact — the sizes and hashes must match on both
+   machines: `wc -c token.json` and `shasum -a 256 token.json` (macOS) /
+   `sha256sum token.json` (Linux).
 
 3. On the server, point the same three variables at the copied file and start
    the server normally — no browser, no `auth` step:
@@ -290,8 +328,20 @@ never needs a browser again, it just refreshes silently.
    AGENTIC_MAIL_MCP_GMAIL_CLIENT_SECRETS_FILE=/etc/agentic-mail-mcp/credentials.json
    ```
 
+4. Confirm auth works on the server before wiring up an agent:
+
+   ```bash
+   agentic-mail-mcp --env-file /etc/agentic-mail-mcp/.env verify-auth
+   ```
+
+   It should print `Authorized as <account>`. If it reports the token could not
+   be decrypted, the transfer corrupted the file (re-copy with `scp`) or the
+   encryption key differs between machines.
+
 **Requirements & notes**
 
+- ⚠️ **The token file is binary** (a raw salt prefix + ciphertext). Move it with
+  `scp` or base64 — a text copy-paste will corrupt it. See step 2.
 - ⚠️ **The encryption key must match** on both machines. The token is
   Fernet-encrypted with a key derived from
   `AGENTIC_MAIL_MCP_GMAIL_TOKEN_ENCRYPTION_KEY`; a different key on the server

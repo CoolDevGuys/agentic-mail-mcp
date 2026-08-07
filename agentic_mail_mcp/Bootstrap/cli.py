@@ -1,10 +1,12 @@
 import argparse
+import logging
 import os
 import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
 
+from agentic_mail_mcp.Bootstrap.auth_check import check_auth
 from agentic_mail_mcp.Bootstrap.Composition import (
     build_oauth_provider,
     build_resource_context,
@@ -17,11 +19,23 @@ from agentic_mail_mcp.Bootstrap.Logging import setup_logging
 from agentic_mail_mcp.Bootstrap.Settings import Settings
 from agentic_mail_mcp.Common.Domain.Exceptions import DomainError
 from agentic_mail_mcp.MCP.Resources import ResourceContext
-from agentic_mail_mcp.MCP.Server import create_server, run_server
+from agentic_mail_mcp.MCP.Server import create_server, resolve_transport, run_server
 from agentic_mail_mcp.MCP.Tools.use_cases import McpUseCases
+
+logger = logging.getLogger(__name__)
 
 
 def _serve(settings: Settings) -> None:
+    # HTTP is long-running, so verify auth up front and warn (do not fail) if the
+    # token is missing/expired — tools still return their usual clear errors.
+    # stdio is launched per-session by a client, so we skip the network check.
+    if resolve_transport(settings) == "streamable-http":
+        result = check_auth(settings)
+        if not result.ok:
+            logger.warning("auth preflight failed: %s", result.message)
+        else:
+            logger.info("auth preflight ok: %s", result.message)
+
     container = Container.with_defaults(settings)
     # Composition root: build the real use cases and resources and register them
     # so create_server exposes the Gmail tools.
@@ -33,6 +47,15 @@ def _serve(settings: Settings) -> None:
         run_server(server, settings)
     except KeyboardInterrupt:
         sys.exit(0)
+
+
+def _verify_auth(settings: Settings) -> None:
+    result = check_auth(settings)
+    if result.ok:
+        print(f"✅ {result.message}")
+        return
+    print(f"❌ {result.message}", file=sys.stderr)
+    sys.exit(1)
 
 
 def _auth(settings: Settings) -> None:
@@ -115,6 +138,11 @@ def main() -> None:
         parents=[common],
         help="Interactively generate a .env configuration file.",
     )
+    subparsers.add_parser(
+        "verify-auth",
+        parents=[common],
+        help="Check credentials and the stored token against Gmail.",
+    )
     args = parser.parse_args()
 
     # No subcommand: show help and exit without side effects (never auto-serve).
@@ -142,6 +170,8 @@ def main() -> None:
 
     if args.command == "auth":
         _auth(settings)
+    elif args.command == "verify-auth":
+        _verify_auth(settings)
     else:  # serve
         _serve(settings)
 

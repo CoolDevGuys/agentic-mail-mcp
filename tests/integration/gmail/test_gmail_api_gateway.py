@@ -56,23 +56,19 @@ class TestGmailApiGateway:
             },
         )
         service.set_result(
-            "messages.batchGet",
+            "messages.get",
             {
-                "messages": [
-                    {
-                        "id": "m1",
-                        "threadId": "t1",
-                        "snippet": "snip",
-                        "labelIds": ["INBOX"],
-                        "payload": {
-                            "headers": [
-                                {"name": "Subject", "value": "Hello"},
-                                {"name": "From", "value": "a@b.com"},
-                                {"name": "Date", "value": "2026-01-01"},
-                            ]
-                        },
-                    }
-                ]
+                "id": "m1",
+                "threadId": "t1",
+                "snippet": "snip",
+                "labelIds": ["INBOX"],
+                "payload": {
+                    "headers": [
+                        {"name": "Subject", "value": "Hello"},
+                        {"name": "From", "value": "a@b.com"},
+                        {"name": "Date", "value": "2026-01-01"},
+                    ]
+                },
             },
         )
         result = _gateway(service).list_messages("is:unread", None, 10)

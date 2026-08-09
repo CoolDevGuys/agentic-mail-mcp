@@ -3,6 +3,7 @@ import logging
 import os
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote
 
 from agentic_mail_mcp.Bootstrap.Settings import Settings
 
@@ -36,8 +37,16 @@ def _validate_db_path(url: str) -> None:
         return
     if url in ("sqlite://", "sqlite:///:memory:"):
         return
-    file_path = url.replace("sqlite:///", "", 1)
-    file_path = file_path.replace("sqlite://", "", 1)
+    # Extract path: strip "sqlite:///" (3 slashes) or "sqlite://" (2 slashes) prefix.
+    # sqlite:///./db.db -> ./db.db
+    # sqlite:////var/lib/db.db -> /var/lib/db.db
+    if url.startswith("sqlite:///"):
+        file_path = url[len("sqlite:///"):]
+    elif url.startswith("sqlite://"):
+        file_path = url[len("sqlite://"):]
+    else:
+        file_path = url.split("sqlite", 1)[1]
+    file_path = unquote(file_path)
     db_path = Path(file_path).expanduser()
     parent = db_path.parent
     if parent and parent != Path("/") and not parent.exists():

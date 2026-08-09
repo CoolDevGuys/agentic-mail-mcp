@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import email.utils
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -45,6 +46,12 @@ class EmailDTO:
 
     @classmethod
     def from_gateway_header(cls, header: GmailMessageHeader) -> EmailDTO:
+        date_sent = None
+        if header.date:
+            try:
+                date_sent = email.utils.parsedate_to_datetime(header.date)
+            except (ValueError, TypeError):
+                pass
         return cls(
             id="",
             message_id=header.id,
@@ -53,7 +60,7 @@ class EmailDTO:
             snippet=header.snippet,
             from_address=header.from_ or None,
             to_addresses=[],
-            date_sent=None,
+            date_sent=date_sent,
             is_read="UNREAD" not in header.labels,
             labels=list(header.labels),
             body="",
@@ -62,6 +69,12 @@ class EmailDTO:
     @classmethod
     def from_gateway_message(cls, message: GmailMessage) -> EmailDTO:
         to_addresses = [a.strip() for a in message.to.split(",")] if message.to else []
+        date_sent = None
+        if message.date:
+            try:
+                date_sent = email.utils.parsedate_to_datetime(message.date)
+            except (ValueError, TypeError):
+                pass
         return cls(
             id="",
             message_id=message.id,
@@ -70,7 +83,7 @@ class EmailDTO:
             snippet=message.snippet,
             from_address=message.from_ or None,
             to_addresses=to_addresses,
-            date_sent=None,
+            date_sent=date_sent,
             is_read="UNREAD" not in message.labels,
             labels=list(message.labels),
             body=message.body,

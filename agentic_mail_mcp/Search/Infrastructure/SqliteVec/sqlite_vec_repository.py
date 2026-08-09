@@ -21,7 +21,7 @@ class SqliteVecRepository:
     This is the default vector backend. sqlite-vec is the maintained successor
     to sqlite-vss and satisfies the same capability. It requires a SQLite build
     with extension loading enabled. Use pysqlite3-binary in Docker images based
-    on python:-slim where the system SQLite lacks extension loading support.
+    on python:<version>-slim where the system SQLite lacks extension loading support.
     """
 
     def __init__(self, connection: Any, dimension: int) -> None:

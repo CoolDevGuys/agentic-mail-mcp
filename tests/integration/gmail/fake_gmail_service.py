@@ -71,9 +71,6 @@ class _Messages:
     def delete(self, **kwargs: Any) -> _Request:
         return self._call("messages.delete", **kwargs)
 
-    def batchGet(self, **kwargs: Any) -> _Request:
-        return self._call("messages.batchGet", **kwargs)
-
     def attachments(self) -> _Attachments:
         return _Attachments(self._service)
 

@@ -494,15 +494,15 @@ directory is not writable.
 ### Search returns empty metadata
 
 If `search_emails` returns results with empty `subject`, `from_address`, `date`,
-etc. (only `message_id` and `thread_id` populated), this is fixed in v0.2.3+.
-The server now fetches full message metadata via `messages.batchGet` after
-`messages.list`.
+etc. (only `message_id` and `thread_id` populated), this is fixed in the
+upcoming patch. The server now fetches full message metadata via
+`messages.batchGet` after `messages.list`.
 
 ### Stale cache after server restart
 
 After `systemctl restart`, cached list operations (`list_unread`, `find_by_thread_id`)
-may return empty results until emails are re-seen. This is fixed in v0.2.3+: the
-cache freshness map is now seeded from persisted data on startup.
+may return empty results until emails are re-seen. This is fixed in the upcoming
+patch: the cache freshness map is now seeded from persisted data on startup.
 
 ### Missing sqlite_vec (semantic search unavailable)
 
@@ -516,7 +516,7 @@ The `sqlite-vec` package is an optional dependency. Install the `search` extra:
 pip install -e ".[search]"
 ```
 
-For Docker, the image installs the `search` extra by default (v0.2.3+). If building
+For Docker, the image installs the `search` extra by default (upcoming patch). If building
 custom images, ensure `pysqlite3-binary` is installed before the package for SQLite
 extension loading support on `python:-slim` bases.
 
@@ -527,7 +527,7 @@ ERROR: ASGI callable returned without completing response.
 ```
 
 This occurs when `systemctl stop` terminates active SSE streams. The server now
-handles SIGTERM gracefully (v0.2.3+). For systemd, add a stop timeout:
+handles SIGTERM gracefully (upcoming patch). For systemd, add a stop timeout:
 
 ```ini
 [Service]

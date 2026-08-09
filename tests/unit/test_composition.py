@@ -77,7 +77,14 @@ class TestBuildUseCases:
     def test_search_skipped_without_backend(self, settings) -> None:
         # sqlite-vec is not installed in the default test env, so search is skipped
         uses = build_use_cases(settings, gateway=StubGmailGateway())
-        assert uses.semantic_search is None
+        try:
+            import pysqlite3  # noqa: F401
+            import sqlite_vec  # noqa: F401
+        except ImportError:
+            assert uses.semantic_search is None
+        else:
+            # Backend is available — search use case is built
+            assert uses.semantic_search is not None
 
 
 class TestServerExposesTools:

@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import signal
 import sys
 from pathlib import Path
 
@@ -25,6 +26,12 @@ from agentic_mail_mcp.MCP.Tools.use_cases import McpUseCases
 logger = logging.getLogger(__name__)
 
 
+def _signal_handler(signum: int, frame: object) -> None:
+    sig_name = signal.Signals(signum).name
+    logger.info("Received %s, shutting down gracefully...", sig_name)
+    sys.exit(0)
+
+
 def _serve(settings: Settings) -> None:
     # HTTP is long-running, so verify auth up front and warn (do not fail) if the
     # token is missing/expired — tools still return their usual clear errors.
@@ -35,6 +42,8 @@ def _serve(settings: Settings) -> None:
             logger.warning("auth preflight failed: %s", result.message)
         else:
             logger.info("auth preflight ok: %s", result.message)
+
+        signal.signal(signal.SIGTERM, _signal_handler)
 
     container = Container.with_defaults(settings)
     # Composition root: build the real use cases and resources and register them

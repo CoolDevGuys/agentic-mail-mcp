@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import base64
+import logging
 import time
 from collections.abc import Callable
 from typing import Any
+
+import googleapiclient.errors
 
 from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     DraftResult,
@@ -25,6 +28,8 @@ from agentic_mail_mcp.Gmail.Infrastructure.Google.rate_limiter import RateLimite
 from agentic_mail_mcp.Gmail.Infrastructure.Google.retry import retry_on_transient
 
 _USER = "me"
+
+logger = logging.getLogger(__name__)
 
 
 def _status_of(error: Exception) -> int | None:
@@ -89,12 +94,45 @@ class GmailApiGateway:
                 userId=_USER, q=query, pageToken=page_token, maxResults=max_results
             )
         )
-        headers = [to_gmail_message_header(m) for m in result.get("messages", [])]
+        message_ids = [m["id"] for m in result.get("messages", [])]
+        if message_ids:
+            headers = self.batch_get_metadata(message_ids)
+        else:
+            headers = []
         return GmailListResponse(
             messages=headers,
             next_page_token=result.get("nextPageToken"),
             result_size_estimate=int(result.get("resultSizeEstimate", 0)),
         )
+
+    def batch_get_metadata(
+        self, message_ids: list[str]
+    ) -> list[GmailMessageHeader]:
+        headers: list[GmailMessageHeader] = []
+        for message_id in message_ids:
+            try:
+                raw = self._execute(
+                    self._messages().get(
+                        userId=_USER,
+                        id=message_id,
+                        format="metadata",
+                        metadataHeaders=["Subject", "From", "To", "Date"],
+                    )
+                )
+                headers.append(to_gmail_message_header(raw))
+            except googleapiclient.errors.HttpError as exc:
+                if _status_of(exc) == 404:
+                    logger.warning(
+                        "Gmail message %s not found during metadata fetch, skipping",
+                        message_id,
+                    )
+                else:
+                    logger.warning(
+                        "Failed to fetch metadata for message %s: %s",
+                        message_id,
+                        exc,
+                    )
+        return headers
 
     def get_message(self, message_id: str, fmt: str) -> GmailMessage | None:
         try:

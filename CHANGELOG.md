@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Search and list results now include full message metadata.** `list_messages` fetches subject/from/date/snippet via `messages.batchGet` after `messages.list`, fixing empty metadata in search results.
+- **Cache freshness map is seeded on restart.** Cached list operations no longer return empty results after a server restart until emails are re-seen.
+- **Database path is validated at startup.** The server exits with a clear error if the DB directory cannot be created or is not writable, instead of failing later with obscure SQLite errors.
+- **sqlite_vec extension loads in slim Docker images.** `pysqlite3-binary` is pre-installed and used as the SQLite backend, fixing missing extension loading support on `python:3.11-slim`.
+- **Graceful shutdown on SIGTERM.** The CLI installs a signal handler for clean ASGI shutdown via `systemctl stop`.
+- **MCP deployment troubleshooting documented.** Configuration docs now cover session ID requirements and common deployment issues.
+
 ## [0.2.2] - 2026-08-07
 
 ### ⚠ Breaking

@@ -16,6 +16,7 @@ from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     GmailLabel,
     GmailListResponse,
     GmailMessage,
+    GmailMessageHeader,
     ModifyResult,
     SentMessageResult,
 )
@@ -52,6 +53,9 @@ class InMemoryEmailRepository:
     def list_unread(self, limit: int) -> list[Email]:
         unread = [e for e in self._by_id.values() if not e.is_read]
         return unread[:limit]
+
+    def list_all(self) -> list[Email]:
+        return list(self._by_id.values())
 
     def save(self, email: Email) -> None:
         self._by_id[email.id] = email
@@ -92,6 +96,7 @@ class StubGmailGateway:
         self.messages: dict[str, GmailMessage] = {}
         self.labels: list[GmailLabel] = []
         self.list_calls: list[tuple[str, str | None, int]] = []
+        self.batch_metadata_results: list[GmailMessageHeader] = []
         self.sent: list[str] = []
         self.drafts_created: list[str] = []
         self.drafts_sent: list[str] = []
@@ -109,6 +114,11 @@ class StubGmailGateway:
 
     def get_message(self, message_id: str, fmt: str) -> GmailMessage | None:
         return self.messages.get(message_id)
+
+    def batch_get_metadata(
+        self, message_ids: list[str]
+    ) -> list[GmailMessageHeader]:
+        return self.batch_metadata_results.copy()
 
     def list_labels(self) -> list[GmailLabel]:
         return list(self.labels)

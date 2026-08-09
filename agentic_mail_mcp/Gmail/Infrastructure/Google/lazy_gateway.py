@@ -20,6 +20,7 @@ from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     GmailLabel,
     GmailListResponse,
     GmailMessage,
+    GmailMessageHeader,
     ModifyResult,
     SentMessageResult,
     StopWatchResult,
@@ -65,6 +66,11 @@ class LazyGmailGateway(GmailGateway):
         self, query: str, page_token: str | None, max_results: int
     ) -> GmailListResponse:
         return self._resolve().list_messages(query, page_token, max_results)
+
+    def batch_get_metadata(
+        self, message_ids: list[str]
+    ) -> list[GmailMessageHeader]:
+        return self._resolve().batch_get_metadata(message_ids)
 
     def get_message(self, message_id: str, fmt: str) -> GmailMessage | None:
         return self._resolve().get_message(message_id, fmt)

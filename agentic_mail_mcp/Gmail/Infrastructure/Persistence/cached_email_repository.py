@@ -15,6 +15,7 @@ mirror:
 
 from __future__ import annotations
 
+import logging
 from datetime import timedelta
 
 from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
@@ -23,6 +24,8 @@ from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
 from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import GmailGateway
 from agentic_mail_mcp.Gmail.Domain.Mapper.email_mapper import EmailMapper
 from agentic_mail_mcp.Gmail.Domain.Repository.email_repository import EmailRepository
+
+logger = logging.getLogger(__name__)
 
 
 class CachedEmailRepository(EmailRepository):
@@ -38,10 +41,29 @@ class CachedEmailRepository(EmailRepository):
         self._gateway = gateway
         self._clock = clock or SystemClock()
         self._ttl = timedelta(seconds=ttl_seconds)
-        # In-memory freshness map keyed by Gmail message id. Resets on restart —
-        # conservative by design: after a restart the cache is treated as stale
-        # and refetched live, never served beyond its TTL.
+        # In-memory freshness map keyed by Gmail message id. Seeded lazily from
+        # the persisted cache on first access so cached entries remain usable
+        # after restart without blocking startup.
         self._seen_at: dict[str, object] = {}
+        self._seeded = False
+
+    def _ensure_seeded(self) -> None:
+        if self._seeded:
+            return
+        self._seeded = True
+        try:
+            now = self._clock.now()
+            for email in self._cache.list_all():
+                mid = email.message_id.value
+                if mid not in self._seen_at:
+                    self._seen_at[mid] = now
+        except Exception:
+            logger.warning("Failed to seed cache freshness map", exc_info=True)
+
+    # --- ensure seed before any cache read ---
+
+    def _pre_read(self) -> None:
+        self._ensure_seeded()
 
     # --- single-email reads: live-through, metadata-only cache ---
 
@@ -53,6 +75,7 @@ class CachedEmailRepository(EmailRepository):
         return self._absorb(EmailMapper.to_domain(message))
 
     def find_by_id(self, id: UUIDId) -> Email | None:
+        self._pre_read()
         cached = self._cache.find_by_id(id)
         if cached is None:
             return None
@@ -62,14 +85,21 @@ class CachedEmailRepository(EmailRepository):
     # --- list reads: cache, TTL-filtered ---
 
     def find_by_thread_id(self, thread_id: str) -> list[Email]:
+        self._pre_read()
         return [e for e in self._cache.find_by_thread_id(thread_id) if self._fresh(e)]
 
     def list_unread(self, limit: int) -> list[Email]:
+        self._pre_read()
         fresh = [e for e in self._cache.list_unread(limit) if self._fresh(e)]
         return fresh[:limit]
 
     def search(self, query: str) -> list[Email]:
+        self._pre_read()
         return [e for e in self._cache.search(query) if self._fresh(e)]
+
+    def list_all(self) -> list[Email]:
+        self._pre_read()
+        return [e for e in self._cache.list_all() if self._fresh(e)]
 
     # --- writes ---
 

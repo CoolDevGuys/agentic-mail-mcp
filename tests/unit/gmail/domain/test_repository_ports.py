@@ -30,6 +30,9 @@ class FakeEmailRepository:
         unread = [e for e in self._store.values() if not e.is_read]
         return unread[:limit]
 
+    def list_all(self) -> list[Email]:
+        return list(self._store.values())
+
     def save(self, email: Email) -> None:
         self._store[email.id] = email
 
@@ -132,6 +135,7 @@ class TestEmailRepositoryProtocol:
         assert callable(repo.find_by_thread_id)
         assert callable(repo.search)
         assert callable(repo.list_unread)
+        assert callable(repo.list_all)
         assert callable(repo.save)
         assert callable(repo.delete)
 

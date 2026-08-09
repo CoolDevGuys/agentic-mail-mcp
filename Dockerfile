@@ -18,9 +18,13 @@ FROM python:3.11-slim AS runtime
 
 WORKDIR /app
 
+# Install pysqlite3-binary for SQLite extension loading support (needed by sqlite-vec).
+# The slim image's system SQLite is compiled without SQLITE_ENABLE_LOAD_EXTENSION.
+RUN pip install --no-cache-dir pysqlite3-binary
+
 # Install the package (and its dependencies) from the wheel produced above.
 COPY --from=builder /dist/*.whl /tmp/
-RUN pip install --no-cache-dir /tmp/*.whl && rm -rf /tmp/*.whl
+RUN pip install --no-cache-dir "/tmp/*.whl[search]" && rm -rf /tmp/*.whl
 
 # Run as a non-root user.
 RUN useradd --create-home --uid 10001 appuser

@@ -38,10 +38,15 @@ class CachedEmailRepository(EmailRepository):
         self._gateway = gateway
         self._clock = clock or SystemClock()
         self._ttl = timedelta(seconds=ttl_seconds)
-        # In-memory freshness map keyed by Gmail message id. Resets on restart —
-        # conservative by design: after a restart the cache is treated as stale
-        # and refetched live, never served beyond its TTL.
+        # In-memory freshness map keyed by Gmail message id. Seeded from the
+        # persisted cache on init so cached entries remain usable after restart.
         self._seen_at: dict[str, object] = {}
+        self._seed_seen_at()
+
+    def _seed_seen_at(self) -> None:
+        now = self._clock.now()
+        for email in self._cache.list_all():
+            self._seen_at[email.message_id.value] = now
 
     # --- single-email reads: live-through, metadata-only cache ---
 
@@ -70,6 +75,9 @@ class CachedEmailRepository(EmailRepository):
 
     def search(self, query: str) -> list[Email]:
         return [e for e in self._cache.search(query) if self._fresh(e)]
+
+    def list_all(self) -> list[Email]:
+        return [e for e in self._cache.list_all() if self._fresh(e)]
 
     # --- writes ---
 

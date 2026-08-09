@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-import sqlite3
+from typing import Any
 
 from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
 from agentic_mail_mcp.Search.Domain.Entities.search_document import SearchDocument
@@ -9,16 +9,22 @@ from agentic_mail_mcp.Search.Domain.Repository.vector_search_repository import (
     SearchResult,
 )
 
+try:
+    import pysqlite3 as sqlite3  # type: ignore[import-not-found]
+except ImportError:
+    import sqlite3  # type: ignore[no-redef]
+
 
 class SqliteVecRepository:
     """VectorSearchRepository backed by the sqlite-vec extension.
 
     This is the default vector backend. sqlite-vec is the maintained successor
     to sqlite-vss and satisfies the same capability. It requires a SQLite build
-    with extension loading enabled.
+    with extension loading enabled. Use pysqlite3-binary in Docker images based
+    on python:-slim where the system SQLite lacks extension loading support.
     """
 
-    def __init__(self, connection: sqlite3.Connection, dimension: int) -> None:
+    def __init__(self, connection: Any, dimension: int) -> None:
         self._conn = connection
         self._dimension = dimension
         self._ensure_schema()

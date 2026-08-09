@@ -55,10 +55,32 @@ class TestGmailApiGateway:
                 "resultSizeEstimate": 1,
             },
         )
+        service.set_result(
+            "messages.batchGet",
+            {
+                "messages": [
+                    {
+                        "id": "m1",
+                        "threadId": "t1",
+                        "snippet": "snip",
+                        "labelIds": ["INBOX"],
+                        "payload": {
+                            "headers": [
+                                {"name": "Subject", "value": "Hello"},
+                                {"name": "From", "value": "a@b.com"},
+                                {"name": "Date", "value": "2026-01-01"},
+                            ]
+                        },
+                    }
+                ]
+            },
+        )
         result = _gateway(service).list_messages("is:unread", None, 10)
         assert result.next_page_token == "next"
         assert result.result_size_estimate == 1
         assert result.messages[0].id == "m1"
+        assert result.messages[0].subject == "Hello"
+        assert result.messages[0].from_ == "a@b.com"
 
     def test_get_message_parses_full(self) -> None:
         service = FakeGmailService()

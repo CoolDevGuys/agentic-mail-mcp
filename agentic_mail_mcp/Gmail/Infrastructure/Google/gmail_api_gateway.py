@@ -89,12 +89,35 @@ class GmailApiGateway:
                 userId=_USER, q=query, pageToken=page_token, maxResults=max_results
             )
         )
-        headers = [to_gmail_message_header(m) for m in result.get("messages", [])]
+        message_ids = [m["id"] for m in result.get("messages", [])]
+        if message_ids:
+            headers = self.batch_get_metadata(message_ids)
+        else:
+            headers = []
         return GmailListResponse(
             messages=headers,
             next_page_token=result.get("nextPageToken"),
             result_size_estimate=int(result.get("resultSizeEstimate", 0)),
         )
+
+    def batch_get_metadata(
+        self, message_ids: list[str]
+    ) -> list[GmailMessageHeader]:
+        headers: list[GmailMessageHeader] = []
+        for i in range(0, len(message_ids), 100):
+            batch = message_ids[i : i + 100]
+            result = self._execute(
+                self._messages().batchGet(
+                    userId=_USER,
+                    ids=batch,
+                    format="metadata",
+                    metadataHeaderIds=["Subject", "From", "To", "Date"],
+                )
+            )
+            for msg in result.get("messages", []):
+                if msg is not None:
+                    headers.append(to_gmail_message_header(msg))
+        return headers
 
     def get_message(self, message_id: str, fmt: str) -> GmailMessage | None:
         try:

@@ -67,6 +67,11 @@ class SqliteEmailRepository:
             ).all()
             return [EmailOrmMapper.to_domain(m) for m in models]
 
+    def list_all(self) -> list[Email]:
+        with self._session_factory() as session:
+            models = session.scalars(select(EmailModel)).all()
+            return [EmailOrmMapper.to_domain(m) for m in models]
+
     def save(self, email: Email) -> None:
         with self._session_factory() as session:
             session.merge(EmailOrmMapper.to_orm(email))

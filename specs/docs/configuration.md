@@ -469,3 +469,84 @@ only the base dependencies. Heavier or optional backends live behind extras:
 - `search` — sqlite-vec, sentence-transformers
 - `notifications` — redis
 - `llm` — llama-cpp-python (local inference)
+
+## Deployment troubleshooting
+
+### Database: "Read-only file system"
+
+```
+sqlite3.DatabaseError: ... [Errno 30] Read-only file system: '/path/to/agentic_mail_mcp.db'
+```
+
+The SQLite database file must be on a writable filesystem. The default path
+(`./agentic_mail_mcp.db`) is relative to the process's working directory, which
+for systemd services or containers may be read-only.
+
+**Fix:** Set an absolute path on a writable volume:
+
+```bash
+AGENTIC_MAIL_MCP_DATABASE_URL=sqlite:////var/lib/agentic-mail-mcp/agentic_mail_mcp.db
+```
+
+The server validates the DB path on startup and exits with a clear error if the
+directory is not writable.
+
+### Search returns empty metadata
+
+If `search_emails` returns results with empty `subject`, `from_address`, `date`,
+etc. (only `message_id` and `thread_id` populated), this is fixed in v0.2.3+.
+The server now fetches full message metadata via `messages.batchGet` after
+`messages.list`.
+
+### Stale cache after server restart
+
+After `systemctl restart`, cached list operations (`list_unread`, `find_by_thread_id`)
+may return empty results until emails are re-seen. This is fixed in v0.2.3+: the
+cache freshness map is now seeded from persisted data on startup.
+
+### Missing sqlite_vec (semantic search unavailable)
+
+```
+Semantic search unavailable: No module named 'sqlite_vec'
+```
+
+The `sqlite-vec` package is an optional dependency. Install the `search` extra:
+
+```bash
+pip install -e ".[search]"
+```
+
+For Docker, the image installs the `search` extra by default (v0.2.3+). If building
+custom images, ensure `pysqlite3-binary` is installed before the package for SQLite
+extension loading support on `python:-slim` bases.
+
+### ASGI shutdown error
+
+```
+ERROR: ASGI callable returned without completing response.
+```
+
+This occurs when `systemctl stop` terminates active SSE streams. The server now
+handles SIGTERM gracefully (v0.2.3+). For systemd, add a stop timeout:
+
+```ini
+[Service]
+TimeoutStopSec=30
+```
+
+### "Missing session ID" on direct HTTP calls
+
+```json
+{"code":-32600,"message":"Bad Request: Missing session ID"}
+```
+
+The streamable-HTTP transport requires the MCP **initialize handshake** before
+tool calls. Clients must:
+
+1. **POST** `/mcp` with `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"client","version":"1.0"}}}`
+2. Use the `Mcp-Session-Id` header from the response on all subsequent requests
+
+This is expected behavior — the server is not a REST API, it's an MCP server.
+Use an MCP client (not raw HTTP) to interact with it. The health check in the
+Dockerfile (`socket.connect()`) works because it only tests port connectivity,
+not the MCP protocol.

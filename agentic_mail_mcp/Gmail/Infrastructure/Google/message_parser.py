@@ -8,6 +8,7 @@ from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     GmailAttachment,
     GmailMessage,
     GmailMessageHeader,
+    GmailThread,
 )
 
 
@@ -40,15 +41,26 @@ def _decode_b64url(data: str) -> str:
 
 
 def _extract_body(payload: dict[str, Any]) -> str:
+    """Concatenate every ``text/plain`` leaf in document order.
+
+    A forward or reply nests the quoted/original message as another MIME
+    subtree (e.g. a ``message/rfc822`` attachment) alongside the new note.
+    Stopping at the first ``text/plain`` leaf found would silently drop that
+    nested content and return only the forward note, so every plain-text leaf
+    is collected and joined instead.
+    """
+    plain_texts: list[str] = []
     first_data: str | None = None
     for part in _walk_leaf_parts(payload):
         data = part.get("body", {}).get("data")
-        if not data:
+        if not data or part.get("filename"):
             continue
         if part.get("mimeType") == "text/plain":
-            return _decode_b64url(data)
-        if first_data is None:
+            plain_texts.append(_decode_b64url(data))
+        elif first_data is None:
             first_data = _decode_b64url(data)
+    if plain_texts:
+        return "\n\n".join(plain_texts)
     return first_data or ""
 
 
@@ -97,4 +109,15 @@ def to_gmail_message_header(raw: dict[str, Any]) -> GmailMessageHeader:
         from_=_header(headers, "From"),
         date=_header(headers, "Date"),
         labels=list(raw.get("labelIds", [])),
+        to=_header(headers, "To"),
+        body=_extract_body(payload),
+    )
+
+
+def to_gmail_thread(raw: dict[str, Any]) -> GmailThread:
+    return GmailThread(
+        id=raw.get("id", ""),
+        snippet=raw.get("snippet", ""),
+        history_id=str(raw.get("historyId", "")),
+        messages=[to_gmail_message(m) for m in raw.get("messages", [])],
     )

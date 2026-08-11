@@ -21,6 +21,8 @@ class GmailMessageHeader:
     from_: str
     date: str
     labels: list[str]
+    to: str = ""
+    body: str = ""
 
 
 @dataclass
@@ -42,6 +44,14 @@ class GmailListResponse:
     messages: list[GmailMessageHeader]
     next_page_token: str | None
     result_size_estimate: int
+
+
+@dataclass
+class GmailThread:
+    id: str
+    snippet: str
+    history_id: str
+    messages: list[GmailMessage]
 
 
 @dataclass
@@ -103,6 +113,8 @@ class GmailGateway(Protocol):
     def get_message(self, message_id: str, fmt: str) -> GmailMessage | None: ...
 
     def get_batch_messages(self, message_ids: list[str]) -> list[GmailMessage]: ...
+
+    def get_thread(self, thread_id: str) -> GmailThread | None: ...
 
     def send_message(self, raw_message: str) -> SentMessageResult: ...
 

@@ -17,6 +17,7 @@ from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     GmailListResponse,
     GmailMessage,
     GmailMessageHeader,
+    GmailThread,
     ModifyResult,
     SentMessageResult,
 )
@@ -94,6 +95,7 @@ class StubGmailGateway:
             messages=[], next_page_token=None, result_size_estimate=0
         )
         self.messages: dict[str, GmailMessage] = {}
+        self.threads: dict[str, GmailThread] = {}
         self.labels: list[GmailLabel] = []
         self.list_calls: list[tuple[str, str | None, int]] = []
         self.batch_metadata_results: list[GmailMessageHeader] = []
@@ -119,6 +121,9 @@ class StubGmailGateway:
         self, message_ids: list[str]
     ) -> list[GmailMessageHeader]:
         return self.batch_metadata_results.copy()
+
+    def get_thread(self, thread_id: str) -> GmailThread | None:
+        return self.threads.get(thread_id)
 
     def list_labels(self) -> list[GmailLabel]:
         return list(self.labels)

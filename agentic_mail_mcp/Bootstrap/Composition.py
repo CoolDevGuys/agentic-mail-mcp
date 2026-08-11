@@ -67,9 +67,6 @@ from agentic_mail_mcp.Gmail.Infrastructure.Persistence.cached_email_repository i
 from agentic_mail_mcp.Gmail.Infrastructure.Persistence.SqlAlchemy.Repositories.sqlite_email_repository import (
     SqliteEmailRepository,
 )
-from agentic_mail_mcp.Gmail.Infrastructure.Persistence.SqlAlchemy.Repositories.sqlite_thread_repository import (
-    SqliteThreadRepository,
-)
 from agentic_mail_mcp.Intelligence.Application.UseCases.classify_email import (
     ClassifyEmailUseCase,
 )
@@ -211,15 +208,13 @@ def build_use_cases(
         clock=clock,
         ttl_seconds=settings.database.cache_ttl_seconds,
     )
-    thread_repo = SqliteThreadRepository(session_factory)
-
     # --- search (optional) ---
     semantic_search, _vector_repo = _build_semantic_search(settings)
 
     uses = McpUseCases(
         search_emails=SearchEmailsUseCase(gateway, email_repo),
         get_email=GetEmailUseCase(gateway, email_repo),
-        get_thread=GetThreadUseCase(thread_repo),
+        get_thread=GetThreadUseCase(gateway),
         list_unread=ListUnreadUseCase(email_repo),
         list_labels=ListLabelsUseCase(gateway),
         forward_email=ForwardEmailUseCase(gateway, validator, email_repo, event_bus),

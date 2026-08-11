@@ -5,7 +5,10 @@ import base64
 import pytest
 
 from agentic_mail_mcp.Common.Domain.Exceptions import DomainError
-from agentic_mail_mcp.Gmail.Infrastructure.Google.message_parser import to_gmail_message
+from agentic_mail_mcp.Gmail.Infrastructure.Google.message_parser import (
+    to_gmail_message,
+    to_gmail_thread,
+)
 from agentic_mail_mcp.Gmail.Infrastructure.Google.oauth_provider import (
     GmailOAuthProvider,
 )
@@ -180,3 +183,88 @@ class TestMessageParser:
         message = to_gmail_message(raw)
         assert message.body == "deep body"
         assert [a.file_name for a in message.attachments] == ["deep.pdf"]
+
+    def test_forwarded_message_keeps_original_body_alongside_the_note(self) -> None:
+        # multipart/mixed -> [note (text/plain), message/rfc822 -> original
+        # message's own text/plain]. Gmail nests a forwarded-as-attachment
+        # message this way; the forward note must not eclipse the original.
+        raw = {
+            "id": "m3",
+            "threadId": "t3",
+            "labelIds": ["INBOX"],
+            "payload": {
+                "mimeType": "multipart/mixed",
+                "headers": [{"name": "Subject", "value": "Fwd: Report"}],
+                "parts": [
+                    {
+                        "mimeType": "text/plain",
+                        "body": {
+                            "data": base64.urlsafe_b64encode(
+                                b"FYI, see below"
+                            ).decode()
+                        },
+                    },
+                    {
+                        "mimeType": "message/rfc822",
+                        "filename": "original.eml",
+                        "body": {},
+                        "parts": [
+                            {
+                                "mimeType": "text/plain",
+                                "body": {
+                                    "data": base64.urlsafe_b64encode(
+                                        b"This is the original email"
+                                    ).decode()
+                                },
+                            }
+                        ],
+                    },
+                ],
+            },
+        }
+        message = to_gmail_message(raw)
+        assert "FYI, see below" in message.body
+        assert "This is the original email" in message.body
+
+
+class TestGmailThreadParser:
+    def test_parses_thread_with_ordered_messages(self) -> None:
+        raw = {
+            "id": "t1",
+            "snippet": "thread snippet",
+            "historyId": "123",
+            "messages": [
+                {
+                    "id": "m1",
+                    "threadId": "t1",
+                    "labelIds": ["INBOX"],
+                    "payload": {
+                        "headers": [
+                            {"name": "Subject", "value": "Hi"},
+                            {"name": "From", "value": "a@b.com"},
+                        ],
+                        "body": {
+                            "data": base64.urlsafe_b64encode(b"first").decode()
+                        },
+                    },
+                },
+                {
+                    "id": "m2",
+                    "threadId": "t1",
+                    "labelIds": ["INBOX"],
+                    "payload": {
+                        "headers": [
+                            {"name": "Subject", "value": "Re: Hi"},
+                            {"name": "From", "value": "c@d.com"},
+                        ],
+                        "body": {
+                            "data": base64.urlsafe_b64encode(b"second").decode()
+                        },
+                    },
+                },
+            ],
+        }
+        thread = to_gmail_thread(raw)
+        assert thread.id == "t1"
+        assert [m.id for m in thread.messages] == ["m1", "m2"]
+        assert [m.body for m in thread.messages] == ["first", "second"]

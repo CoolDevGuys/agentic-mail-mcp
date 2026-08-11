@@ -21,6 +21,7 @@ from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     GmailListResponse,
     GmailMessage,
     GmailMessageHeader,
+    GmailThread,
     ModifyResult,
     SentMessageResult,
     StopWatchResult,
@@ -77,6 +78,9 @@ class LazyGmailGateway(GmailGateway):
 
     def get_batch_messages(self, message_ids: list[str]) -> list[GmailMessage]:
         return self._resolve().get_batch_messages(message_ids)
+
+    def get_thread(self, thread_id: str) -> GmailThread | None:
+        return self._resolve().get_thread(thread_id)
 
     def send_message(self, raw_message: str) -> SentMessageResult:
         return self._resolve().send_message(raw_message)

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
-from email.utils import getaddresses, parseaddr
+from email.utils import getaddresses, parseaddr, parsedate_to_datetime
 
 from agentic_mail_mcp.Common.Domain.Exceptions import ValidationError
 from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
@@ -39,10 +38,8 @@ class EmailMapper:
         date_sent = None
         if gateway_message.date:
             try:
-                date_sent = datetime.fromisoformat(
-                    gateway_message.date.removesuffix("Z")
-                )
-            except (ValueError, AttributeError):
+                date_sent = parsedate_to_datetime(gateway_message.date)
+            except (ValueError, TypeError):
                 date_sent = None
 
         return Email.from_gmail_message(

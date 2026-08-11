@@ -9,8 +9,9 @@ Decision: **Gmail is the source of truth; local persistence is a read-through ca
 - **Identity is the Gmail `message_id`.** Tools speak `message_id` end to end (search returns it; `get_email` and the write tools accept it). The internal `UUID` is an implementation detail assigned by the cache and kept stable per message id.
 - **Single-email reads are live.** `find_by_gmail_message_id` / `find_by_id` fetch from the gateway so callers get fresh, complete data (including the body).
 - **Metadata-only at rest.** Cache rows store headers/labels/snippet — **never the body**. Bodies are fetched live on demand.
-- **Short TTL for list views.** `list_unread` / thread / search are served from the metadata cache, filtered by `database.cache_ttl_seconds` (default 900s). The freshness clock is in memory, so a restart conservatively treats the cache as stale.
+- **Short TTL for list views.** `list_unread` is served from the metadata cache, filtered by `database.cache_ttl_seconds` (default 900s). The freshness clock is in memory, so a restart conservatively treats the cache as stale.
 - **Self-healing, no sync engine.** A message the gateway reports as gone (404 / `None`) is evicted and reported not-found. There is no delete-propagation job and no history sync.
+- **Threads are not cached at all.** `get_thread` calls `GmailGateway.get_thread` (`users.threads.get`) directly on every call — there is no local sync engine populating a thread cache, so a cache-backed thread lookup would simply never find anything. This also means every message in the thread comes back with its full body already fetched, at the cost of a live round trip per call.
 - The **audit log** (durable) and **search index** (durable, derived embeddings) are the only stores that intentionally outlive a TTL.
 
 Consequences:

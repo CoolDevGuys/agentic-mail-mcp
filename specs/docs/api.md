@@ -27,7 +27,7 @@
 Always registered, regardless of access level.
 
 ### `search_emails`
-Search the mailbox by full-text query and structured filters. Returns a page of email summaries.
+Search the mailbox by full-text query and structured filters. Returns a page of emails, each with its full body — no follow-up `get_email` call is needed to read a result's content.
 
 | Property | Type | Required | Notes |
 |---|---|---|---|
@@ -43,7 +43,7 @@ Search the mailbox by full-text query and structured filters. Returns a page of 
 | `page` | integer | | 1-based page (default 1) |
 | `page_size` | integer | | Page size (default 25) |
 
-**Output:** `{ emails: EmailSummary[], page, page_size, next_page_token, total_estimate }`.
+**Output:** `{ emails: Email[], page, page_size, next_page_token, total_estimate }`. Each `Email` includes `body` and `to_addresses`. There is no internal cache UUID for a live result, so `id` is the Gmail message id — the same value `get_email` and `get_thread` accept.
 
 ### `get_email`
 Fetch a single email with its body.
@@ -55,13 +55,13 @@ Fetch a single email with its body.
 **Output:** an `Email` object (id, message_id, thread_id, subject, snippet, from/to, date, is_read, labels, body).
 
 ### `get_thread`
-Fetch a conversation thread and its ordered email ids.
+Fetch a full conversation thread directly from Gmail (`users.threads.get`): every message in order, each with its own body, sender, recipients, and date — enough to reconstruct the whole conversation in one call.
 
 | Property | Type | Required |
 |---|---|---|
 | `thread_id` | string | ✱ |
 
-**Output:** a `Thread` object (id, thread_id, subject, snippet, participants, email_ids, last_updated, is_read).
+**Output:** a `Thread` object (thread_id, subject, snippet, participants, email_ids, last_updated, is_read, `emails`). `emails` is the ordered list of full `Email` objects (with bodies); `email_ids` holds the same messages' Gmail message ids.
 
 ### `list_unread`
 List unread emails, optionally filtered by label.

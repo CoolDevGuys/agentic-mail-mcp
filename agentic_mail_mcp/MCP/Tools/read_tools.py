@@ -65,7 +65,8 @@ def build_search_emails_tool(uses: McpUseCases) -> ToolDefinition:
         description=(
             "Search the mailbox by full-text query and structured filters "
             "(sender, recipient, subject, date range, label, unread). Returns a "
-            "page of email summaries."
+            "page of emails, each with its full body. Each result's `id` is the "
+            "Gmail message id — pass it straight to get_email or get_thread."
         ),
         category=READ,
         handler=search_emails,
@@ -104,7 +105,11 @@ def build_get_thread_tool(uses: McpUseCases) -> ToolDefinition:
 
     return ToolDefinition(
         name="get_thread",
-        description="Fetch a conversation thread and its ordered email ids.",
+        description=(
+            "Fetch a full conversation thread from Gmail: every message in "
+            "order, each with its own body, sender, recipients, and date — "
+            "enough to reconstruct the whole conversation in one call."
+        ),
         category=READ,
         handler=get_thread,
     )

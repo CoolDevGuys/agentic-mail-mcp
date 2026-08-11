@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.2] - 2026-08-11
+
+### Fixed
+
+- **`search_emails` results now include the full body, recipients, and a usable id.** The per-message fetch behind search used Gmail's `metadata` format, which never returns a body and only carried the headers it was explicitly asked for (not `To`); it now fetches `full` messages instead. Each result's `id` also falls back to the Gmail message id (instead of an empty string) since live search results have no internal cache UUID — the same id `get_email` already accepts.
+- **`get_email` no longer loses `date_sent`.** The email cache's mapper parsed the `Date` header with `datetime.fromisoformat`, which raises on real RFC 2822 mail headers (e.g. `"Tue, 11 Aug 2026 10:00:00 +0000"`) and was silently swallowed into `None`; it now parses with `email.utils.parsedate_to_datetime`, matching how search already parsed dates.
+- **Forwarded/replied emails no longer drop the original message body.** Body extraction stopped at the first `text/plain` MIME leaf, which is the forward note when the original is nested as a `message/rfc822` attachment; it now concatenates every plain-text leaf (excluding real file attachments) so both the note and the original content come back.
+- **`get_thread` is now backed by Gmail instead of a local table nothing ever wrote to.** No code path persisted threads into the local thread cache, so every `get_thread` call raised "not found" in practice. It now calls `users.threads.get` directly and returns every message in the thread with its own full body, sender, recipients, and date — enough to reconstruct the conversation in one call, instead of a list of ids requiring a follow-up `get_email` per message.
+
 ## [0.3.1] - 2026-08-09
 
 ### Fixed

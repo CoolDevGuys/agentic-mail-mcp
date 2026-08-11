@@ -11,6 +11,7 @@ from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     GmailLabel,
     GmailMessage,
     GmailMessageHeader,
+    GmailThread,
 )
 
 
@@ -52,18 +53,24 @@ class EmailDTO:
                 date_sent = email.utils.parsedate_to_datetime(header.date)
             except (ValueError, TypeError):
                 pass
+        to_addresses = (
+            [a.strip() for a in header.to.split(",")] if header.to else []
+        )
         return cls(
-            id="",
+            # No internal cache UUID exists for a live (non-cached) result, so
+            # the Gmail message id doubles as the identifier — it is what
+            # get_email actually accepts, unlike an empty string.
+            id=header.id,
             message_id=header.id,
             thread_id=header.thread_id,
             subject=header.subject,
             snippet=header.snippet,
             from_address=header.from_ or None,
-            to_addresses=[],
+            to_addresses=to_addresses,
             date_sent=date_sent,
             is_read="UNREAD" not in header.labels,
             labels=list(header.labels),
-            body="",
+            body=header.body,
         )
 
     @classmethod
@@ -76,7 +83,7 @@ class EmailDTO:
             except (ValueError, TypeError):
                 pass
         return cls(
-            id="",
+            id=message.id,
             message_id=message.id,
             thread_id=message.thread_id,
             subject=message.subject,
@@ -100,6 +107,10 @@ class ThreadDTO:
     email_ids: list[str]
     last_updated: datetime | None
     is_read: bool
+    # Full messages in thread order, each with its own body — populated when
+    # the thread is resolved live from Gmail (see from_gateway_thread), empty
+    # for the local-cache path so existing from_entity callers are unaffected.
+    emails: list[EmailDTO] = field(default_factory=list)
 
     @classmethod
     def from_entity(cls, thread: Thread) -> ThreadDTO:
@@ -112,6 +123,28 @@ class ThreadDTO:
             email_ids=[str(eid) for eid in thread.email_ids],
             last_updated=thread.last_updated,
             is_read=thread.is_read,
+        )
+
+    @classmethod
+    def from_gateway_thread(cls, thread: GmailThread) -> ThreadDTO:
+        emails = [EmailDTO.from_gateway_message(m) for m in thread.messages]
+        participants = sorted(
+            {e.from_address for e in emails if e.from_address}
+            | {addr for e in emails for addr in e.to_addresses}
+        )
+        last_updated = max((e.date_sent for e in emails if e.date_sent), default=None)
+        return cls(
+            id="",
+            thread_id=thread.id,
+            # Gmail threads carry no thread-level subject; the first message's
+            # subject stands in, matching how Gmail's own UI titles a thread.
+            subject=emails[0].subject if emails else "",
+            snippet=thread.snippet,
+            participants=participants,
+            email_ids=[e.message_id for e in emails],
+            last_updated=last_updated,
+            is_read=all(e.is_read for e in emails) if emails else True,
+            emails=emails,
         )
 
 

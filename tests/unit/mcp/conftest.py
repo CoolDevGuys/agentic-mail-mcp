@@ -61,7 +61,6 @@ from tests.fakes.ports import (
     InMemoryEmailRepository,
     InMemorySuggestionRepository,
     InMemorySummaryRepository,
-    InMemoryThreadRepository,
     InMemoryVectorSearchRepository,
     StubEmbeddingGateway,
     StubGmailGateway,
@@ -73,7 +72,6 @@ from tests.fakes.ports import (
 class McpEnv:
     uses: McpUseCases
     email_repo: InMemoryEmailRepository
-    thread_repo: InMemoryThreadRepository
     gateway: StubGmailGateway
     event_bus: InMemoryEventBus
     llm: StubLlmGateway
@@ -101,7 +99,6 @@ def make_env(
     llm_text: str = "stub output",
 ) -> McpEnv:
     email_repo = InMemoryEmailRepository()
-    thread_repo = InMemoryThreadRepository()
     gateway = StubGmailGateway()
     event_bus = InMemoryEventBus()
     llm = StubLlmGateway(response_text=llm_text)
@@ -120,7 +117,7 @@ def make_env(
     uses = McpUseCases(
         search_emails=SearchEmailsUseCase(gateway, email_repo),
         get_email=GetEmailUseCase(gateway, email_repo),
-        get_thread=GetThreadUseCase(thread_repo),
+        get_thread=GetThreadUseCase(gateway),
         list_unread=ListUnreadUseCase(email_repo),
         list_labels=ListLabelsUseCase(gateway),
         forward_email=ForwardEmailUseCase(gateway, validator, email_repo, event_bus),
@@ -146,7 +143,6 @@ def make_env(
     return McpEnv(
         uses=uses,
         email_repo=email_repo,
-        thread_repo=thread_repo,
         gateway=gateway,
         event_bus=event_bus,
         llm=llm,

@@ -178,6 +178,11 @@ Wraps a Gmail search query string with builder classmethods.
 | `save(thread)` | `None` | Persist thread |
 | `delete(id)` | `None` | Remove thread |
 
+> No production code path calls `save()` on this port, so it is never
+> populated. `GetThreadUseCase` resolves threads live from `GmailGateway`
+> (`get_thread`) instead of this repository — see
+> [ADR 0007](adr/0007-persistence-read-through-cache.md).
+
 ### Gateway Port
 
 #### GmailGateway
@@ -189,6 +194,7 @@ Anti-corruption layer port isolating the domain from the Gmail API.
 | `list_messages(query, page_token, max_results)` | `GmailListResponse` | List messages with pagination |
 | `get_message(message_id, fmt)` | `GmailMessage` | Get full message |
 | `get_batch_messages(message_ids)` | `list[GmailMessage]` | Get multiple messages |
+| `get_thread(thread_id)` | `GmailThread \| None` | Get a full thread (`users.threads.get`), every message with its body |
 | `send_message(raw_message)` | `SentMessageResult` | Send raw message |
 | `modify_message(message_id, add_labels, remove_labels)` | `ModifyResult` | Modify labels |
 | `trash_message(message_id)` | `None` | Move to trash |

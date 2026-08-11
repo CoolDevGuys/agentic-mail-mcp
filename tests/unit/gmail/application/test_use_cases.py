@@ -23,19 +23,15 @@ from agentic_mail_mcp.Gmail.Application.UseCases.search_emails import (
     build_gmail_query,
 )
 from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
-from agentic_mail_mcp.Gmail.Domain.Entities.thread import Thread
 from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     GmailLabel,
     GmailListResponse,
     GmailMessage,
     GmailMessageHeader,
+    GmailThread,
 )
-from agentic_mail_mcp.Gmail.Domain.ValueObjects import GmailMessageId, ThreadId
-from tests.fakes.ports import (
-    InMemoryEmailRepository,
-    InMemoryThreadRepository,
-    StubGmailGateway,
-)
+from agentic_mail_mcp.Gmail.Domain.ValueObjects import GmailMessageId
+from tests.fakes.ports import InMemoryEmailRepository, StubGmailGateway
 
 
 def _make_email(message_id: str = "msg_1", *, read: bool = False, labels=None) -> Email:
@@ -180,21 +176,52 @@ class TestGetEmailUseCase:
 
 
 class TestGetThreadUseCase:
-    def test_resolve_thread(self) -> None:
-        repo = InMemoryThreadRepository()
-        thread = Thread.create(
-            thread_id=ThreadId("t1"),
-            email_ids=[UUIDId.generate(), UUIDId.generate()],
-            subject="Subj",
+    def test_resolve_thread_with_full_message_bodies(self) -> None:
+        gateway = StubGmailGateway()
+        gateway.threads["t1"] = GmailThread(
+            id="t1",
+            snippet="snip",
+            history_id="h1",
+            messages=[
+                GmailMessage(
+                    id="m1",
+                    thread_id="t1",
+                    snippet="s1",
+                    subject="Subj",
+                    from_="a@b.com",
+                    to="me@example.com",
+                    date="2026-01-01",
+                    labels=["INBOX"],
+                    body="First message body",
+                    attachments=[],
+                ),
+                GmailMessage(
+                    id="m2",
+                    thread_id="t1",
+                    snippet="s2",
+                    subject="Re: Subj",
+                    from_="me@example.com",
+                    to="a@b.com",
+                    date="2026-01-02",
+                    labels=["INBOX"],
+                    body="Reply body",
+                    attachments=[],
+                ),
+            ],
         )
-        repo.add(thread)
-        uc = GetThreadUseCase(repo)
+        uc = GetThreadUseCase(gateway)
         dto = uc.execute(GetThreadQuery(thread_id="t1"))
+
         assert isinstance(dto, ThreadDTO)
-        assert len(dto.email_ids) == 2
+        assert dto.subject == "Subj"
+        assert len(dto.emails) == 2
+        assert dto.emails[0].body == "First message body"
+        assert dto.emails[1].body == "Reply body"
+        assert dto.email_ids == ["m1", "m2"]
+        assert set(dto.participants) == {"a@b.com", "me@example.com"}
 
     def test_thread_not_found(self) -> None:
-        uc = GetThreadUseCase(InMemoryThreadRepository())
+        uc = GetThreadUseCase(StubGmailGateway())
         with pytest.raises(NotFoundError):
             uc.execute(GetThreadQuery(thread_id="missing"))
 

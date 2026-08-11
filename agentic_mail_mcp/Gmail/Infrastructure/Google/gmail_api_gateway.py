@@ -15,6 +15,7 @@ from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     GmailListResponse,
     GmailMessage,
     GmailMessageHeader,
+    GmailThread,
     ModifyResult,
     SentMessageResult,
     StopWatchResult,
@@ -23,6 +24,7 @@ from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
 from agentic_mail_mcp.Gmail.Infrastructure.Google.message_parser import (
     to_gmail_message,
     to_gmail_message_header,
+    to_gmail_thread,
 )
 from agentic_mail_mcp.Gmail.Infrastructure.Google.rate_limiter import RateLimiter
 from agentic_mail_mcp.Gmail.Infrastructure.Google.retry import retry_on_transient
@@ -108,6 +110,13 @@ class GmailApiGateway:
     def batch_get_metadata(
         self, message_ids: list[str]
     ) -> list[GmailMessageHeader]:
+        """Fetch a header+body summary per message id.
+
+        Uses ``format="full"`` (not ``"metadata"``) so the returned headers
+        carry the recipient list and body text search results need — Gmail's
+        metadata format omits the body entirely regardless of which headers
+        are requested, and never includes ``To`` unless asked for by name.
+        """
         headers: list[GmailMessageHeader] = []
         for message_id in message_ids:
             try:
@@ -115,8 +124,7 @@ class GmailApiGateway:
                     self._messages().get(
                         userId=_USER,
                         id=message_id,
-                        format="metadata",
-                        metadataHeaders=["Subject", "From", "To", "Date"],
+                        format="full",
                     )
                 )
                 headers.append(to_gmail_message_header(raw))
@@ -152,6 +160,19 @@ class GmailApiGateway:
             if message is not None:
                 messages.append(message)
         return messages
+
+    def get_thread(self, thread_id: str) -> GmailThread | None:
+        try:
+            raw = self._execute(
+                self._service.users()
+                .threads()
+                .get(userId=_USER, id=thread_id, format="full")
+            )
+        except Exception as error:
+            if _status_of(error) == 404:
+                return None
+            raise
+        return to_gmail_thread(raw)
 
     def send_message(self, raw_message: str) -> SentMessageResult:
         result = self._execute(

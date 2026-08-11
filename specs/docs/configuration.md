@@ -491,18 +491,12 @@ AGENTIC_MAIL_MCP_DATABASE_URL=sqlite:////var/lib/agentic-mail-mcp/agentic_mail_m
 The server validates the DB path on startup and exits with a clear error if the
 directory is not writable.
 
-### Search returns empty metadata
-
-If `search_emails` returns results with empty `subject`, `from_address`, `date`,
-etc. (only `message_id` and `thread_id` populated), this is fixed in the
-upcoming patch. The server now fetches full message metadata via
-`messages.batchGet` after `messages.list`.
-
 ### Stale cache after server restart
 
 After `systemctl restart`, cached list operations (`list_unread`, `find_by_thread_id`)
-may return empty results until emails are re-seen. This is fixed in the upcoming
-patch: the cache freshness map is now seeded from persisted data on startup.
+may return empty results until emails are re-seen. The cache freshness map is
+seeded from persisted data on startup, so this self-heals as soon as any cache
+read runs — it does not require re-fetching the whole mailbox.
 
 ### Missing sqlite_vec (semantic search unavailable)
 

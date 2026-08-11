@@ -3,6 +3,9 @@ from __future__ import annotations
 from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     GmailLabel,
     GmailListResponse,
+    GmailMessage,
+    GmailMessageHeader,
+    GmailThread,
 )
 from agentic_mail_mcp.MCP.errors import INVALID_INPUT, NOT_FOUND
 from agentic_mail_mcp.MCP.Tools.read_tools import build_read_tools
@@ -46,6 +49,38 @@ class TestSearchEmailsTool:
         assert result["error"]["type"] == INVALID_INPUT
         assert env.gateway.list_calls == []  # never reached the use case
 
+    async def test_results_include_body_recipients_and_a_usable_id(self) -> None:
+        env = make_env()
+        env.gateway.list_response = GmailListResponse(
+            messages=[
+                GmailMessageHeader(
+                    id="m1",
+                    thread_id="t1",
+                    snippet="hi",
+                    subject="Hello",
+                    from_="sender@example.com",
+                    date="",
+                    labels=["INBOX"],
+                    to="me@example.com, cc@example.com",
+                    body="Full email content",
+                )
+            ],
+            next_page_token=None,
+            result_size_estimate=1,
+        )
+        tool = _tool(env.uses, "search_emails")
+
+        result = await tool.handler(query="hello")
+
+        [email] = result["emails"]
+        assert email["body"] == "Full email content"
+        assert email["to_addresses"] == ["me@example.com", "cc@example.com"]
+        # There is no internal cache UUID for a live result, so `id` falls
+        # back to the Gmail message id instead of being blank — the same
+        # value get_email actually accepts.
+        assert email["id"] == "m1"
+        assert email["message_id"] == "m1"
+
 
 class TestGetEmailTool:
     async def test_resolves_by_uuid(self) -> None:
@@ -65,6 +100,59 @@ class TestGetEmailTool:
         # A non-UUID id is treated as a Gmail message id and falls through to the
         # gateway, which has no such message.
         result = await tool.handler(email_id="unknown-gmail-id")
+
+        assert result["error"]["type"] == NOT_FOUND
+
+
+class TestGetThreadTool:
+    async def test_returns_full_conversation_with_bodies(self) -> None:
+        env = make_env()
+        env.gateway.threads["t1"] = GmailThread(
+            id="t1",
+            snippet="snip",
+            history_id="h1",
+            messages=[
+                GmailMessage(
+                    id="m1",
+                    thread_id="t1",
+                    snippet="s1",
+                    subject="Question",
+                    from_="a@b.com",
+                    to="me@example.com",
+                    date="",
+                    labels=["INBOX"],
+                    body="Original message",
+                    attachments=[],
+                ),
+                GmailMessage(
+                    id="m2",
+                    thread_id="t1",
+                    snippet="s2",
+                    subject="Re: Question",
+                    from_="me@example.com",
+                    to="a@b.com",
+                    date="",
+                    labels=["INBOX"],
+                    body="My reply",
+                    attachments=[],
+                ),
+            ],
+        )
+        tool = _tool(env.uses, "get_thread")
+
+        result = await tool.handler(thread_id="t1")
+
+        assert [e["body"] for e in result["emails"]] == [
+            "Original message",
+            "My reply",
+        ]
+        assert result["email_ids"] == ["m1", "m2"]
+
+    async def test_missing_thread_maps_to_not_found(self) -> None:
+        env = make_env()
+        tool = _tool(env.uses, "get_thread")
+
+        result = await tool.handler(thread_id="missing")
 
         assert result["error"]["type"] == NOT_FOUND
 

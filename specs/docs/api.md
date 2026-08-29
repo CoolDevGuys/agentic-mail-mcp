@@ -27,23 +27,27 @@
 Always registered, regardless of access level.
 
 ### `search_emails`
-Search the mailbox by full-text query and structured filters. Returns a page of emails, each with its full body — no follow-up `get_email` call is needed to read a result's content.
+Search the mailbox by full-text query and structured filters. By default each result includes its full body — no follow-up `get_email` call is needed to read a result's content. Pass `fields` to return only what you need and keep large result sets small.
 
 | Property | Type | Required | Notes |
 |---|---|---|---|
 | `query` | string | | Gmail-style full-text query |
 | `from_address` | string | | Sender filter |
 | `to_address` | string | | Recipient filter |
-| `subject` | string | | Subject filter |
+| `subject` | string | | Subject-only filter (Gmail `subject:` operator) |
 | `date_from` | string | | `YYYY-MM-DD` lower bound |
 | `date_to` | string | | `YYYY-MM-DD` upper bound |
 | `has_attachment` | boolean | | Only mail with attachments |
 | `label` | string | | Label filter |
 | `unread_only` | boolean | | Only unread |
+| `direction` | string | | `received` or `sent` — restrict by direction |
+| `fields` | string[] | | Return only these fields (e.g. `["subject","from","date"]`); omit for the full email. Aliases: `from`→`from_address`, `to`→`to_addresses`, `date`→`date_sent`. `id` is always included |
+| `seen_ids` | string[] | | Message ids to exclude (already seen) |
+| `body_max_length` | integer | | Cap each body's length in characters |
 | `page` | integer | | 1-based page (default 1) |
 | `page_size` | integer | | Page size (default 25) |
 
-**Output:** `{ emails: Email[], page, page_size, next_page_token, total_estimate }`. Each `Email` includes `body` and `to_addresses`. There is no internal cache UUID for a live result, so `id` is the Gmail message id — the same value `get_email` and `get_thread` accept.
+**Output:** `{ emails: Email[], page, page_size, total_count }`. `total_count` is the exact number of matches (after `seen_ids` exclusion). When `fields` is omitted each `Email` includes `body` and `to_addresses`; when `fields` is given, each `Email` carries only `id` plus the requested fields. Each `Email` may also carry `attached_messages` (the original(s) of a forward, each with its own subject/sender/date/body). There is no internal cache UUID for a live result, so `id` is the Gmail message id — the same value `get_email` and `get_thread` accept.
 
 ### `get_email`
 Fetch a single email with its body.
@@ -52,7 +56,7 @@ Fetch a single email with its body.
 |---|---|---|---|
 | `email_id` | string | ✱ | UUID (cache) or Gmail message id (API) |
 
-**Output:** an `Email` object (id, message_id, thread_id, subject, snippet, from/to, date, is_read, labels, body).
+**Output:** an `Email` object (id, message_id, thread_id, subject, snippet, from/to, date, is_read, labels, body, `attached_messages`). `attached_messages` holds the original(s) of a forward, each with its own subject, sender, date, and body; the email's `body` is only the forward's own note.
 
 ### `get_thread`
 Fetch a full conversation thread directly from Gmail (`users.threads.get`): every message in order, each with its own body, sender, recipients, and date — enough to reconstruct the whole conversation in one call.

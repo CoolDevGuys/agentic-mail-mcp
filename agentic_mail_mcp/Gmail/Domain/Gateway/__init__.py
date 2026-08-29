@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
+    GmailAttachedMessage,
     GmailAttachment,
     GmailGateway,
     GmailHistory,
+    GmailIdPage,
     GmailLabel,
-    GmailListResponse,
     GmailMessage,
     GmailMessageHeader,
     GmailThread,
@@ -16,11 +17,12 @@ from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
 )
 
 __all__ = [
+    "GmailAttachedMessage",
     "GmailAttachment",
     "GmailGateway",
     "GmailHistory",
+    "GmailIdPage",
     "GmailLabel",
-    "GmailListResponse",
     "GmailMessage",
     "GmailMessageHeader",
     "GmailThread",

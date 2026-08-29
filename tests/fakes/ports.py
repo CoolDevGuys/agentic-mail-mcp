@@ -13,8 +13,8 @@ from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
 from agentic_mail_mcp.Gmail.Domain.Entities.thread import Thread
 from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     DraftResult,
+    GmailIdPage,
     GmailLabel,
-    GmailListResponse,
     GmailMessage,
     GmailMessageHeader,
     GmailThread,
@@ -91,14 +91,15 @@ class InMemoryThreadRepository:
 
 class StubGmailGateway:
     def __init__(self) -> None:
-        self.list_response = GmailListResponse(
-            messages=[], next_page_token=None, result_size_estimate=0
-        )
+        # All matching message ids, in Gmail order (newest first). list_message_ids
+        # pages through this; batch_get_metadata resolves ids against `headers`.
+        self.message_ids: list[str] = []
+        self.headers: dict[str, GmailMessageHeader] = {}
         self.messages: dict[str, GmailMessage] = {}
         self.threads: dict[str, GmailThread] = {}
         self.labels: list[GmailLabel] = []
         self.list_calls: list[tuple[str, str | None, int]] = []
-        self.batch_metadata_results: list[GmailMessageHeader] = []
+        self.metadata_calls: list[tuple[list[str], bool]] = []
         self.sent: list[str] = []
         self.drafts_created: list[str] = []
         self.drafts_sent: list[str] = []
@@ -108,19 +109,30 @@ class StubGmailGateway:
         self.untrashed: list[str] = []
         self.deleted: list[str] = []
 
-    def list_messages(
+    def list_message_ids(
         self, query: str, page_token: str | None, max_results: int
-    ) -> GmailListResponse:
+    ) -> GmailIdPage:
         self.list_calls.append((query, page_token, max_results))
-        return self.list_response
+        start = int(page_token) if page_token else 0
+        chunk = self.message_ids[start : start + max_results]
+        next_start = start + len(chunk)
+        next_page_token = (
+            str(next_start) if next_start < len(self.message_ids) else None
+        )
+        return GmailIdPage(
+            message_ids=chunk,
+            next_page_token=next_page_token,
+            result_size_estimate=len(self.message_ids),
+        )
 
     def get_message(self, message_id: str, fmt: str) -> GmailMessage | None:
         return self.messages.get(message_id)
 
     def batch_get_metadata(
-        self, message_ids: list[str]
+        self, message_ids: list[str], *, include_body: bool = False
     ) -> list[GmailMessageHeader]:
-        return self.batch_metadata_results.copy()
+        self.metadata_calls.append((list(message_ids), include_body))
+        return [self.headers[mid] for mid in message_ids if mid in self.headers]
 
     def get_thread(self, thread_id: str) -> GmailThread | None:
         return self.threads.get(thread_id)

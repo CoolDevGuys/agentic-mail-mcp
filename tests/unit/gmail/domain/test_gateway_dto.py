@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
+    GmailAttachedMessage,
     GmailAttachment,
     GmailHistory,
+    GmailIdPage,
     GmailLabel,
-    GmailListResponse,
     GmailMessage,
     GmailMessageHeader,
     ModifyResult,
@@ -95,37 +96,58 @@ class TestGmailAttachment:
         assert att.size_bytes == 2048
 
 
-class TestGmailListResponse:
+class TestGmailIdPage:
     def test_with_results(self) -> None:
-        header = GmailMessageHeader(
-            id="msg_1",
-            thread_id="thread_1",
-            snippet="snippet",
-            subject="subject",
-            from_="from@example.com",
-            date="2024-01-01",
-            labels=[],
-        )
-
-        response = GmailListResponse(
-            messages=[header],
+        page = GmailIdPage(
+            message_ids=["msg_1", "msg_2"],
             next_page_token="next_token",
             result_size_estimate=100,
         )
 
-        assert len(response.messages) == 1
-        assert response.next_page_token == "next_token"
-        assert response.result_size_estimate == 100
+        assert page.message_ids == ["msg_1", "msg_2"]
+        assert page.next_page_token == "next_token"
+        assert page.result_size_estimate == 100
 
     def test_no_more_pages(self) -> None:
-        response = GmailListResponse(
-            messages=[],
+        page = GmailIdPage(
+            message_ids=[],
             next_page_token=None,
             result_size_estimate=0,
         )
 
-        assert response.messages == []
-        assert response.next_page_token is None
+        assert page.message_ids == []
+        assert page.next_page_token is None
+
+
+class TestGmailAttachedMessage:
+    def test_instantiation(self) -> None:
+        attached = GmailAttachedMessage(
+            subject="Original",
+            from_="orig@example.com",
+            date="2024-01-01",
+            body="Original body",
+        )
+
+        assert attached.subject == "Original"
+        assert attached.from_ == "orig@example.com"
+        assert attached.date == "2024-01-01"
+        assert attached.body == "Original body"
+
+    def test_message_attached_messages_defaults_empty(self) -> None:
+        message = GmailMessage(
+            id="msg_1",
+            thread_id="thread_1",
+            snippet="",
+            subject="",
+            from_="",
+            to="",
+            date="",
+            labels=[],
+            body="",
+            attachments=[],
+        )
+
+        assert message.attached_messages == []
 
 
 class TestSentMessageResult:

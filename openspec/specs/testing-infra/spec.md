@@ -27,11 +27,11 @@ The project SHALL have tests/unit/, tests/integration/, and tests/fakes/ directo
 - **THEN** unit/, integration/, and fakes/ subdirectories exist
 
 ### Requirement: Fake implementations
-The tests/fakes/ directory SHALL contain in-memory fakes: FakeEmailRepository, FakeGmailGateway, FakeLlmGateway, FakeEmbeddingGateway, FakeNotificationGateway.
+The tests/fakes/ directory SHALL contain in-memory fakes: FakeEmailRepository, FakeLlmGateway, FakeEmbeddingGateway, FakeNotificationGateway, and a GmailGateway stub (StubGmailGateway in ports.py).
 
 #### Scenario: Fakes exist
 - **WHEN** tests/fakes/ is listed
-- **THEN** all five fake classes are present
+- **THEN** all fakes are present, including the StubGmailGateway in ports.py
 
 ### Requirement: Coverage floors
 The project SHALL enforce tiered coverage: >=90% on Domain/ directories, >=80% overall. CI SHALL fail below either floor.

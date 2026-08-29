@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     GmailLabel,
-    GmailListResponse,
     GmailMessage,
     GmailMessageHeader,
     GmailThread,
@@ -17,19 +16,34 @@ def _tool(uses, name):
     return next(t for t in build_read_tools(uses) if t.name == name)
 
 
+def _header(mid: str, *, body: str = "", to: str = "") -> GmailMessageHeader:
+    return GmailMessageHeader(
+        id=mid,
+        thread_id="t1",
+        snippet="hi",
+        subject="Hello",
+        from_="sender@example.com",
+        date="",
+        labels=["INBOX"],
+        to=to,
+        body=body,
+    )
+
+
 class TestSearchEmailsTool:
-    async def test_wires_to_use_case_and_paginates(self) -> None:
+    async def test_wires_to_use_case_and_counts(self) -> None:
         env = make_env()
-        env.gateway.list_response = GmailListResponse(
-            messages=[], next_page_token="next", result_size_estimate=0
-        )
+        env.gateway.message_ids = ["m1", "m2"]
+        env.gateway.headers["m1"] = _header("m1")
+        env.gateway.headers["m2"] = _header("m2")
         tool = _tool(env.uses, "search_emails")
 
-        result = await tool.handler(query="hello", page=2, page_size=10)
+        result = await tool.handler(query="hello", page=2, page_size=1)
 
         assert result["page"] == 2
-        assert result["page_size"] == 10
-        assert result["next_page_token"] == "next"
+        assert result["page_size"] == 1
+        assert result["total_count"] == 2
+        assert [e["id"] for e in result["emails"]] == ["m2"]
         assert env.gateway.list_calls  # use case reached the gateway
 
     async def test_invalid_pagination_maps_to_error(self) -> None:
@@ -51,22 +65,9 @@ class TestSearchEmailsTool:
 
     async def test_results_include_body_recipients_and_a_usable_id(self) -> None:
         env = make_env()
-        env.gateway.list_response = GmailListResponse(
-            messages=[
-                GmailMessageHeader(
-                    id="m1",
-                    thread_id="t1",
-                    snippet="hi",
-                    subject="Hello",
-                    from_="sender@example.com",
-                    date="",
-                    labels=["INBOX"],
-                    to="me@example.com, cc@example.com",
-                    body="Full email content",
-                )
-            ],
-            next_page_token=None,
-            result_size_estimate=1,
+        env.gateway.message_ids = ["m1"]
+        env.gateway.headers["m1"] = _header(
+            "m1", to="me@example.com, cc@example.com", body="Full email content"
         )
         tool = _tool(env.uses, "search_emails")
 
@@ -80,6 +81,74 @@ class TestSearchEmailsTool:
         # value get_email actually accepts.
         assert email["id"] == "m1"
         assert email["message_id"] == "m1"
+
+    async def test_fields_projection_omits_unrequested_fields(self) -> None:
+        env = make_env()
+        env.gateway.message_ids = ["m1"]
+        env.gateway.headers["m1"] = _header("m1", body="secret body")
+        tool = _tool(env.uses, "search_emails")
+
+        result = await tool.handler(query="hello", fields=["subject", "from"])
+
+        [email] = result["emails"]
+        assert set(email.keys()) == {"id", "subject", "from_address"}
+        assert "body" not in email
+        # body was not requested, so the gateway fetched metadata only
+        assert env.gateway.metadata_calls[0][1] is False
+
+    async def test_body_requested_triggers_full_fetch(self) -> None:
+        env = make_env()
+        env.gateway.message_ids = ["m1"]
+        env.gateway.headers["m1"] = _header("m1", body="the body")
+        tool = _tool(env.uses, "search_emails")
+
+        result = await tool.handler(query="hello", fields=["body"])
+
+        assert result["emails"][0]["body"] == "the body"
+        assert env.gateway.metadata_calls[0][1] is True
+
+    async def test_body_max_length_truncates(self) -> None:
+        env = make_env()
+        env.gateway.message_ids = ["m1"]
+        env.gateway.headers["m1"] = _header("m1", body="0123456789")
+        tool = _tool(env.uses, "search_emails")
+
+        result = await tool.handler(query="hello", body_max_length=4)
+
+        assert result["emails"][0]["body"] == "0123"
+
+    async def test_seen_ids_excluded_and_counted(self) -> None:
+        env = make_env()
+        env.gateway.message_ids = ["m1", "m2", "m3"]
+        for mid in env.gateway.message_ids:
+            env.gateway.headers[mid] = _header(mid)
+        tool = _tool(env.uses, "search_emails")
+
+        result = await tool.handler(query="hello", seen_ids=["m1"])
+
+        assert result["total_count"] == 2
+        assert [e["id"] for e in result["emails"]] == ["m2", "m3"]
+
+    async def test_unknown_field_maps_to_invalid_input(self) -> None:
+        env = make_env()
+        tool = _tool(env.uses, "search_emails")
+
+        result = await tool.handler(query="hello", fields=["bogus"])
+
+        assert result["error"]["type"] == INVALID_INPUT
+
+    async def test_direction_is_passed_to_query(self) -> None:
+        env = make_env()
+        env.gateway.message_ids = ["m1"]
+        env.gateway.headers["m1"] = _header("m1")
+        tool = _tool(env.uses, "search_emails")
+
+        await tool.handler(query="hello", direction="sent")
+        assert "in:sent" in env.gateway.list_calls[0][0]
+
+        await tool.handler(query="hello", direction="received")
+        assert "-in:sent" in env.gateway.list_calls[1][0]
+        assert "-in:draft" in env.gateway.list_calls[1][0]
 
 
 class TestGetEmailTool:

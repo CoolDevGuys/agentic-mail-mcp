@@ -1,10 +1,21 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 from agentic_mail_mcp.Gmail.Application.DTO.dtos import EmailDTO, SearchEmailsResult
 from agentic_mail_mcp.Gmail.Application.Queries.queries import SearchEmailsQuery
 from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import GmailGateway
 from agentic_mail_mcp.Gmail.Domain.Repository.email_repository import EmailRepository
 from agentic_mail_mcp.Gmail.Domain.ValueObjects import GmailQuery
+
+# Page size for the id-walk that computes the exact total. Gmail caps
+# messages.list at 500, so this stays within the limit while minimizing
+# round-trips.
+_ID_PAGE_SIZE = 500
+
+# Gmail has no is:received operator; "received" is everything that is not
+# sent, a draft, spam, trash, or a chat.
+_RECEIVED_EXCLUSIONS = "-in:sent -in:draft -in:spam -in:trash -in:chats"
 
 
 def build_gmail_query(query: SearchEmailsQuery) -> GmailQuery:
@@ -28,6 +39,10 @@ def build_gmail_query(query: SearchEmailsQuery) -> GmailQuery:
         parts.append(f"label:{query.label}")
     if query.unread_only:
         parts.append("is:unread")
+    if query.direction == "sent":
+        parts.append("in:sent")
+    elif query.direction == "received":
+        parts.append(_RECEIVED_EXCLUSIONS)
     if not parts:
         parts.append("in:inbox")
     return GmailQuery(value=" ".join(parts))
@@ -60,30 +75,60 @@ class SearchEmailsUseCase:
     def _search_live(
         self, query: SearchEmailsQuery, gmail_query: GmailQuery
     ) -> SearchEmailsResult:
-        response = self._gateway.list_messages(
-            gmail_query.value, query.page_token, query.page_size
+        all_ids = self._collect_message_ids(gmail_query.value)
+        ids = [mid for mid in all_ids if mid not in query.seen_ids]
+        total_count = len(ids)
+        start = (query.page - 1) * query.page_size
+        page_ids = ids[start : start + query.page_size]
+        headers = self._gateway.batch_get_metadata(
+            page_ids, include_body=query.include_body
         )
-        emails = [EmailDTO.from_gateway_header(h) for h in response.messages]
+        emails = [EmailDTO.from_gateway_header(h) for h in headers]
+        if query.body_max_length is not None:
+            emails = [self._truncate(e, query.body_max_length) for e in emails]
         return SearchEmailsResult(
             emails=emails,
             page=query.page,
             page_size=query.page_size,
-            next_page_token=response.next_page_token,
-            total_estimate=response.result_size_estimate,
+            total_count=total_count,
         )
+
+    def _collect_message_ids(self, q: str) -> list[str]:
+        """Walk every ``messages.list`` page and return all matching ids, in
+        Gmail's default order (newest first)."""
+        ids: list[str] = []
+        page_token: str | None = None
+        while True:
+            page = self._gateway.list_message_ids(q, page_token, _ID_PAGE_SIZE)
+            ids.extend(page.message_ids)
+            if not page.next_page_token:
+                return ids
+            page_token = page.next_page_token
+
+    @staticmethod
+    def _truncate(email: EmailDTO, max_length: int) -> EmailDTO:
+        if len(email.body) <= max_length:
+            return email
+        return replace(email, body=email.body[:max_length])
 
     def _search_cache(
         self, query: SearchEmailsQuery, gmail_query: GmailQuery
     ) -> SearchEmailsResult:
         matches = self._repository.search(gmail_query.value)
+        if query.seen_ids:
+            matches = [
+                e for e in matches if e.message_id.value not in query.seen_ids
+            ]
+        total_count = len(matches)
         start = (query.page - 1) * query.page_size
         end = start + query.page_size
         page_items = matches[start:end]
         emails = [EmailDTO.from_entity(e) for e in page_items]
+        if query.body_max_length is not None:
+            emails = [self._truncate(e, query.body_max_length) for e in emails]
         return SearchEmailsResult(
             emails=emails,
             page=query.page,
             page_size=query.page_size,
-            next_page_token=None,
-            total_estimate=len(matches),
+            total_count=total_count,
         )

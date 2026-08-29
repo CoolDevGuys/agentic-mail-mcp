@@ -11,8 +11,8 @@ import googleapiclient.errors
 from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     DraftResult,
     GmailHistory,
+    GmailIdPage,
     GmailLabel,
-    GmailListResponse,
     GmailMessage,
     GmailMessageHeader,
     GmailThread,
@@ -88,45 +88,59 @@ class GmailApiGateway:
     def _drafts(self) -> Any:
         return self._service.users().drafts()
 
-    def list_messages(
+    def list_message_ids(
         self, query: str, page_token: str | None, max_results: int
-    ) -> GmailListResponse:
+    ) -> GmailIdPage:
         result = self._execute(
             self._messages().list(
                 userId=_USER, q=query, pageToken=page_token, maxResults=max_results
             )
         )
-        message_ids = [m["id"] for m in result.get("messages", [])]
-        if message_ids:
-            headers = self.batch_get_metadata(message_ids)
-        else:
-            headers = []
-        return GmailListResponse(
-            messages=headers,
+        return GmailIdPage(
+            message_ids=[m["id"] for m in result.get("messages", [])],
             next_page_token=result.get("nextPageToken"),
             result_size_estimate=int(result.get("resultSizeEstimate", 0)),
         )
 
     def batch_get_metadata(
-        self, message_ids: list[str]
+        self,
+        message_ids: list[str],
+        *,
+        include_body: bool = False,
     ) -> list[GmailMessageHeader]:
-        """Fetch a header+body summary per message id.
+        """Fetch a header summary per message id.
 
-        Uses ``format="full"`` (not ``"metadata"``) so the returned headers
-        carry the recipient list and body text search results need — Gmail's
-        metadata format omits the body entirely regardless of which headers
-        are requested, and never includes ``To`` unless asked for by name.
+        With ``include_body=False`` the messages are fetched with
+        ``format="metadata"`` (no body, only the named headers) so listing a
+        mailbox does not pay for body transfer; with ``include_body=True``
+        they are fetched with ``format="full"`` so the body text is carried.
         """
         headers: list[GmailMessageHeader] = []
         for message_id in message_ids:
             try:
-                raw = self._execute(
-                    self._messages().get(
-                        userId=_USER,
-                        id=message_id,
-                        format="full",
+                if include_body:
+                    raw = self._execute(
+                        self._messages().get(
+                            userId=_USER,
+                            id=message_id,
+                            format="full",
+                        )
                     )
-                )
+                else:
+                    raw = self._execute(
+                        self._messages().get(
+                            userId=_USER,
+                            id=message_id,
+                            format="metadata",
+                            metadataHeaders=[
+                                "From",
+                                "To",
+                                "Subject",
+                                "Date",
+                                "Message-Id",
+                            ],
+                        )
+                    )
                 headers.append(to_gmail_message_header(raw))
             except googleapiclient.errors.HttpError as exc:
                 if _status_of(exc) == 404:

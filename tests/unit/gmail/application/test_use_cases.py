@@ -25,7 +25,6 @@ from agentic_mail_mcp.Gmail.Application.UseCases.search_emails import (
 from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
 from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     GmailLabel,
-    GmailListResponse,
     GmailMessage,
     GmailMessageHeader,
     GmailThread,
@@ -81,39 +80,93 @@ class TestBuildGmailQuery:
         assert "after:2026-01-01" in q.value
         assert "before:2026-02-01" in q.value
 
+    def test_direction_sent(self) -> None:
+        q = build_gmail_query(SearchEmailsQuery(query_string="hi", direction="sent"))
+        assert "in:sent" in q.value
+
+    def test_direction_received_excludes_sent_mail(self) -> None:
+        q = build_gmail_query(
+            SearchEmailsQuery(query_string="hi", direction="received")
+        )
+        assert "-in:sent" in q.value
+        assert "-in:draft" in q.value
+        assert "-in:spam" in q.value
+        assert "-in:trash" in q.value
+        assert "-in:chats" in q.value
+
+
+def _header(mid: str, *, body: str = "") -> GmailMessageHeader:
+    return GmailMessageHeader(
+        id=mid,
+        thread_id="t1",
+        snippet="snip",
+        subject="Sub",
+        from_="a@b.com",
+        date="2026-01-01",
+        labels=["INBOX"],
+        body=body,
+    )
+
 
 class TestSearchEmailsUseCase:
-    def test_live_returns_dtos_and_pagination(self) -> None:
+    def test_live_returns_dtos_and_exact_count(self) -> None:
         gateway = StubGmailGateway()
-        gateway.list_response = GmailListResponse(
-            messages=[
-                GmailMessageHeader(
-                    id="m1",
-                    thread_id="t1",
-                    snippet="snip",
-                    subject="Sub",
-                    from_="a@b.com",
-                    date="2026-01-01",
-                    labels=["INBOX", "UNREAD"],
-                )
-            ],
-            next_page_token="next",
-            result_size_estimate=1,
-        )
+        gateway.message_ids = ["m1"]
+        gateway.headers["m1"] = _header("m1")
         uc = SearchEmailsUseCase(gateway, InMemoryEmailRepository())
         result = uc.execute(SearchEmailsQuery(query_string="hi", page_size=5))
 
         assert len(result.emails) == 1
         assert result.emails[0].message_id == "m1"
-        assert result.emails[0].is_read is False
-        assert result.next_page_token == "next"
-        assert gateway.list_calls[0] == ("hi", None, 5)
+        assert result.emails[0].is_read is True
+        assert result.total_count == 1
+        # The id-walk uses a fixed 500-id page size, not the result page size.
+        assert gateway.list_calls[0] == ("hi", None, 500)
 
     def test_live_empty_results(self) -> None:
         uc = SearchEmailsUseCase(StubGmailGateway(), InMemoryEmailRepository())
         result = uc.execute(SearchEmailsQuery())
         assert result.emails == []
-        assert result.total_estimate == 0
+        assert result.total_count == 0
+
+    def test_live_paginates_over_the_id_walk(self) -> None:
+        gateway = StubGmailGateway()
+        gateway.message_ids = [f"m{i}" for i in range(5)]
+        for mid in gateway.message_ids:
+            gateway.headers[mid] = _header(mid)
+        uc = SearchEmailsUseCase(gateway, InMemoryEmailRepository())
+        result = uc.execute(SearchEmailsQuery(query_string="hi", page=2, page_size=2))
+
+        assert result.total_count == 5
+        assert [e.message_id for e in result.emails] == ["m2", "m3"]
+
+    def test_live_seen_ids_filtered_before_paging(self) -> None:
+        gateway = StubGmailGateway()
+        gateway.message_ids = ["m1", "m2", "m3"]
+        for mid in gateway.message_ids:
+            gateway.headers[mid] = _header(mid)
+        uc = SearchEmailsUseCase(gateway, InMemoryEmailRepository())
+        result = uc.execute(
+            SearchEmailsQuery(query_string="hi", seen_ids=frozenset({"m1"}))
+        )
+        assert result.total_count == 2
+        assert [e.message_id for e in result.emails] == ["m2", "m3"]
+
+    def test_live_include_body_flag_forwarded(self) -> None:
+        gateway = StubGmailGateway()
+        gateway.message_ids = ["m1"]
+        gateway.headers["m1"] = _header("m1", body="B")
+        uc = SearchEmailsUseCase(gateway, InMemoryEmailRepository())
+        uc.execute(SearchEmailsQuery(query_string="hi", include_body=True))
+        assert gateway.metadata_calls[0][1] is True
+
+    def test_live_body_max_length_truncates(self) -> None:
+        gateway = StubGmailGateway()
+        gateway.message_ids = ["m1"]
+        gateway.headers["m1"] = _header("m1", body="0123456789")
+        uc = SearchEmailsUseCase(gateway, InMemoryEmailRepository())
+        result = uc.execute(SearchEmailsQuery(query_string="hi", body_max_length=4))
+        assert result.emails[0].body == "0123"
 
     def test_cache_mode_uses_repository_with_pagination(self) -> None:
         repo = InMemoryEmailRepository()
@@ -121,7 +174,7 @@ class TestSearchEmailsUseCase:
         uc = SearchEmailsUseCase(StubGmailGateway(), repo, use_cache=True)
         result = uc.execute(SearchEmailsQuery(query_string="x", page=2, page_size=2))
 
-        assert result.total_estimate == 5
+        assert result.total_count == 5
         assert len(result.emails) == 2
         assert all(isinstance(e, EmailDTO) for e in result.emails)
 

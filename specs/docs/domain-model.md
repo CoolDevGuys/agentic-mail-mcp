@@ -191,7 +191,8 @@ Anti-corruption layer port isolating the domain from the Gmail API.
 
 | Method | Returns | Description |
 |---|---|---|
-| `list_messages(query, page_token, max_results)` | `GmailListResponse` | List messages with pagination |
+| `list_message_ids(query, page_token, max_results)` | `GmailIdPage` | List message IDs with pagination (no bodies) |
+| `batch_get_metadata(message_ids, *, include_body=False)` | `list[GmailMessageHeader]` | Fetch metadata for a batch of IDs; `include_body=True` returns full messages |
 | `get_message(message_id, fmt)` | `GmailMessage` | Get full message |
 | `get_batch_messages(message_ids)` | `list[GmailMessage]` | Get multiple messages |
 | `get_thread(thread_id)` | `GmailThread \| None` | Get a full thread (`users.threads.get`), every message with its body |

@@ -167,9 +167,13 @@ The system SHALL define EmailRepository and ThreadRepository protocols with find
 ### Requirement: GmailGateway anti-corruption layer
 The system SHALL define GmailGateway port with methods for all Gmail API operations.
 
-#### Scenario: Messages listed with pagination
-- **WHEN** list_messages(query, page_token, max_results) is called
-- **THEN** a GmailListResponse with messages and next page token is returned
+#### Scenario: Message IDs listed with pagination
+- **WHEN** list_message_ids(query, page_token, max_results) is called
+- **THEN** a GmailIdPage with message IDs and next page token is returned (no bodies)
+
+#### Scenario: Metadata fetched for a batch of IDs
+- **WHEN** batch_get_metadata(message_ids, include_body=False) is called
+- **THEN** a list of GmailMessageHeader is returned; with include_body=True the messages include their bodies
 
 #### Scenario: Message retrieved by ID
 - **WHEN** get_message(message_id, format) is called

@@ -184,10 +184,11 @@ class TestMessageParser:
         assert message.body == "deep body"
         assert [a.file_name for a in message.attachments] == ["deep.pdf"]
 
-    def test_forwarded_message_keeps_original_body_alongside_the_note(self) -> None:
+    def test_forwarded_original_extracted_as_attached_message(self) -> None:
         # multipart/mixed -> [note (text/plain), message/rfc822 -> original
         # message's own text/plain]. Gmail nests a forwarded-as-attachment
-        # message this way; the forward note must not eclipse the original.
+        # message this way. The forward's note is the body; the original is a
+        # separate attached message, not concatenated into the body.
         raw = {
             "id": "m3",
             "threadId": "t3",
@@ -223,8 +224,106 @@ class TestMessageParser:
             },
         }
         message = to_gmail_message(raw)
-        assert "FYI, see below" in message.body
-        assert "This is the original email" in message.body
+        assert message.body == "FYI, see below"
+        assert "This is the original email" not in message.body
+        assert len(message.attached_messages) == 1
+        assert message.attached_messages[0].body == "This is the original email"
+
+    def test_forwarded_html_only_original_uses_html_fallback(self) -> None:
+        # An rfc822 part with only text/html (no text/plain) — e.g. a LinkedIn
+        # forward — must still surface its body via the HTML fallback.
+        raw = {
+            "id": "m4",
+            "threadId": "t4",
+            "labelIds": ["INBOX"],
+            "payload": {
+                "mimeType": "multipart/mixed",
+                "headers": [{"name": "Subject", "value": "Fwd: LinkedIn"}],
+                "parts": [
+                    {
+                        "mimeType": "text/plain",
+                        "body": {
+                            "data": base64.urlsafe_b64encode(b"note").decode()
+                        },
+                    },
+                    {
+                        "mimeType": "message/rfc822",
+                        "body": {},
+                        "parts": [
+                            {
+                                "mimeType": "text/html",
+                                "body": {
+                                    "data": base64.urlsafe_b64encode(
+                                        b"<p>orig html</p>"
+                                    ).decode()
+                                },
+                            }
+                        ],
+                    },
+                ],
+            },
+        }
+        message = to_gmail_message(raw)
+        assert message.body == "note"
+        assert len(message.attached_messages) == 1
+        assert message.attached_messages[0].body == "<p>orig html</p>"
+
+    def test_nested_forward_extracts_each_original(self) -> None:
+        # A forward of a forward: an rfc822 (middle) that itself contains an
+        # rfc822 (inner). Both originals must be surfaced, each with its own
+        # body, and the outer note stays the message body.
+        raw = {
+            "id": "m5",
+            "threadId": "t5",
+            "labelIds": ["INBOX"],
+            "payload": {
+                "mimeType": "multipart/mixed",
+                "headers": [{"name": "Subject", "value": "Fwd: Fwd: X"}],
+                "parts": [
+                    {
+                        "mimeType": "text/plain",
+                        "body": {
+                            "data": base64.urlsafe_b64encode(b"outer note").decode()
+                        },
+                    },
+                    {
+                        "mimeType": "message/rfc822",
+                        "body": {},
+                        "parts": [
+                            {
+                                "mimeType": "text/plain",
+                                "body": {
+                                    "data": base64.urlsafe_b64encode(
+                                        b"middle note"
+                                    ).decode()
+                                },
+                            },
+                            {
+                                "mimeType": "message/rfc822",
+                                "body": {},
+                                "parts": [
+                                    {
+                                        "mimeType": "text/plain",
+                                        "body": {
+                                            "data": base64.urlsafe_b64encode(
+                                                b"inner original"
+                                            ).decode()
+                                        },
+                                    }
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
+        }
+        message = to_gmail_message(raw)
+        assert message.body == "outer note"
+        assert len(message.attached_messages) == 2
+        assert [a.body for a in message.attached_messages] == [
+            "middle note",
+            "inner original",
+        ]
 
 
 class TestGmailThreadParser:

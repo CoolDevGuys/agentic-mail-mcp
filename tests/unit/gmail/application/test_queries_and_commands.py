@@ -50,6 +50,30 @@ class TestQueries:
         with pytest.raises(ValidationError):
             SearchEmailsQuery(page=page, page_size=page_size)
 
+    def test_search_emails_query_stores_new_filters(self) -> None:
+        q = SearchEmailsQuery(
+            direction="sent",
+            include_body=True,
+            body_max_length=100,
+            seen_ids=frozenset({"m1", "m2"}),
+        )
+        assert q.direction == "sent"
+        assert q.include_body is True
+        assert q.body_max_length == 100
+        assert q.seen_ids == frozenset({"m1", "m2"})
+
+    @pytest.mark.parametrize("direction", ["inbound", "SENT", ""])
+    def test_search_emails_query_rejects_bad_direction(self, direction: str) -> None:
+        with pytest.raises(ValidationError):
+            SearchEmailsQuery(direction=direction)
+
+    @pytest.mark.parametrize("body_max_length", [0, -5])
+    def test_search_emails_query_rejects_bad_body_max_length(
+        self, body_max_length: int
+    ) -> None:
+        with pytest.raises(ValidationError):
+            SearchEmailsQuery(body_max_length=body_max_length)
+
     def test_get_email_query_accepts_uuid(self) -> None:
         uid = UUIDId.generate()
         q = GetEmailQuery(email_id=uid)

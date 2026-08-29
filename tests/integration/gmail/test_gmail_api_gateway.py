@@ -45,7 +45,7 @@ def _gateway(service: FakeGmailService) -> GmailApiGateway:
 
 
 class TestGmailApiGateway:
-    def test_list_messages_maps_response(self) -> None:
+    def test_list_message_ids_maps_response(self) -> None:
         service = FakeGmailService()
         service.set_result(
             "messages.list",
@@ -55,28 +55,32 @@ class TestGmailApiGateway:
                 "resultSizeEstimate": 1,
             },
         )
-        service.set_result(
-            "messages.get",
-            {
-                "id": "m1",
-                "threadId": "t1",
-                "snippet": "snip",
-                "labelIds": ["INBOX"],
-                "payload": {
-                    "headers": [
-                        {"name": "Subject", "value": "Hello"},
-                        {"name": "From", "value": "a@b.com"},
-                        {"name": "Date", "value": "2026-01-01"},
-                    ]
-                },
-            },
-        )
-        result = _gateway(service).list_messages("is:unread", None, 10)
+        result = _gateway(service).list_message_ids("is:unread", None, 10)
+        assert result.message_ids == ["m1"]
         assert result.next_page_token == "next"
         assert result.result_size_estimate == 1
-        assert result.messages[0].id == "m1"
-        assert result.messages[0].subject == "Hello"
-        assert result.messages[0].from_ == "a@b.com"
+        # The id-walk fetches ids only — no per-message body transfer.
+        assert service.executed == ["messages.list"]
+
+    def test_batch_get_metadata_uses_metadata_format(self) -> None:
+        service = FakeGmailService()
+        service.set_result("messages.get", _full_message("m1"))
+        headers = _gateway(service).batch_get_metadata(["m1"], include_body=False)
+        assert headers[0].id == "m1"
+        assert headers[0].subject == "Hello"
+        op, kwargs = service.calls[0]
+        assert op == "messages.get"
+        assert kwargs["format"] == "metadata"
+        assert "From" in kwargs["metadataHeaders"]
+
+    def test_batch_get_metadata_full_format_includes_body(self) -> None:
+        service = FakeGmailService()
+        service.set_result("messages.get", _full_message("m1"))
+        headers = _gateway(service).batch_get_metadata(["m1"], include_body=True)
+        assert headers[0].body == "Body text"
+        op, kwargs = service.calls[0]
+        assert op == "messages.get"
+        assert kwargs["format"] == "full"
 
     def test_get_message_parses_full(self) -> None:
         service = FakeGmailService()

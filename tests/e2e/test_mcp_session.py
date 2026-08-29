@@ -25,7 +25,7 @@ class TestReadWriteFlow:
 
         # 1. search
         search = tool_json(await server.call_tool("search_emails", {"query": "hi"}))
-        assert search["total_estimate"] == 1
+        assert search["total_count"] == 1
         assert env.gateway.list_calls  # reached the (mocked) Gmail API
 
         # 2. read the cached email by id

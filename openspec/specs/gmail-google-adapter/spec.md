@@ -21,9 +21,13 @@ The system SHALL provide a GmailOAuthProvider that authenticates via OAuth2 (int
 ### Requirement: GmailApiGateway implements the GmailGateway port
 The system SHALL provide a GmailApiGateway that implements every GmailGateway method using the Google API client, returning the gateway DTOs defined by the port, with retry and rate limiting around API calls.
 
-#### Scenario: list_messages returns a GmailListResponse
-- **WHEN** GmailApiGateway.list_messages is called with a query
-- **THEN** it returns a GmailListResponse containing message headers and a next page token
+#### Scenario: list_message_ids returns a GmailIdPage
+- **WHEN** GmailApiGateway.list_message_ids is called with a query
+- **THEN** it returns a GmailIdPage containing message IDs and a next page token, without fetching bodies
+
+#### Scenario: batch_get_metadata fetches headers or full messages
+- **WHEN** GmailApiGateway.batch_get_metadata is called with a list of IDs
+- **THEN** it returns the metadata for each ID; with include_body=True it fetches full messages including bodies
 
 #### Scenario: get_message returns None when the message does not exist
 - **WHEN** GmailApiGateway.get_message is called with an unknown message id

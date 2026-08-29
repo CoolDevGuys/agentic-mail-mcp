@@ -19,9 +19,14 @@ _SEARCH_STRATEGY = PromptTemplate(
         "Goal: find emails about {goal}.\n"
         "Strategy:\n"
         "1. Start broad with semantic_search using a natural-language description.\n"
-        "2. Narrow with search_emails filters: from, subject, date range, label.\n"
-        "3. Use unread_only to triage new mail first.\n"
-        "4. Open promising results with get_email (or get_thread for conversations)."
+        "2. Narrow with search_emails filters: from, subject, date range, label, "
+        "direction (received/sent).\n"
+        "3. Keep results small: pass `fields` for only what you need "
+        "(e.g. [\"subject\", \"from\", \"date\"]) and cap bodies with "
+        "`body_max_length`; fetch full bodies only for the few you open.\n"
+        "4. Use unread_only to triage new mail first; pass `seen_ids` to skip "
+        "messages you have already processed.\n"
+        "5. Open promising results with get_email (or get_thread for conversations)."
     ),
 )
 

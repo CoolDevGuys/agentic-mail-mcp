@@ -12,7 +12,6 @@ from typing import Any
 
 from agentic_mail_mcp.Bootstrap.Settings import RailguardsConfig, Settings
 from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
-    GmailListResponse,
     GmailMessageHeader,
 )
 from agentic_mail_mcp.MCP.Server import create_server
@@ -34,20 +33,15 @@ def build_session(
 def seed_inbox_message(env: McpEnv, message_id: str = "m1"):
     """Add an email to the mocked mailbox and make it discoverable via search."""
     email = env.add_email(message_id=message_id)
-    env.gateway.list_response = GmailListResponse(
-        messages=[
-            GmailMessageHeader(
-                id=message_id,
-                thread_id="t1",
-                snippet="hi",
-                subject="Hello",
-                from_="sender@example.com",
-                date="",
-                labels=["INBOX"],
-            )
-        ],
-        next_page_token=None,
-        result_size_estimate=1,
+    env.gateway.message_ids = [message_id]
+    env.gateway.headers[message_id] = GmailMessageHeader(
+        id=message_id,
+        thread_id="t1",
+        snippet="hi",
+        subject="Hello",
+        from_="sender@example.com",
+        date="",
+        labels=["INBOX"],
     )
     return email
 

@@ -8,11 +8,37 @@ from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
 from agentic_mail_mcp.Gmail.Domain.Entities.label import SYSTEM_LABELS, Label
 from agentic_mail_mcp.Gmail.Domain.Entities.thread import Thread
 from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
+    GmailAttachedMessage,
     GmailLabel,
     GmailMessage,
     GmailMessageHeader,
     GmailThread,
 )
+
+
+@dataclass(frozen=True)
+class AttachedMessageDTO:
+    """A nested ``message/rfc822`` part — the original of a forwarded email."""
+
+    subject: str
+    from_address: str | None
+    date_sent: datetime | None
+    body: str
+
+    @classmethod
+    def from_gateway(cls, attached: GmailAttachedMessage) -> AttachedMessageDTO:
+        date_sent = None
+        if attached.date:
+            try:
+                date_sent = email.utils.parsedate_to_datetime(attached.date)
+            except (ValueError, TypeError):
+                pass
+        return cls(
+            subject=attached.subject,
+            from_address=attached.from_ or None,
+            date_sent=date_sent,
+            body=attached.body,
+        )
 
 
 @dataclass(frozen=True)
@@ -28,6 +54,9 @@ class EmailDTO:
     is_read: bool
     labels: list[str]
     body: str = ""
+    # The original(s) of a forward (nested message/rfc822 parts), each with its
+    # own subject, sender, date, and body. Empty for non-forwarded messages.
+    attached_messages: list[AttachedMessageDTO] = field(default_factory=list)
 
     @classmethod
     def from_entity(cls, email: Email) -> EmailDTO:
@@ -94,6 +123,9 @@ class EmailDTO:
             is_read="UNREAD" not in message.labels,
             labels=list(message.labels),
             body=message.body,
+            attached_messages=[
+                AttachedMessageDTO.from_gateway(a) for a in message.attached_messages
+            ],
         )
 
 
@@ -185,5 +217,6 @@ class SearchEmailsResult:
     emails: list[EmailDTO] = field(default_factory=list)
     page: int = 1
     page_size: int = 25
-    next_page_token: str | None = None
-    total_estimate: int = 0
+    # Exact number of messages matching the query (after any seen_ids
+    # exclusion), not Gmail's approximate resultSizeEstimate.
+    total_count: int = 0

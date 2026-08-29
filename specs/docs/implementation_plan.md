@@ -73,7 +73,7 @@ Set up:
 - pytest.ini with asyncio_mode = auto, testpaths, markers
 - tests/conftest.py with shared fixtures: settings, event_bus, clock, container
 - tests/unit/ and tests/integration/ directories
-- tests/fakes/ directory for in-memory fakes: FakeEmailRepository, FakeGmailGateway, FakeLlmGateway, FakeEmbeddingGateway, FakeNotificationGateway
+- tests/fakes/ directory for in-memory fakes: FakeEmailRepository, FakeLlmGateway, FakeEmbeddingGateway, FakeNotificationGateway, and StubGmailGateway (in ports.py)
 - pytest-cov config targeting src/ with a tiered floor: ≥90% on Domain/, ≥80% overall; CI fails the build below either floor
 
 ### 1.8 - Docker setup
@@ -173,7 +173,8 @@ Set up:
 
 ### 3.8 - Gmail/Domain/Gateway/GmailGateway.py
 - GmailGateway anti-corruption layer port with methods:
-  - list_messages(query, page_token, max_results) -> GmailListResponse
+  - list_message_ids(query, page_token, max_results) -> GmailIdPage
+  - batch_get_metadata(message_ids, *, include_body=False) -> list[GmailMessage]
   - get_message(message_id, format) -> GmailMessage
   - get_batch_messages(message_ids) -> list[GmailMessage]
   - send_message(raw_message) -> SentMessageResult
@@ -273,12 +274,13 @@ Set up:
 - Tests: command validation
 
 ### 4.3 - SearchEmailsUseCase
-- Accepts SearchEmailsQuery
-- Builds GmailQuery from query criteria
-- Calls GmailGateway.list_messages() or EmailRepository.search() (configurable: live API vs cached)
-- Returns SearchEmailsResult: paginated list of EmailDTO
-- Handles: empty results, pagination, query errors
-- Tests: various query combinations, pagination, error handling
+- Accepts SearchEmailsQuery (includes direction, include_body, body_max_length, seen_ids)
+- Builds GmailQuery from query criteria (direction maps to in:/-in: operators)
+- Live mode: walks all ID pages via GmailGateway.list_message_ids() for an exact total_count, filters seen_ids, slices the requested page, then fetches the page via GmailGateway.batch_get_metadata(include_body=...) (configurable: live API vs cached)
+- Cache mode: filters seen_ids and truncates bodies on cached results
+- Returns SearchEmailsResult: exact total_count + paginated list of EmailDTO (client-side paging, no next_page_token)
+- Handles: empty results, pagination, body truncation, query errors
+- Tests: various query combinations, direction mapping, exact count, seen_ids, include_body, body truncation, error handling
 
 ### 4.4 - GetEmailUseCase / GetThreadUseCase
 - GetEmailUseCase: resolves by UUID (local cache) or GmailMessageId (live API), returns EmailDTO with body

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable
 
 
@@ -26,6 +26,14 @@ class GmailMessageHeader:
 
 
 @dataclass
+class GmailAttachedMessage:
+    subject: str
+    from_: str
+    date: str
+    body: str
+
+
+@dataclass
 class GmailMessage:
     id: str
     thread_id: str
@@ -37,11 +45,14 @@ class GmailMessage:
     labels: list[str]
     body: str
     attachments: list[GmailAttachment]
+    # Nested message/rfc822 parts (the original(s) of a forward), each with
+    # its own subject, sender, date, and body.
+    attached_messages: list[GmailAttachedMessage] = field(default_factory=list)
 
 
 @dataclass
-class GmailListResponse:
-    messages: list[GmailMessageHeader]
+class GmailIdPage:
+    message_ids: list[str]
     next_page_token: str | None
     result_size_estimate: int
 
@@ -98,16 +109,18 @@ class GmailHistory:
 
 @runtime_checkable
 class GmailGateway(Protocol):
-    def list_messages(
+    def list_message_ids(
         self,
         query: str,
         page_token: str | None,
         max_results: int,
-    ) -> GmailListResponse: ...
+    ) -> GmailIdPage: ...
 
     def batch_get_metadata(
         self,
         message_ids: list[str],
+        *,
+        include_body: bool = False,
     ) -> list[GmailMessageHeader]: ...
 
     def get_message(self, message_id: str, fmt: str) -> GmailMessage | None: ...

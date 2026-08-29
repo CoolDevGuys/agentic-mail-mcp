@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-08-29
+
+### ⚠ Breaking
+
+- **`search_emails` output: `total_estimate` → `total_count`, and `next_page_token` removed.** The result now reports the exact number of matching messages (`total_count`, computed by walking every `messages.list` id page) instead of Gmail's approximate `resultSizeEstimate`, and paging is client-side (`page` / `page_size`), so the opaque `next_page_token` is gone. Update any client that read `total_estimate` or followed `next_page_token`.
+
+### Added
+
+- **Field filtering on `search_emails` (`fields` + `body_max_length`).** Pass `fields` to return only the fields you need (e.g. `["subject", "from", "date"]`); when `body` is not requested the gateway fetches `metadata`-format messages (no body transfer) instead of full messages, keeping large result sets small. `body_max_length` caps each body's length. Aliases `from` / `to` / `date` map to `from_address` / `to_addresses` / `date_sent`; `id` is always included.
+- **Direction filter on `search_emails` (`direction`).** `direction="received"` restricts to received mail (`-in:sent -in:draft -in:spam -in:trash -in:chats`); `direction="sent"` restricts to sent mail (`in:sent`).
+- **Duplicate suppression on `search_emails` (`seen_ids`).** Pass ids you have already seen; they are excluded before paging and not counted in `total_count`.
+- **Forwarded originals surfaced as `attached_messages`.** A forward's nested `message/rfc822` part(s) are now extracted into a new `attached_messages` list on each email — each with its own subject, sender, date, and body, with an HTML fallback for HTML-only originals (e.g. LinkedIn). The email's `body` holds only the forward's own note. Applies to `get_email`, `get_thread`, and `search_emails`.
+
+### Fixed
+
+- **`search_emails` `page` now works in live mode.** The page token was never threaded through, so `page` was silently ignored; client-side paging over the full id list makes `page` / `page_size` behave as documented.
+- **Subject-only search is now explicit.** The `subject` filter maps to Gmail's subject-only `subject:` operator; this is now documented in the tool description, the `search_strategy` prompt, and the API reference.
+
 ## [0.3.2] - 2026-08-11
 
 ### Fixed

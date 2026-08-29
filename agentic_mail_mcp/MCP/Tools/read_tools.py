@@ -12,6 +12,7 @@ from agentic_mail_mcp.Common.Domain.Exceptions import (
     PermissionError,
     ValidationError,
 )
+from agentic_mail_mcp.Gmail.Application.DTO.dtos import EmailDTO
 from agentic_mail_mcp.Gmail.Application.Queries.queries import (
     GetEmailQuery,
     GetThreadQuery,
@@ -27,6 +28,52 @@ from agentic_mail_mcp.MCP.Tools.use_cases import McpUseCases
 
 _READ_ERRORS = (ValidationError, NotFoundError, PermissionError)
 
+# Fields search_emails can return, keyed by their EmailDTO attribute name.
+_SEARCH_FIELDS = frozenset(
+    {
+        "id",
+        "message_id",
+        "thread_id",
+        "subject",
+        "snippet",
+        "from_address",
+        "to_addresses",
+        "date_sent",
+        "is_read",
+        "labels",
+        "body",
+        "attached_messages",
+    }
+)
+# Short aliases agents are likely to use, mapped to EmailDTO field names.
+_FIELD_ALIASES = {"from": "from_address", "to": "to_addresses", "date": "date_sent"}
+
+
+def _normalize_fields(fields: list[str] | None) -> frozenset[str] | None:
+    """Resolve the requested fields (expanding aliases). Returns None when no
+    fields were requested, meaning "return the full email"."""
+    if fields is None:
+        return None
+    normalized: set[str] = set()
+    for name in fields:
+        resolved = _FIELD_ALIASES.get(name, name)
+        if resolved not in _SEARCH_FIELDS:
+            raise ValidationError(
+                f"unknown field {name!r}; valid fields are {sorted(_SEARCH_FIELDS)}"
+            )
+        normalized.add(resolved)
+    return frozenset(normalized)
+
+
+def _project_email(email: EmailDTO, fields: frozenset[str]) -> dict:
+    """Reduce an email to the requested fields, always keeping ``id``."""
+    full = to_jsonable(email)
+    projected: dict = {"id": full["id"]}
+    for name in sorted(fields):
+        if name != "id" and name in full:
+            projected[name] = full[name]
+    return projected
+
 
 def build_search_emails_tool(uses: McpUseCases) -> ToolDefinition:
     async def search_emails(
@@ -39,10 +86,18 @@ def build_search_emails_tool(uses: McpUseCases) -> ToolDefinition:
         has_attachment: bool = False,
         label: str | None = None,
         unread_only: bool = False,
+        direction: str | None = None,
+        fields: list[str] | None = None,
+        seen_ids: list[str] | None = None,
+        body_max_length: int | None = None,
         page: int = 1,
         page_size: int = 25,
     ) -> dict:
         try:
+            normalized_fields = _normalize_fields(fields)
+            include_body = (
+                True if normalized_fields is None else "body" in normalized_fields
+            )
             q = SearchEmailsQuery(
                 query_string=query,
                 from_address=from_address,
@@ -53,10 +108,20 @@ def build_search_emails_tool(uses: McpUseCases) -> ToolDefinition:
                 has_attachment=has_attachment,
                 label=label,
                 unread_only=unread_only,
+                direction=direction,
+                include_body=include_body,
+                body_max_length=body_max_length,
+                seen_ids=frozenset(seen_ids or ()),
                 page=page,
                 page_size=page_size,
             )
-            return to_jsonable(uses.search_emails.execute(q))
+            result = uses.search_emails.execute(q)
+            result_dict = to_jsonable(result)
+            if normalized_fields is not None:
+                result_dict["emails"] = [
+                    _project_email(e, normalized_fields) for e in result.emails
+                ]
+            return result_dict
         except _READ_ERRORS as exc:
             return error_result(exc)
 
@@ -64,9 +129,16 @@ def build_search_emails_tool(uses: McpUseCases) -> ToolDefinition:
         name="search_emails",
         description=(
             "Search the mailbox by full-text query and structured filters "
-            "(sender, recipient, subject, date range, label, unread). Returns a "
-            "page of emails, each with its full body. Each result's `id` is the "
-            "Gmail message id — pass it straight to get_email or get_thread."
+            "(sender, recipient, subject, date range, label, unread, direction). "
+            "Returns a page of emails plus the exact total_count of matches. By "
+            "default each email includes its full body; pass `fields` to return "
+            "only the fields you need (e.g. [\"subject\", \"from\", \"date\"]) to "
+            "keep results small, and `body_max_length` to cap the body length. "
+            "Use `direction` to restrict to received or sent mail, and `seen_ids` "
+            "to exclude messages you have already seen. To match only on the "
+            "subject line, set `subject` (it searches the subject only). Each "
+            "result's `id` is the Gmail message id — pass it straight to "
+            "get_email or get_thread."
         ),
         category=READ,
         handler=search_emails,

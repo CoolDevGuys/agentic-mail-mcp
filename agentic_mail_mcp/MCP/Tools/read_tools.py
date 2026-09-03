@@ -159,8 +159,10 @@ def build_get_email_tool(uses: McpUseCases) -> ToolDefinition:
     return ToolDefinition(
         name="get_email",
         description=(
-            "Fetch a single email with its body by internal UUID (local cache) "
-            "or Gmail message id (live API)."
+            "Fetch a single email with its body by Gmail message id or internal "
+            "UUID. For a forwarded email, `body` holds only the forward's own "
+            "note; the forwarded original(s) are in `attached_messages`, each "
+            "with its own subject, sender, date, and body."
         ),
         category=READ,
         handler=get_email,

@@ -37,8 +37,16 @@ def error_type_for(exc: Exception) -> str:
 
 
 def error_result(exc: Exception) -> dict[str, Any]:
-    """Build a structured tool-error payload from a domain exception."""
-    return {"error": {"type": error_type_for(exc), "message": str(exc)}}
+    """Build a structured tool-error payload from a domain exception.
+
+    Internal (unexpected) errors carry the exception type alongside the
+    message — domain-error messages are already descriptive, but a bare
+    ``"'NoneType' object is not iterable"`` is nearly untraceable without
+    knowing what raised it.
+    """
+    kind = error_type_for(exc)
+    message = f"{type(exc).__name__}: {exc}" if kind == INTERNAL_ERROR else str(exc)
+    return {"error": {"type": kind, "message": message}}
 
 
 def is_error_result(result: Any) -> bool:

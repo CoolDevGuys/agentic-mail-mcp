@@ -119,6 +119,62 @@ class TestEmailOrmMapper:
         assert attached.date_sent == datetime(2026, 1, 2, 9, 30, tzinfo=UTC)
 
 
+class TestNullJsonColumns:
+    """Rows written before a JSON column existed (migration 0001 left the
+    originals nullable; 0003 added ``attached_messages`` without backfilling)
+    read back as NULL. Loading them must treat NULL as empty, not crash."""
+
+    def test_email_with_null_json_columns_loads_as_empty(self) -> None:
+        from agentic_mail_mcp.Gmail.Infrastructure.Persistence.SqlAlchemy.Models.models import (
+            EmailModel,
+        )
+
+        model = EmailModel(
+            id=str(UUIDId.generate()),
+            message_id="legacy1",
+            thread_id="t1",
+            snippet="",
+            subject="Legacy row",
+            from_address=None,
+            to_addresses=None,
+            date_sent=None,
+            is_read=False,
+            labels=None,
+            body="",
+            attachments=None,
+            attached_messages=None,
+        )
+
+        restored = EmailOrmMapper.to_domain(model)
+
+        assert restored.to_addresses == []
+        assert restored.labels == frozenset()
+        assert restored.attachments == []
+        assert restored.attached_messages == []
+        assert restored.subject == "Legacy row"
+
+    def test_thread_with_null_json_columns_loads_as_empty(self) -> None:
+        from agentic_mail_mcp.Gmail.Infrastructure.Persistence.SqlAlchemy.Models.models import (
+            ThreadModel,
+        )
+
+        model = ThreadModel(
+            id=str(UUIDId.generate()),
+            thread_id="t2",
+            snippet="",
+            subject="",
+            participants=None,
+            email_entries=None,
+            last_updated=None,
+            is_read=False,
+        )
+
+        restored = ThreadOrmMapper.to_domain(model)
+
+        assert restored.participants == []
+        assert restored.email_ids == ()
+
+
 class TestThreadOrmMapper:
     def test_round_trip_preserves_ordered_email_ids(self, session_factory) -> None:
         e1, e2 = UUIDId.generate(), UUIDId.generate()

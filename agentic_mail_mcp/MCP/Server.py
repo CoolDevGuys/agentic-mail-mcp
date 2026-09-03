@@ -12,14 +12,18 @@ prompts are library-agnostic and unit-testable on their own.
 
 from __future__ import annotations
 
+import functools
 import inspect
 import logging
+from collections.abc import Callable
+from typing import Any
 
 from mcp.server import MCPServer
 
 from agentic_mail_mcp.Bootstrap.DependencyContainer import Container
 from agentic_mail_mcp.Bootstrap.Lifespan import lifespan
 from agentic_mail_mcp.Bootstrap.Settings import Settings
+from agentic_mail_mcp.MCP.errors import error_result
 from agentic_mail_mcp.MCP.Prompts import PromptDefinition, build_prompts
 from agentic_mail_mcp.MCP.Resources import (
     ResourceContext,
@@ -83,10 +87,39 @@ def create_server(
     return server
 
 
+def _safe_handler(handler: Callable[..., Any]) -> Callable[..., Any]:
+    """Dispatch a tool handler defensively.
+
+    Tool handlers already map known domain failures to structured errors; an
+    exception that escapes that mapping used to reach the MCP transport as an
+    opaque error that clients could not trace back. This wrapper turns any such
+    unexpected failure into the same structured ``{"error": {...}}`` payload
+    (with the exception type in the message) and logs the full traceback, so
+    the underlying cause is visible to the caller and in the server logs.
+    """
+
+    @functools.wraps(handler)
+    async def wrapper(*args: Any, **kwargs: Any) -> Any:
+        try:
+            result = handler(*args, **kwargs)
+            if inspect.isawaitable(result):
+                result = await result
+            return result
+        except Exception as exc:
+            _logger.exception(
+                "Unhandled exception in MCP tool %s",
+                getattr(handler, "__name__", "<anonymous>"),
+            )
+            return error_result(exc)
+
+    wrapper.__signature__ = inspect.signature(handler)  # type: ignore[attr-defined]
+    return wrapper
+
+
 def register_tools(server: MCPServer, registry: ToolRegistry) -> None:
     for definition in registry.definitions():
         server.add_tool(
-            definition.handler,
+            _safe_handler(definition.handler),
             name=definition.name,
             description=definition.description,
         )

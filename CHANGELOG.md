@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1] - 2026-09-03
+
+### Fixed
+
+- **Legacy cache rows crashed every email read.** The `emails` table's JSON
+  columns are nullable at the schema level (`to_addresses`, `labels`,
+  `attachments` in migration 0001; `attached_messages` added without a backfill
+  in 0003), so rows predating those columns read back as NULL. The ORM mapper
+  iterated them directly and raised `TypeError: 'NoneType' object is not
+  iterable` for essentially every cached email. NULL is now treated as an
+  empty list in both the email and thread mappers.
+- **Unexpected tool failures now name the real cause.** Exceptions that
+  escaped the domain-error mapping reached the MCP transport as opaque errors
+  (clients saw nothing actionable). The server now logs the full traceback and
+  returns a structured `internal_error` payload whose message includes the
+  exception type and text, e.g. `TypeError: 'NoneType' object is not iterable`.
+
+### Changed
+
+- **`get_email` description documents forwarded mail.** It now states
+  explicitly that for a forwarded email `body` holds only the forward's own
+  note and the forwarded original(s) live in `attached_messages`.
+
 ## [0.5.0] - 2026-08-31
 
 ### Fixed

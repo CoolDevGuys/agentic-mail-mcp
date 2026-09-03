@@ -1,9 +1,19 @@
 from __future__ import annotations
 
+import inspect
+import logging
+
 from agentic_mail_mcp.Bootstrap.DependencyContainer import Container
 from agentic_mail_mcp.Bootstrap.Settings import MCPConfig, RailguardsConfig, Settings
 from agentic_mail_mcp.MCP.Resources import ResourceContext
-from agentic_mail_mcp.MCP.Server import create_server, resolve_transport, run_server
+from agentic_mail_mcp.MCP.Server import (
+    _safe_handler,
+    create_server,
+    register_tools,
+    resolve_transport,
+    run_server,
+)
+from agentic_mail_mcp.MCP.ToolRegistry import READ, ToolDefinition, ToolRegistry
 from agentic_mail_mcp.MCP.Tools.use_cases import McpUseCases
 
 from .conftest import make_env
@@ -108,3 +118,65 @@ class TestTransport:
 
         run_server(FakeServer(), Settings(mcp=MCPConfig(transport="stdio")))
         assert calls == ["stdio"]
+
+
+class TestErrorSurfacing:
+    """Unexpected exceptions must not reach the transport as opaque errors:
+    they come back as a structured internal_error carrying the real cause."""
+
+    async def test_unexpected_exception_becomes_structured_error(
+        self, caplog
+    ) -> None:
+        async def boom(query: str = "") -> dict:
+            raise TypeError("'NoneType' object is not iterable")
+
+        registry = ToolRegistry()
+        registry.register(
+            ToolDefinition(name="boom", description="d", category=READ, handler=boom)
+        )
+        captured: dict[str, object] = {}
+
+        class FakeServer:
+            def add_tool(self, handler, *, name, description) -> None:
+                captured[name] = handler
+
+        register_tools(FakeServer(), registry)
+
+        with caplog.at_level(logging.ERROR):
+            result = await captured["boom"]()
+
+        assert result == {
+            "error": {
+                "type": "internal_error",
+                "message": "TypeError: 'NoneType' object is not iterable",
+            }
+        }
+        assert "Unhandled exception in MCP tool boom" in caplog.text
+        assert "Traceback" in caplog.text
+
+    async def test_successful_handler_is_untouched(self) -> None:
+        async def ok(query: str = "") -> dict:
+            return {"hits": [query]}
+
+        registry = ToolRegistry()
+        registry.register(
+            ToolDefinition(name="ok", description="d", category=READ, handler=ok)
+        )
+        captured: dict[str, object] = {}
+
+        class FakeServer:
+            def add_tool(self, handler, *, name, description) -> None:
+                captured[name] = handler
+
+        register_tools(FakeServer(), registry)
+
+        assert await captured["ok"](query="hi") == {"hits": ["hi"]}
+
+    def test_handler_signature_and_coroutine_flags_are_preserved(self) -> None:
+        async def handler(subject: str, page: int = 1) -> dict:
+            return {}
+
+        wrapped = _safe_handler(handler)
+
+        assert list(inspect.signature(wrapped).parameters) == ["subject", "page"]
+        assert inspect.iscoroutinefunction(wrapped)

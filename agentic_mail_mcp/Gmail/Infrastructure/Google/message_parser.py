@@ -148,6 +148,7 @@ def to_gmail_message_header(raw: dict[str, Any]) -> GmailMessageHeader:
         labels=list(raw.get("labelIds", [])),
         to=_header(headers, "To"),
         body=_extract_body(payload),
+        attached_messages=_extract_attached_messages(payload),
     )
 
 

@@ -8,6 +8,7 @@ from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
 from agentic_mail_mcp.Gmail.Domain.Entities.label import Label
 from agentic_mail_mcp.Gmail.Domain.Entities.thread import Thread, _EmailEntry
 from agentic_mail_mcp.Gmail.Domain.ValueObjects import (
+    AttachedMessage,
     EmailAddress,
     GmailMessageId,
     ThreadId,
@@ -18,6 +19,34 @@ from agentic_mail_mcp.Gmail.Infrastructure.Persistence.SqlAlchemy.Models.models 
     LabelModel,
     ThreadModel,
 )
+
+
+def _attached_to_dict(attached: AttachedMessage) -> dict:
+    return {
+        "subject": attached.subject,
+        "from_address": (
+            attached.from_address.value if attached.from_address else None
+        ),
+        "date_sent": attached.date_sent.isoformat() if attached.date_sent else None,
+        "body": attached.body,
+    }
+
+
+def _dict_to_attached(raw: dict) -> AttachedMessage:
+    date_sent = None
+    if raw.get("date_sent"):
+        try:
+            date_sent = datetime.fromisoformat(raw["date_sent"])
+        except (ValueError, TypeError):
+            date_sent = None
+    return AttachedMessage(
+        subject=raw.get("subject", ""),
+        from_address=(
+            EmailAddress(raw["from_address"]) if raw.get("from_address") else None
+        ),
+        date_sent=date_sent,
+        body=raw.get("body", ""),
+    )
 
 
 class EmailOrmMapper:
@@ -36,6 +65,9 @@ class EmailOrmMapper:
             labels=sorted(email.labels),
             body=email.body,
             attachments=list(email.attachments),
+            attached_messages=[
+                _attached_to_dict(attached) for attached in email.attached_messages
+            ],
             is_trashed=email.is_trashed,
         )
 
@@ -56,6 +88,9 @@ class EmailOrmMapper:
             _labels=set(model.labels),
             body=model.body,
             _attachments=list(model.attachments),
+            _attached_messages=[
+                _dict_to_attached(raw) for raw in model.attached_messages
+            ],
             _is_trashed=model.is_trashed,
         )
 

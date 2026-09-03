@@ -5,6 +5,7 @@ from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
 from agentic_mail_mcp.Common.Infrastructure.Clock import Clock
 from agentic_mail_mcp.Common.Infrastructure.IdGenerator import IdGenerator
 from agentic_mail_mcp.Gmail.Domain.Repository.email_repository import EmailRepository
+from agentic_mail_mcp.Gmail.Domain.ValueObjects import GmailMessageId
 from agentic_mail_mcp.Intelligence.Application.DTO.dtos import SuggestionDTO
 from agentic_mail_mcp.Intelligence.Domain.Entities.suggestion import Suggestion
 from agentic_mail_mcp.Intelligence.Domain.Gateway.llm_gateway import LlmGateway
@@ -42,8 +43,11 @@ class SuggestReplyUseCase:
         self._model = model
         self._max_tokens = max_tokens
 
-    def execute(self, email_id: UUIDId) -> SuggestionDTO:
-        email = self._email_repository.find_by_id(email_id)
+    def execute(self, email_id: UUIDId | GmailMessageId) -> SuggestionDTO:
+        if isinstance(email_id, GmailMessageId):
+            email = self._email_repository.find_by_gmail_message_id(email_id.value)
+        else:
+            email = self._email_repository.find_by_id(email_id)
         if email is None:
             raise NotFoundError(f"Email not found: {email_id}")
 

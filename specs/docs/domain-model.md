@@ -32,6 +32,7 @@ Aggregate root representing a single email message.
 | `labels` | `frozenset[str]` | Applied labels (read-only view) |
 | `body` | `str` | Email body text |
 | `attachments` | `list[str]` | Attachment identifiers |
+| `attached_messages` | `list[AttachedMessage]` | The original(s) of a forward (nested `message/rfc822` parts), each with its own subject, sender, date, and body |
 | `is_trashed` | `bool` | Trash status |
 
 **Behaviors:**
@@ -154,6 +155,19 @@ Wraps a Gmail search query string with builder classmethods.
 | `query.and_(other)` | `{query} {other}` |
 
 **Validation:** Non-empty, max 500 characters.
+
+#### AttachedMessage
+
+Immutable value object for a nested `message/rfc822` part — the original of a
+forwarded email. Each carries its own subject, sender, date, and body so the
+forward's note can be distinguished from what it forwards.
+
+| Field | Type | Description |
+|---|---|---|
+| `subject` | `str` | Original's subject line |
+| `from_address` | `EmailAddress \| None` | Original's sender |
+| `date_sent` | `datetime \| None` | Original's send timestamp |
+| `body` | `str` | Original's body text |
 
 ### Repository Ports
 

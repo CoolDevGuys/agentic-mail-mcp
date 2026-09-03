@@ -27,7 +27,7 @@ The system SHALL provide a GmailApiGateway that implements every GmailGateway me
 
 #### Scenario: batch_get_metadata fetches headers or full messages
 - **WHEN** GmailApiGateway.batch_get_metadata is called with a list of IDs
-- **THEN** it returns the metadata for each ID; with include_body=True it fetches full messages including bodies
+- **THEN** it returns the metadata for each ID; with include_body=True it fetches full messages including bodies and the nested `message/rfc822` attached messages (originals of a forward)
 
 #### Scenario: get_message returns None when the message does not exist
 - **WHEN** GmailApiGateway.get_message is called with an unknown message id

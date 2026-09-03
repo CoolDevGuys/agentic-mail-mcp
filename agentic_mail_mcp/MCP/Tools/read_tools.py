@@ -136,9 +136,10 @@ def build_search_emails_tool(uses: McpUseCases) -> ToolDefinition:
             "keep results small, and `body_max_length` to cap the body length. "
             "Use `direction` to restrict to received or sent mail, and `seen_ids` "
             "to exclude messages you have already seen. To match only on the "
-            "subject line, set `subject` (it searches the subject only). Each "
-            "result's `id` is the Gmail message id — pass it straight to "
-            "get_email or get_thread."
+            "subject line, set `subject` (it searches the subject only). To match "
+            "an exact phrase, wrap it in double quotes in `query` (e.g. "
+            "\"quarterly report\"). Each result's `id` is the Gmail message id — "
+            "pass it straight to get_email or get_thread."
         ),
         category=READ,
         handler=search_emails,

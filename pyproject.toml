@@ -1,6 +1,6 @@
 [project]
 name = "agentic-mail-mcp"
-version = "0.5.0"
+version = "0.5.1"
 description = "A Model Context Protocol (MCP) server exposing Gmail operations for AI agents"
 readme = "README.md"
 requires-python = ">=3.11"

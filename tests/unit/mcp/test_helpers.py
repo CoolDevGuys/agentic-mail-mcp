@@ -57,7 +57,15 @@ class TestErrorMapping:
         assert error_result(ValidationError("bad"))["error"]["type"] == INVALID_INPUT
 
     def test_unknown_maps_to_internal(self) -> None:
-        assert error_result(RuntimeError("boom"))["error"]["type"] == INTERNAL_ERROR
+        result = error_result(RuntimeError("boom"))
+        assert result["error"]["type"] == INTERNAL_ERROR
+        # Internal errors carry the exception type so the real cause is traceable.
+        assert result["error"]["message"] == "RuntimeError: boom"
+
+    def test_domain_error_messages_stay_clean(self) -> None:
+        assert error_result(ValidationError("bad input"))["error"]["message"] == (
+            "bad input"
+        )
 
     def test_is_error_result_false_for_success(self) -> None:
         assert is_error_result({"ok": True}) is False

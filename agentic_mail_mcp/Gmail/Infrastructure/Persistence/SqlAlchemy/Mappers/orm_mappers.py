@@ -73,6 +73,15 @@ class EmailOrmMapper:
 
     @staticmethod
     def to_domain(model: EmailModel) -> Email:
+        # The JSON columns are nullable at the schema level (migration 0001) and
+        # ``attached_messages`` was added as a plain nullable column (0003), so
+        # rows written before those defaults existed — or by anything that does
+        # not go through this mapper — read back as NULL. Treat NULL as empty.
+        to_addresses = [EmailAddress(a) for a in (model.to_addresses or [])]
+        attachments = list(model.attachments or [])
+        attached_messages = [
+            _dict_to_attached(raw) for raw in (model.attached_messages or [])
+        ]
         return Email(
             id=UUIDId.from_string(model.id),
             message_id=GmailMessageId(model.message_id),
@@ -82,15 +91,13 @@ class EmailOrmMapper:
             from_address=(
                 EmailAddress(model.from_address) if model.from_address else None
             ),
-            to_addresses=[EmailAddress(a) for a in model.to_addresses],
+            to_addresses=to_addresses,
             date_sent=model.date_sent,
             is_read=model.is_read,
-            _labels=set(model.labels),
+            _labels=set(model.labels or []),
             body=model.body,
-            _attachments=list(model.attachments),
-            _attached_messages=[
-                _dict_to_attached(raw) for raw in model.attached_messages
-            ],
+            _attachments=attachments,
+            _attached_messages=attached_messages,
             _is_trashed=model.is_trashed,
         )
 
@@ -120,14 +127,14 @@ class ThreadOrmMapper:
                 UUIDId.from_string(entry["email_id"]),
                 datetime.fromisoformat(entry["date_sent"]),
             )
-            for entry in model.email_entries
+            for entry in (model.email_entries or [])
         ]
         return Thread(
             id=UUIDId.from_string(model.id),
             thread_id=ThreadId(model.thread_id),
             snippet=model.snippet,
             subject=model.subject,
-            participants=list(model.participants),
+            participants=list(model.participants or []),
             _emails=emails,
             last_updated=model.last_updated,
             is_read=model.is_read,

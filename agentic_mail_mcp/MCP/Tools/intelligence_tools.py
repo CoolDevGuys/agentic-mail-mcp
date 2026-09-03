@@ -17,7 +17,10 @@ from agentic_mail_mcp.Common.Domain.Exceptions import (
 from agentic_mail_mcp.MCP.errors import error_result
 from agentic_mail_mcp.MCP.serialization import to_jsonable
 from agentic_mail_mcp.MCP.ToolRegistry import INTELLIGENCE, ToolDefinition
-from agentic_mail_mcp.MCP.Tools.arguments import parse_date_anchor, parse_uuid
+from agentic_mail_mcp.MCP.Tools.arguments import (
+    parse_date_anchor,
+    parse_email_identifier,
+)
 from agentic_mail_mcp.MCP.Tools.use_cases import McpUseCases
 
 _INTEL_ERRORS = (ValidationError, NotFoundError, PermissionError)
@@ -29,13 +32,16 @@ def build_summarize_email_tool(uses: McpUseCases) -> ToolDefinition:
 
     async def summarize_email(email_id: str) -> dict:
         try:
-            return to_jsonable(use_case.execute(parse_uuid(email_id)))
+            return to_jsonable(use_case.execute(parse_email_identifier(email_id)))
         except _INTEL_ERRORS as exc:
             return error_result(exc)
 
     return ToolDefinition(
         name="summarize_email",
-        description="Generate a concise summary of an email.",
+        description=(
+            "Generate a concise summary of an email. email_id is the Gmail "
+            "message id (or cache UUID)."
+        ),
         category=INTELLIGENCE,
         handler=summarize_email,
     )
@@ -47,7 +53,7 @@ def build_classify_email_tool(uses: McpUseCases) -> ToolDefinition:
 
     async def classify_email(email_id: str) -> dict:
         try:
-            return to_jsonable(use_case.execute(parse_uuid(email_id)))
+            return to_jsonable(use_case.execute(parse_email_identifier(email_id)))
         except _INTEL_ERRORS as exc:
             return error_result(exc)
 
@@ -55,7 +61,8 @@ def build_classify_email_tool(uses: McpUseCases) -> ToolDefinition:
         name="classify_email",
         description=(
             "Classify an email into a category (urgent/normal/spam/promo) with a "
-            "priority and confidence."
+            "priority and confidence. email_id is the Gmail message id (or cache "
+            "UUID)."
         ),
         category=INTELLIGENCE,
         handler=classify_email,
@@ -68,13 +75,16 @@ def build_suggest_reply_tool(uses: McpUseCases) -> ToolDefinition:
 
     async def suggest_reply(email_id: str) -> dict:
         try:
-            return to_jsonable(use_case.execute(parse_uuid(email_id)))
+            return to_jsonable(use_case.execute(parse_email_identifier(email_id)))
         except _INTEL_ERRORS as exc:
             return error_result(exc)
 
     return ToolDefinition(
         name="suggest_reply",
-        description="Draft a suggested reply to an email.",
+        description=(
+            "Draft a suggested reply to an email. email_id is the Gmail message "
+            "id (or cache UUID)."
+        ),
         category=INTELLIGENCE,
         handler=suggest_reply,
     )
@@ -86,14 +96,17 @@ def build_extract_action_items_tool(uses: McpUseCases) -> ToolDefinition:
 
     async def extract_action_items(email_id: str) -> dict:
         try:
-            items = use_case.execute(parse_uuid(email_id))
+            items = use_case.execute(parse_email_identifier(email_id))
             return {"action_items": to_jsonable(items)}
         except _INTEL_ERRORS as exc:
             return error_result(exc)
 
     return ToolDefinition(
         name="extract_action_items",
-        description="Extract action items (description, due date, priority) from an email.",
+        description=(
+            "Extract action items (description, due date, priority) from an "
+            "email. email_id is the Gmail message id (or cache UUID)."
+        ),
         category=INTELLIGENCE,
         handler=extract_action_items,
     )

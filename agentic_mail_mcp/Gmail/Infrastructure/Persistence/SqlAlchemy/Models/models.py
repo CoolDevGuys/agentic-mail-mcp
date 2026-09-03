@@ -26,6 +26,9 @@ class EmailModel(Base):
     labels: Mapped[list[str]] = mapped_column(JSON, default=list)
     body: Mapped[str] = mapped_column(Text, default="")
     attachments: Mapped[list[str]] = mapped_column(JSON, default=list)
+    # Nested message/rfc822 parts (originals of a forward), as
+    # {"subject", "from_address", "date_sent", "body"} dicts.
+    attached_messages: Mapped[list[dict]] = mapped_column(JSON, default=list)
     is_trashed: Mapped[bool] = mapped_column(Boolean, default=False)
 
 

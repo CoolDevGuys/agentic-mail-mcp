@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2026-08-31
+
+### Fixed
+
+- **`attached_messages` now survives every read path.** The forwarded-original
+  list was extracted from the live Gmail payload but dropped whenever an email
+  was rebuilt through the domain entity / read-through cache (the production
+  `get_email` path), so it came back empty. `attached_messages` is now a first-class
+  field on the `Email` aggregate, persisted in the `emails` table (new
+  `attached_messages` JSON column, migration `0003`), and mapped through the
+  gateway, domain, and ORM layers — so `get_email`, `get_thread`, and
+  `search_emails` all return the original(s) of a forward.
+- **`search_emails` / `get_email` `id` is now always the Gmail message id.** The
+  entity/cache path previously exposed the internal cache UUID as `id`, while the
+  live path exposed the Gmail message id — two different ids for the same email.
+  `id` now always equals `message_id`, the stable identity `get_email`,
+  `get_thread`, and the write tools all accept.
+
+### Added
+
+- **`search_emails` exact-phrase matching is documented.** Wrap a phrase in
+  double quotes in `query` (e.g. `"quarterly report"`) to match it exactly; the
+  `subject` filter already searches the subject line only.
+- **Intelligence tools accept a Gmail message id.** `summarize_email`,
+  `classify_email`, `suggest_reply`, and `extract_action_items` now resolve
+  `email_id` as a Gmail message id (live) or a cache UUID, matching `get_email` —
+  previously they only accepted the internal cache UUID.
+- **`EmailDTO.snippet` is derived from the body.** The snippet is now a clean
+  one-line preview derived from the message body (whitespace-collapsed, truncated
+  with an ellipsis), falling back to the gateway snippet when the body is empty,
+  instead of echoing the raw gateway snippet.
+
 ## [0.4.0] - 2026-08-29
 
 ### ⚠ Breaking

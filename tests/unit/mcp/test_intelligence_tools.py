@@ -34,13 +34,22 @@ class TestSummarizeEmailTool:
 
         assert result["error"]["type"] == NOT_FOUND
 
-    async def test_malformed_email_id_maps_to_invalid_input(self) -> None:
+    async def test_resolves_by_gmail_message_id(self) -> None:
+        env = make_env(llm_text="A short summary.")
+        env.add_email(message_id="msg-123")
+        tool = _tool(env.uses, "summarize_email")
+
+        result = await tool.handler(email_id="msg-123")
+
+        assert result["summary_text"] == "A short summary."
+
+    async def test_unknown_message_id_maps_to_not_found(self) -> None:
         env = make_env()
         tool = _tool(env.uses, "summarize_email")
 
         result = await tool.handler(email_id="not-a-uuid")
 
-        assert result["error"]["type"] == INVALID_INPUT
+        assert result["error"]["type"] == NOT_FOUND
 
 
 class TestClassifyEmailTool:

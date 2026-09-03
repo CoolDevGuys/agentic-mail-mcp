@@ -57,6 +57,17 @@ The system SHALL provide immutable value objects for Gmail identifiers: GmailMes
 - **WHEN** a GmailQuery is built using has_attachment()
 - **THEN** the query string contains "has:attachment"
 
+### Requirement: AttachedMessage value object
+The system SHALL provide an immutable AttachedMessage value object representing a nested `message/rfc822` part (the original of a forwarded email), carrying its own subject, sender, date, and body.
+
+#### Scenario: AttachedMessage created with all fields
+- **WHEN** an AttachedMessage is created with a subject, sender, date, and body
+- **THEN** the value object stores each field immutably
+
+#### Scenario: AttachedMessage with missing sender or date
+- **WHEN** an AttachedMessage is created with a null sender or date
+- **THEN** the value object stores None for the missing field and is still valid
+
 #### Scenario: GmailQuery unread builder
 - **WHEN** a GmailQuery is built using unread()
 - **THEN** the query string contains "is:unread"
@@ -67,6 +78,11 @@ The system SHALL model Email as an aggregate root with behaviors for mark_read, 
 #### Scenario: Email created from Gmail API response
 - **WHEN** Email.from_gmail_message() is called with mapped Gmail data
 - **THEN** an Email aggregate is created with all required fields populated
+
+#### Scenario: Email carries the originals of a forward
+- **WHEN** Email.from_gmail_message() is called with attached_messages
+- **THEN** the Email aggregate exposes them via the attached_messages property, each an AttachedMessage with its own subject, sender, date, and body
+- **AND** an email with no attached_messages exposes an empty list
 
 #### Scenario: Email marked as read
 - **WHEN** mark_read() is called on an unread Email

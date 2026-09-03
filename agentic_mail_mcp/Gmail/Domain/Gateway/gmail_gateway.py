@@ -23,6 +23,9 @@ class GmailMessageHeader:
     labels: list[str]
     to: str = ""
     body: str = ""
+    # Nested message/rfc822 parts (originals of a forward). Populated only when
+    # the header is built from a full-format message (include_body=True).
+    attached_messages: list[GmailAttachedMessage] = field(default_factory=list)
 
 
 @dataclass

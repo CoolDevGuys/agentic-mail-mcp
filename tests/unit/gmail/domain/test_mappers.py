@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from agentic_mail_mcp.Common.Domain.ValueObjects.uuid_id import UUIDId
-from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import GmailMessage
+from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
+    GmailAttachedMessage,
+    GmailMessage,
+)
 from agentic_mail_mcp.Gmail.Domain.Mapper.email_mapper import EmailMapper
 from agentic_mail_mcp.Gmail.Domain.Mapper.thread_mapper import ThreadMapper
 from agentic_mail_mcp.Gmail.Domain.ValueObjects import (
@@ -175,6 +178,56 @@ class TestEmailMapper:
         email = EmailMapper.to_domain(gateway_message)
 
         assert email.from_address is None
+
+    def test_to_domain_maps_attached_messages(self) -> None:
+        gateway_message = GmailMessage(
+            id="msg_1",
+            thread_id="thread_1",
+            snippet="",
+            subject="Fwd: Original",
+            from_="forwarder@example.com",
+            to="",
+            date="",
+            labels=[],
+            body="Forwarding note",
+            attachments=[],
+            attached_messages=[
+                GmailAttachedMessage(
+                    subject="Original",
+                    from_="Original Sender <original@example.com>",
+                    date="Mon, 15 Jan 2024 09:00:00 +0000",
+                    body="Original body",
+                )
+            ],
+        )
+
+        email = EmailMapper.to_domain(gateway_message)
+
+        assert len(email.attached_messages) == 1
+        attached = email.attached_messages[0]
+        assert attached.subject == "Original"
+        assert attached.from_address == EmailAddress("original@example.com")
+        assert attached.body == "Original body"
+        assert attached.date_sent is not None
+        assert attached.date_sent.year == 2024
+
+    def test_to_domain_no_attached_messages(self) -> None:
+        gateway_message = GmailMessage(
+            id="msg_1",
+            thread_id="thread_1",
+            snippet="",
+            subject="Plain",
+            from_="sender@example.com",
+            to="",
+            date="",
+            labels=[],
+            body="Body",
+            attachments=[],
+        )
+
+        email = EmailMapper.to_domain(gateway_message)
+
+        assert email.attached_messages == []
 
 
 class TestThreadMapper:

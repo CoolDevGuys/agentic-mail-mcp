@@ -12,6 +12,7 @@ from agentic_mail_mcp.Gmail.Domain.Events import (
     EmailRead,
 )
 from agentic_mail_mcp.Gmail.Domain.ValueObjects import (
+    AttachedMessage,
     EmailAddress,
     GmailMessageId,
     ThreadId,
@@ -32,6 +33,7 @@ class Email:
     _labels: set[str] = field(default_factory=set)
     body: str = ""
     _attachments: list[str] = field(default_factory=list)
+    _attached_messages: list[AttachedMessage] = field(default_factory=list)
     _is_trashed: bool = False
     _domain_events: list[object] = field(default_factory=list)
 
@@ -46,6 +48,10 @@ class Email:
     @property
     def attachments(self) -> list[str]:
         return list(self._attachments)
+
+    @property
+    def attached_messages(self) -> list[AttachedMessage]:
+        return list(self._attached_messages)
 
     @property
     def domain_events(self) -> list[object]:
@@ -66,6 +72,7 @@ class Email:
         date_sent: datetime | None = None,
         body: str = "",
         labels: list[str] | None = None,
+        attached_messages: list[AttachedMessage] | None = None,
     ) -> Email:
         return cls(
             id=UUIDId.generate(),
@@ -78,6 +85,7 @@ class Email:
             date_sent=date_sent,
             body=body,
             _labels=set(labels or []),
+            _attached_messages=list(attached_messages or []),
         )
 
     def mark_read(self) -> None:

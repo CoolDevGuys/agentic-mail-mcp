@@ -77,6 +77,47 @@ class TestEmailOrmMapper:
         assert restored.from_address is None
         assert restored.to_addresses == []
 
+    def test_attached_messages_round_trip_through_database(self, session_factory) -> None:
+        from agentic_mail_mcp.Gmail.Domain.ValueObjects import (
+            AttachedMessage,
+            EmailAddress,
+        )
+
+        email = Email.from_gmail_message(
+            message_id="msg_fwd",
+            thread_id="thread_1",
+            subject="Fwd: Original",
+            from_address="forwarder@example.com",
+            body="Forwarding note",
+            attached_messages=[
+                AttachedMessage(
+                    subject="Original",
+                    from_address=EmailAddress("original@example.com"),
+                    date_sent=datetime(2026, 1, 2, 9, 30, tzinfo=UTC),
+                    body="Original body",
+                )
+            ],
+        )
+
+        with session_factory() as session:
+            session.add(EmailOrmMapper.to_orm(email))
+            session.commit()
+
+        with session_factory() as session:
+            from agentic_mail_mcp.Gmail.Infrastructure.Persistence.SqlAlchemy.Models.models import (
+                EmailModel,
+            )
+
+            model = session.get(EmailModel, str(email.id))
+            restored = EmailOrmMapper.to_domain(model)
+
+        assert len(restored.attached_messages) == 1
+        attached = restored.attached_messages[0]
+        assert attached.subject == "Original"
+        assert attached.from_address == EmailAddress("original@example.com")
+        assert attached.body == "Original body"
+        assert attached.date_sent == datetime(2026, 1, 2, 9, 30, tzinfo=UTC)
+
 
 class TestThreadOrmMapper:
     def test_round_trip_preserves_ordered_email_ids(self, session_factory) -> None:

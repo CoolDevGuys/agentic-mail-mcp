@@ -7,6 +7,7 @@ import pytest
 from agentic_mail_mcp.Common.Domain.Exceptions import DomainError
 from agentic_mail_mcp.Gmail.Infrastructure.Google.message_parser import (
     to_gmail_message,
+    to_gmail_message_header,
     to_gmail_thread,
 )
 from agentic_mail_mcp.Gmail.Infrastructure.Google.oauth_provider import (
@@ -324,6 +325,63 @@ class TestMessageParser:
             "middle note",
             "inner original",
         ]
+
+    def test_header_parser_extracts_attached_messages(self) -> None:
+        # to_gmail_message_header (the batch/metadata path) must surface the
+        # same forwarded originals as to_gmail_message when given a full payload.
+        raw = {
+            "id": "m6",
+            "threadId": "t6",
+            "labelIds": ["INBOX"],
+            "payload": {
+                "mimeType": "multipart/mixed",
+                "headers": [
+                    {"name": "Subject", "value": "Fwd: Report"},
+                    {"name": "From", "value": "f@example.com"},
+                ],
+                "parts": [
+                    {
+                        "mimeType": "text/plain",
+                        "body": {
+                            "data": base64.urlsafe_b64encode(b"note").decode()
+                        },
+                    },
+                    {
+                        "mimeType": "message/rfc822",
+                        "body": {},
+                        "parts": [
+                            {
+                                "mimeType": "text/plain",
+                                "body": {
+                                    "data": base64.urlsafe_b64encode(
+                                        b"the original"
+                                    ).decode()
+                                },
+                            }
+                        ],
+                    },
+                ],
+            },
+        }
+        header = to_gmail_message_header(raw)
+        assert header.body == "note"
+        assert len(header.attached_messages) == 1
+        assert header.attached_messages[0].body == "the original"
+
+    def test_header_parser_no_attached_messages(self) -> None:
+        raw = {
+            "id": "m7",
+            "threadId": "t7",
+            "labelIds": ["INBOX"],
+            "payload": {
+                "headers": [{"name": "Subject", "value": "Plain"}],
+                "body": {
+                    "data": base64.urlsafe_b64encode(b"plain body").decode()
+                },
+            },
+        }
+        header = to_gmail_message_header(raw)
+        assert header.attached_messages == []
 
 
 class TestGmailThreadParser:

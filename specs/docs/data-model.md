@@ -28,6 +28,7 @@ stored as JSON since they are value collections owned by the aggregate.
 | `labels` | JSON | List of label strings |
 | `body` | Text | |
 | `attachments` | JSON | List of attachment ids |
+| `attached_messages` | JSON | List of `{subject, from_address, date_sent, body}` — the original(s) of a forward (nested `message/rfc822` parts). Added by migration `0003` |
 | `is_trashed` | Boolean | |
 
 ## Table: `threads`

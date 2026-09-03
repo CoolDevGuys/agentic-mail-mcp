@@ -31,7 +31,7 @@ Search the mailbox by full-text query and structured filters. By default each re
 
 | Property | Type | Required | Notes |
 |---|---|---|---|
-| `query` | string | | Gmail-style full-text query |
+| `query` | string | | Gmail-style full-text query. Wrap a phrase in double quotes to match it exactly (e.g. `"quarterly report"`) |
 | `from_address` | string | | Sender filter |
 | `to_address` | string | | Recipient filter |
 | `subject` | string | | Subject-only filter (Gmail `subject:` operator) |
@@ -169,9 +169,9 @@ they register **only when an LLM is configured** (`llm.api_key` or `model_path`)
 
 Setting `AGENTIC_MAIL_MCP_LLM_INTERNAL_TOOLS=true` *also* registers server-side
 `summarize_email`, `classify_email`, `suggest_reply`, and `extract_action_items`
-tools (each takes `email_id`) for deployments that want that — at the cost of
-extra latency. `classify_email` categories are `urgent`/`normal`/`spam`/`promo`,
-priority `1`–`5`.
+tools (each takes `email_id`, the Gmail message id or a cache UUID) for
+deployments that want that — at the cost of extra latency. `classify_email`
+categories are `urgent`/`normal`/`spam`/`promo`, priority `1`–`5`.
 
 ## Search tools
 

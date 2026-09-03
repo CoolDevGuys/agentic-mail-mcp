@@ -222,6 +222,39 @@ class TestGetEmailUseCase:
         dto = uc.execute(GetEmailQuery(email_id=GmailMessageId("cached_1")))
         assert dto.message_id == "cached_1"
 
+    def test_gmail_id_returns_attached_messages(self) -> None:
+        from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
+            GmailAttachedMessage,
+        )
+
+        gateway = StubGmailGateway()
+        gateway.messages["m10"] = GmailMessage(
+            id="m10",
+            thread_id="t10",
+            snippet="s",
+            subject="Fwd: Original",
+            from_="a@b.com",
+            to="",
+            date="2026-01-01",
+            labels=["INBOX"],
+            body="Forwarding note",
+            attachments=[],
+            attached_messages=[
+                GmailAttachedMessage(
+                    subject="Original",
+                    from_="orig@example.com",
+                    date="2026-01-01",
+                    body="Original body",
+                )
+            ],
+        )
+        uc = GetEmailUseCase(gateway, InMemoryEmailRepository())
+        dto = uc.execute(GetEmailQuery(email_id=GmailMessageId("m10")))
+        assert len(dto.attached_messages) == 1
+        assert dto.attached_messages[0].subject == "Original"
+        assert dto.attached_messages[0].body == "Original body"
+        assert dto.body == "Forwarding note"
+
     def test_gmail_id_not_found_anywhere_raises(self) -> None:
         uc = GetEmailUseCase(StubGmailGateway(), InMemoryEmailRepository())
         with pytest.raises(NotFoundError):
@@ -344,6 +377,94 @@ class TestDTOMapping:
         dto = EmailDTO.from_entity(email)
         assert dto.from_address is None
         assert dto.to_addresses == []
+
+    def test_email_dto_id_is_message_id(self) -> None:
+        # The exposed id is the Gmail message id (stable across read/write), not
+        # the internal cache UUID.
+        email = _make_email("msg-abc")
+        dto = EmailDTO.from_entity(email)
+        assert dto.id == "msg-abc"
+        assert dto.id == dto.message_id
+
+    def test_email_dto_snippet_derived_from_body(self) -> None:
+        email = _make_email("m1")
+        email.body = "First line.\n\nSecond   paragraph here."
+        email.snippet = "stale gateway snippet"
+        dto = EmailDTO.from_entity(email)
+        assert dto.snippet == "First line. Second paragraph here."
+
+    def test_email_dto_snippet_falls_back_when_body_empty(self) -> None:
+        email = Email.from_gmail_message(
+            message_id="m1", thread_id="t1", snippet="gateway snip"
+        )
+        dto = EmailDTO.from_entity(email)
+        assert dto.snippet == "gateway snip"
+
+    def test_email_dto_snippet_truncates_long_body(self) -> None:
+        email = _make_email("m1")
+        email.body = "word " * 100
+        dto = EmailDTO.from_entity(email)
+        assert len(dto.snippet) <= 201
+        assert dto.snippet.endswith("…")
+
+    def test_email_dto_maps_attached_messages(self) -> None:
+        from agentic_mail_mcp.Gmail.Domain.ValueObjects import (
+            AttachedMessage,
+            EmailAddress,
+        )
+
+        email = _make_email("m1")
+        email._attached_messages = [
+            AttachedMessage(
+                subject="Original",
+                from_address=EmailAddress("orig@example.com"),
+                date_sent=datetime(2026, 1, 1, tzinfo=UTC),
+                body="Original body",
+            )
+        ]
+        dto = EmailDTO.from_entity(email)
+        assert len(dto.attached_messages) == 1
+        assert dto.attached_messages[0].subject == "Original"
+        assert dto.attached_messages[0].from_address == "orig@example.com"
+        assert dto.attached_messages[0].body == "Original body"
+
+    def test_email_dto_from_gateway_header_maps_attached_messages(self) -> None:
+        from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
+            GmailAttachedMessage,
+        )
+
+        header = _header("m1", body="note")
+        header.attached_messages = [
+            GmailAttachedMessage(
+                subject="Original",
+                from_="orig@example.com",
+                date="",
+                body="Original body",
+            )
+        ]
+        dto = EmailDTO.from_gateway_header(header)
+        assert len(dto.attached_messages) == 1
+        assert dto.attached_messages[0].subject == "Original"
+        assert dto.attached_messages[0].body == "Original body"
+
+
+class TestDeriveSnippet:
+    def test_collapses_whitespace(self) -> None:
+        from agentic_mail_mcp.Gmail.Application.DTO.dtos import derive_snippet
+
+        assert derive_snippet("a\n\nb\tc", "fallback") == "a b c"
+
+    def test_returns_fallback_when_body_empty(self) -> None:
+        from agentic_mail_mcp.Gmail.Application.DTO.dtos import derive_snippet
+
+        assert derive_snippet("", "fallback") == "fallback"
+
+    def test_truncates_with_ellipsis(self) -> None:
+        from agentic_mail_mcp.Gmail.Application.DTO.dtos import derive_snippet
+
+        result = derive_snippet("x" * 300, "fallback", max_length=100)
+        assert len(result) == 101
+        assert result.endswith("…")
 
     def test_label_dto_from_entity(self) -> None:
         from agentic_mail_mcp.Gmail.Domain.Entities.label import Label

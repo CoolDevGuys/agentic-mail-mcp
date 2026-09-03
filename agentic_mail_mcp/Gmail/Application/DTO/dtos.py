@@ -6,7 +6,6 @@ from datetime import datetime
 
 from agentic_mail_mcp.Gmail.Domain.Entities.email import Email
 from agentic_mail_mcp.Gmail.Domain.Entities.label import SYSTEM_LABELS, Label
-from agentic_mail_mcp.Gmail.Domain.Entities.thread import Thread
 from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     GmailAttachedMessage,
     GmailLabel,
@@ -14,6 +13,22 @@ from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
     GmailMessageHeader,
     GmailThread,
 )
+from agentic_mail_mcp.Gmail.Domain.ValueObjects.attached_message import AttachedMessage
+
+
+def derive_snippet(body: str, fallback: str, max_length: int = 200) -> str:
+    """Derive a short one-line snippet from the body.
+
+    Falls back to the gateway-provided snippet when the body is empty. The body
+    is whitespace-collapsed so the preview is a single clean line, and truncated
+    with an ellipsis when it exceeds ``max_length``.
+    """
+    if not body:
+        return fallback
+    text = " ".join(body.split())
+    if len(text) <= max_length:
+        return text
+    return text[:max_length].rstrip() + "…"
 
 
 @dataclass(frozen=True)
@@ -40,6 +55,17 @@ class AttachedMessageDTO:
             body=attached.body,
         )
 
+    @classmethod
+    def from_domain(cls, attached: AttachedMessage) -> AttachedMessageDTO:
+        return cls(
+            subject=attached.subject,
+            from_address=(
+                attached.from_address.value if attached.from_address else None
+            ),
+            date_sent=attached.date_sent,
+            body=attached.body,
+        )
+
 
 @dataclass(frozen=True)
 class EmailDTO:
@@ -61,17 +87,22 @@ class EmailDTO:
     @classmethod
     def from_entity(cls, email: Email) -> EmailDTO:
         return cls(
-            id=str(email.id),
+            # The Gmail message id is the stable identity across read and write
+            # tools; the internal cache UUID is not exposed to callers.
+            id=email.message_id.value,
             message_id=email.message_id.value,
             thread_id=email.thread_id.value,
             subject=email.subject,
-            snippet=email.snippet,
+            snippet=derive_snippet(email.body, email.snippet),
             from_address=email.from_address.value if email.from_address else None,
             to_addresses=[a.value for a in email.to_addresses],
             date_sent=email.date_sent,
             is_read=email.is_read,
             labels=sorted(email.labels),
             body=email.body,
+            attached_messages=[
+                AttachedMessageDTO.from_domain(a) for a in email.attached_messages
+            ],
         )
 
     @classmethod
@@ -93,13 +124,16 @@ class EmailDTO:
             message_id=header.id,
             thread_id=header.thread_id,
             subject=header.subject,
-            snippet=header.snippet,
+            snippet=derive_snippet(header.body, header.snippet),
             from_address=header.from_ or None,
             to_addresses=to_addresses,
             date_sent=date_sent,
             is_read="UNREAD" not in header.labels,
             labels=list(header.labels),
             body=header.body,
+            attached_messages=[
+                AttachedMessageDTO.from_gateway(a) for a in header.attached_messages
+            ],
         )
 
     @classmethod
@@ -116,7 +150,7 @@ class EmailDTO:
             message_id=message.id,
             thread_id=message.thread_id,
             subject=message.subject,
-            snippet=message.snippet,
+            snippet=derive_snippet(message.body, message.snippet),
             from_address=message.from_ or None,
             to_addresses=to_addresses,
             date_sent=date_sent,
@@ -139,23 +173,9 @@ class ThreadDTO:
     email_ids: list[str]
     last_updated: datetime | None
     is_read: bool
-    # Full messages in thread order, each with its own body — populated when
-    # the thread is resolved live from Gmail (see from_gateway_thread), empty
-    # for the local-cache path so existing from_entity callers are unaffected.
+    # Full messages in thread order, each with its own body, resolved live from
+    # Gmail (see from_gateway_thread).
     emails: list[EmailDTO] = field(default_factory=list)
-
-    @classmethod
-    def from_entity(cls, thread: Thread) -> ThreadDTO:
-        return cls(
-            id=str(thread.id),
-            thread_id=thread.thread_id.value,
-            subject=thread.subject,
-            snippet=thread.snippet,
-            participants=list(thread.participants),
-            email_ids=[str(eid) for eid in thread.email_ids],
-            last_updated=thread.last_updated,
-            is_read=thread.is_read,
-        )
 
     @classmethod
     def from_gateway_thread(cls, thread: GmailThread) -> ThreadDTO:

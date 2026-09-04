@@ -7,6 +7,8 @@ serializes the result. Domain errors are mapped to structured tool errors.
 
 from __future__ import annotations
 
+from typing import Any
+
 from agentic_mail_mcp.Common.Domain.Exceptions import (
     NotFoundError,
     PermissionError,
@@ -37,6 +39,7 @@ _SEARCH_FIELDS = frozenset(
         "subject",
         "snippet",
         "from_address",
+        "from_display_name",
         "to_addresses",
         "date_sent",
         "is_read",
@@ -78,6 +81,7 @@ def _project_email(email: EmailDTO, fields: frozenset[str]) -> dict:
 def build_search_emails_tool(uses: McpUseCases) -> ToolDefinition:
     async def search_emails(
         query: str = "",
+        query_scope: str = "all",
         from_address: str | None = None,
         to_address: str | None = None,
         subject: str | None = None,
@@ -92,7 +96,7 @@ def build_search_emails_tool(uses: McpUseCases) -> ToolDefinition:
         body_max_length: int | None = None,
         page: int = 1,
         page_size: int = 25,
-    ) -> dict:
+    ) -> dict[str, Any]:
         try:
             normalized_fields = _normalize_fields(fields)
             include_body = (
@@ -100,6 +104,7 @@ def build_search_emails_tool(uses: McpUseCases) -> ToolDefinition:
             )
             q = SearchEmailsQuery(
                 query_string=query,
+                query_scope=query_scope,
                 from_address=from_address,
                 to_address=to_address,
                 subject=subject,
@@ -135,11 +140,16 @@ def build_search_emails_tool(uses: McpUseCases) -> ToolDefinition:
             "only the fields you need (e.g. [\"subject\", \"from\", \"date\"]) to "
             "keep results small, and `body_max_length` to cap the body length. "
             "Use `direction` to restrict to received or sent mail, and `seen_ids` "
-            "to exclude messages you have already seen. To match only on the "
-            "subject line, set `subject` (it searches the subject only). To match "
-            "an exact phrase, wrap it in double quotes in `query` (e.g. "
+            "to exclude messages you have already seen. Restrict the free-text "
+            "`query` to one field with `query_scope` (\"subject\" or \"body\"); "
+            "use it when a company name also appears in unrelated mail (CI "
+            "notifications, coding challenges). To match only on the subject "
+            "line, set `subject` (it searches the subject only). To match an "
+            "exact phrase, wrap it in double quotes in `query` (e.g. "
             "\"quarterly report\"). Each result's `id` is the Gmail message id — "
-            "pass it straight to get_email or get_thread."
+            "pass it straight to get_email or get_thread. Some senders (e.g. "
+            "LinkedIn InMail) use a generic alias address with the real person "
+            "only in the display name — request the `from_display_name` field."
         ),
         category=READ,
         handler=search_emails,
@@ -147,12 +157,16 @@ def build_search_emails_tool(uses: McpUseCases) -> ToolDefinition:
 
 
 def build_get_email_tool(uses: McpUseCases) -> ToolDefinition:
-    async def get_email(email_id: str) -> dict:
+    async def get_email(
+        email_id: str, fields: list[str] | None = None
+    ) -> dict[str, Any]:
         try:
+            normalized_fields = _normalize_fields(fields)
             identifier = parse_email_identifier(email_id)
-            return to_jsonable(
-                uses.get_email.execute(GetEmailQuery(email_id=identifier))
-            )
+            email = uses.get_email.execute(GetEmailQuery(email_id=identifier))
+            if normalized_fields is None:
+                return to_jsonable(email)
+            return _project_email(email, normalized_fields)
         except _READ_ERRORS as exc:
             return error_result(exc)
 
@@ -160,9 +174,11 @@ def build_get_email_tool(uses: McpUseCases) -> ToolDefinition:
         name="get_email",
         description=(
             "Fetch a single email with its body by Gmail message id or internal "
-            "UUID. For a forwarded email, `body` holds only the forward's own "
-            "note; the forwarded original(s) are in `attached_messages`, each "
-            "with its own subject, sender, date, and body."
+            "UUID. Pass `fields` (e.g. [\"subject\", \"from\", \"date\"]) to "
+            "return only those fields instead of the full body. For a forwarded "
+            "email, `body` holds only the forward's own note; the forwarded "
+            "original(s) are in `attached_messages`, each with its own subject, "
+            "sender, date, and body."
         ),
         category=READ,
         handler=get_email,
@@ -170,7 +186,7 @@ def build_get_email_tool(uses: McpUseCases) -> ToolDefinition:
 
 
 def build_get_thread_tool(uses: McpUseCases) -> ToolDefinition:
-    async def get_thread(thread_id: str) -> dict:
+    async def get_thread(thread_id: str) -> dict[str, Any]:
         try:
             return to_jsonable(
                 uses.get_thread.execute(GetThreadQuery(thread_id=thread_id))
@@ -191,7 +207,9 @@ def build_get_thread_tool(uses: McpUseCases) -> ToolDefinition:
 
 
 def build_list_unread_tool(uses: McpUseCases) -> ToolDefinition:
-    async def list_unread(limit: int = 25, label: str | None = None) -> dict:
+    async def list_unread(
+        limit: int = 25, label: str | None = None
+    ) -> dict[str, Any]:
         try:
             result = uses.list_unread.execute(ListUnreadQuery(limit=limit, label=label))
             return {"emails": to_jsonable(result)}
@@ -207,7 +225,7 @@ def build_list_unread_tool(uses: McpUseCases) -> ToolDefinition:
 
 
 def build_list_labels_tool(uses: McpUseCases) -> ToolDefinition:
-    async def list_labels(label_type: str = "all") -> dict:
+    async def list_labels(label_type: str = "all") -> dict[str, Any]:
         try:
             result = uses.list_labels.execute(ListLabelsQuery(label_type=label_type))
             return {"labels": to_jsonable(result)}

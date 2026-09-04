@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2026-09-04
+
+### Added
+
+- **Structured results for every tool.** Tool handlers now declare
+  `dict[str, Any]` return types, so the MCP server delivers real structured
+  content instead of a JSON string clients had to parse a second time (some
+  wrapped it as `{"result": "<json string>"}`).
+- **`get_email(fields=[...])`** — fetch only the requested fields (e.g.
+  `["subject","from","date"]`) instead of the full body, using the same
+  projection, aliases, and `id`-always behavior as `search_emails`.
+- **`from_display_name` on live email results** — the sender's display name is
+  split out of the raw From header, with `from_address` now holding the bare
+  address. Surfaces the real person behind generic aliases such as LinkedIn
+  InMail's `inmail-hit-reply@linkedin.com`.
+- **`query_scope` for `search_emails`** — restrict the free-text `query` to
+  `subject` or `body` (compiled to Gmail `subject:"…"` / `inbody:"…"`), so a
+  company-name search no longer matches unrelated CI/build notifications.
+- **`message_id` on `semantic_search` results** — the matched email's Gmail
+  message id (when resolvable from the cache), directly usable with
+  `get_email`; previously only the opaque internal UUID was exposed.
+
+### Fixed
+
+- **Snippets no longer carry invisible characters.** Zero-width spaces/joiners,
+  bidi controls, soft hyphens, and BOM (injected by senders like LinkedIn) are
+  stripped from snippets, and the gateway-provided fallback snippet is now
+  cleaned, collapsed, and truncated at 200 characters like body-derived ones.
+
 ## [0.5.1] - 2026-09-03
 
 ### Fixed

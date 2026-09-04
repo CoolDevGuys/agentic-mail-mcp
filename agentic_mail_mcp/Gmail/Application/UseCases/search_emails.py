@@ -18,11 +18,27 @@ _ID_PAGE_SIZE = 500
 _RECEIVED_EXCLUSIONS = "-in:sent -in:draft -in:spam -in:trash -in:chats"
 
 
+def _scoped_query_term(query: SearchEmailsQuery) -> str:
+    """Apply the free-text term according to ``query_scope``.
+
+    ``subject``/``body`` restrict the term to the Gmail ``subject:``/``inbody:``
+    operators (Gmail needs quotes for multi-word values); a term already
+    containing double quotes is passed through unquoted rather than corrupted.
+    """
+    term = query.query_string
+    if query.query_scope == "all":
+        return term
+    operator = "subject" if query.query_scope == "subject" else "inbody"
+    if '"' in term:
+        return f"{operator}:{term}"
+    return f'{operator}:"{term}"'
+
+
 def build_gmail_query(query: SearchEmailsQuery) -> GmailQuery:
     """Compose a GmailQuery string from the structured search criteria."""
     parts: list[str] = []
     if query.query_string:
-        parts.append(query.query_string)
+        parts.append(_scoped_query_term(query))
     if query.from_address:
         parts.append(f"from:{query.from_address}")
     if query.to_address:

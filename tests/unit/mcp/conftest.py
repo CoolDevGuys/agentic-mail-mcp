@@ -138,7 +138,9 @@ def make_env(
         extract_action_items=ExtractActionItemsUseCase(email_repo, llm),
         daily_digest=DailyDigestUseCase(email_repo, llm, clock, event_bus),
         weekly_digest=WeeklyDigestUseCase(email_repo, llm, clock, event_bus),
-        semantic_search=SemanticSearchUseCase(embedding, vector_repo),
+        semantic_search=SemanticSearchUseCase(
+            embedding, vector_repo, email_repository=email_repo
+        ),
     )
     return McpEnv(
         uses=uses,

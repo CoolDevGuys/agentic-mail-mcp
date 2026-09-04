@@ -8,6 +8,8 @@ denial surfaces cleanly instead of raising.
 
 from __future__ import annotations
 
+from typing import Any
+
 from agentic_mail_mcp.Common.Domain.Exceptions import (
     NotFoundError,
     PermissionError,
@@ -36,7 +38,7 @@ def build_forward_email_tool(uses: McpUseCases) -> ToolDefinition:
         subject: str = "",
         body: str = "",
         include_original: bool = True,
-    ) -> dict:
+    ) -> dict[str, Any]:
         try:
             command = ForwardEmailCommand(
                 message_id=email_id,
@@ -63,7 +65,7 @@ def build_forward_email_tool(uses: McpUseCases) -> ToolDefinition:
 def build_archive_email_tool(uses: McpUseCases) -> ToolDefinition:
     async def archive_email(
         email_id: str | None = None, thread_id: str | None = None
-    ) -> dict:
+    ) -> dict[str, Any]:
         try:
             command = ArchiveEmailCommand(
                 message_id=email_id or None,
@@ -83,7 +85,7 @@ def build_archive_email_tool(uses: McpUseCases) -> ToolDefinition:
 
 
 def build_delete_email_tool(uses: McpUseCases) -> ToolDefinition:
-    async def delete_email(email_id: str, permanent: bool = False) -> dict:
+    async def delete_email(email_id: str, permanent: bool = False) -> dict[str, Any]:
         try:
             command = DeleteEmailCommand(message_id=email_id, permanent=permanent)
             uses.delete_email.execute(command)
@@ -103,7 +105,7 @@ def build_delete_email_tool(uses: McpUseCases) -> ToolDefinition:
 
 
 def build_create_draft_tool(uses: McpUseCases) -> ToolDefinition:
-    async def create_draft(to: str, subject: str = "", body: str = "") -> dict:
+    async def create_draft(to: str, subject: str = "", body: str = "") -> dict[str, Any]:
         try:
             command = CreateDraftCommand(to_address=to, subject=subject, body=body)
             draft_id = uses.create_draft.execute(command)
@@ -123,7 +125,7 @@ def build_create_draft_tool(uses: McpUseCases) -> ToolDefinition:
 
 
 def build_send_draft_tool(uses: McpUseCases) -> ToolDefinition:
-    async def send_draft(draft_id: str) -> dict:
+    async def send_draft(draft_id: str) -> dict[str, Any]:
         try:
             command = SendDraftCommand(draft_id=draft_id)
             return to_jsonable(uses.send_draft.execute(command))
@@ -139,7 +141,7 @@ def build_send_draft_tool(uses: McpUseCases) -> ToolDefinition:
 
 
 def build_add_label_tool(uses: McpUseCases) -> ToolDefinition:
-    async def add_label(email_id: str, label: str) -> dict:
+    async def add_label(email_id: str, label: str) -> dict[str, Any]:
         try:
             command = AddLabelCommand(message_id=email_id, label_name=label)
             uses.add_label.execute(command)

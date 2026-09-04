@@ -150,6 +150,27 @@ class TestSearchEmailsTool:
         assert "-in:sent" in env.gateway.list_calls[1][0]
         assert "-in:draft" in env.gateway.list_calls[1][0]
 
+    async def test_query_scope_restricts_term_in_gateway_query(self) -> None:
+        env = make_env()
+        env.gateway.message_ids = ["m1"]
+        env.gateway.headers["m1"] = _header("m1")
+        tool = _tool(env.uses, "search_emails")
+
+        await tool.handler(query="Luma", query_scope="subject")
+        assert 'subject:"Luma"' in env.gateway.list_calls[0][0]
+
+        await tool.handler(query="Luma", query_scope="body")
+        assert 'inbody:"Luma"' in env.gateway.list_calls[1][0]
+
+    async def test_invalid_query_scope_maps_to_error(self) -> None:
+        env = make_env()
+        tool = _tool(env.uses, "search_emails")
+
+        result = await tool.handler(query="x", query_scope="headers")
+
+        assert result["error"]["type"] == INVALID_INPUT
+        assert env.gateway.list_calls == []
+
 
 class TestGetEmailTool:
     async def test_resolves_by_uuid(self) -> None:
@@ -171,6 +192,27 @@ class TestGetEmailTool:
         result = await tool.handler(email_id="unknown-gmail-id")
 
         assert result["error"]["type"] == NOT_FOUND
+
+    async def test_fields_projection_omits_the_body(self) -> None:
+        env = make_env()
+        email = env.add_email()
+        tool = _tool(env.uses, "get_email")
+
+        result = await tool.handler(
+            email_id=str(email.id), fields=["subject", "from", "date"]
+        )
+
+        assert set(result.keys()) == {"id", "subject", "from_address", "date_sent"}
+        assert "body" not in result
+
+    async def test_unknown_field_maps_to_invalid_input(self) -> None:
+        env = make_env()
+        email = env.add_email()
+        tool = _tool(env.uses, "get_email")
+
+        result = await tool.handler(email_id=str(email.id), fields=["bogus"])
+
+        assert result["error"]["type"] == INVALID_INPUT
 
 
 class TestGetThreadTool:

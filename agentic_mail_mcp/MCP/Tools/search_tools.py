@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from agentic_mail_mcp.Common.Domain.Exceptions import PermissionError, ValidationError
 from agentic_mail_mcp.MCP.errors import error_result
 from agentic_mail_mcp.MCP.serialization import to_jsonable
@@ -17,7 +19,7 @@ def build_semantic_search_tool(uses: McpUseCases) -> ToolDefinition:
 
     async def semantic_search(
         query: str, limit: int = 10, min_score: float = 0.0
-    ) -> dict:
+    ) -> dict[str, Any]:
         try:
             results = use_case.execute(query, limit=limit, min_score=min_score)
             return {"results": to_jsonable(results)}
@@ -28,7 +30,10 @@ def build_semantic_search_tool(uses: McpUseCases) -> ToolDefinition:
         name="semantic_search",
         description=(
             "Search emails by meaning using natural language. Returns matches "
-            "ranked by similarity score."
+            "ranked by similarity score. Each result's `message_id` is the "
+            "Gmail message id (pass it to get_email); it is null when the "
+            "matched email is not in the local cache, in which case use "
+            "search_emails to locate it."
         ),
         category=SEARCH,
         handler=semantic_search,

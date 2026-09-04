@@ -19,7 +19,8 @@
   [ADR 0007](adr/0007-persistence-read-through-cache.md).
 - **Dates** — `YYYY-MM-DD` strings.
 - **Output** — tools return a JSON object (email/thread/label DTOs, digests,
-  search results) or a small status object. Errors use the
+  search results) or a small status object, delivered as **structured content**
+  (a real object, not a JSON string to re-parse). Errors use the
   [structured error format](#error-responses) instead of raising.
 
 ## Read tools
@@ -32,6 +33,7 @@ Search the mailbox by full-text query and structured filters. By default each re
 | Property | Type | Required | Notes |
 |---|---|---|---|
 | `query` | string | | Gmail-style full-text query. Wrap a phrase in double quotes to match it exactly (e.g. `"quarterly report"`) |
+| `query_scope` | string | | Where `query` matches: `all` (default), `subject`, or `body` — use `subject` when a company name also appears in unrelated mail (CI notifications, coding challenges) |
 | `from_address` | string | | Sender filter |
 | `to_address` | string | | Recipient filter |
 | `subject` | string | | Subject-only filter (Gmail `subject:` operator) |
@@ -47,16 +49,17 @@ Search the mailbox by full-text query and structured filters. By default each re
 | `page` | integer | | 1-based page (default 1) |
 | `page_size` | integer | | Page size (default 25) |
 
-**Output:** `{ emails: Email[], page, page_size, total_count }`. `total_count` is the exact number of matches (after `seen_ids` exclusion). When `fields` is omitted each `Email` includes `body` and `to_addresses`; when `fields` is given, each `Email` carries only `id` plus the requested fields. Each `Email` may also carry `attached_messages` (the original(s) of a forward, each with its own subject/sender/date/body). There is no internal cache UUID for a live result, so `id` is the Gmail message id — the same value `get_email` and `get_thread` accept.
+**Output:** `{ emails: Email[], page, page_size, total_count }`. `total_count` is the exact number of matches (after `seen_ids` exclusion). When `fields` is omitted each `Email` includes `body` and `to_addresses`; when `fields` is given, each `Email` carries only `id` plus the requested fields. Each `Email` may also carry `attached_messages` (the original(s) of a forward, each with its own subject/sender/date/body). There is no internal cache UUID for a live result, so `id` is the Gmail message id — the same value `get_email` and `get_thread` accept. `from_address` is the bare sender address; `from_display_name` (live results, requestable via `fields`) carries the display name — the real person behind alias senders such as LinkedIn InMail's `inmail-hit-reply@linkedin.com`. Snippets are stripped of invisible Unicode characters (zero-width spaces, bidi controls) and truncated with `…` at 200 characters.
 
 ### `get_email`
-Fetch a single email with its body.
+Fetch a single email with its body. Pass `fields` to fetch only what you need (e.g. subject/from/date on many forwarded emails) instead of the full body.
 
 | Property | Type | Required | Notes |
 |---|---|---|---|
 | `email_id` | string | ✱ | UUID (cache) or Gmail message id (API) |
+| `fields` | string[] | | Return only these fields (same set, aliases, and `id`-always behavior as `search_emails`); omit for the full email |
 
-**Output:** an `Email` object (id, message_id, thread_id, subject, snippet, from/to, date, is_read, labels, body, `attached_messages`). `attached_messages` holds the original(s) of a forward, each with its own subject, sender, date, and body; the email's `body` is only the forward's own note.
+**Output:** an `Email` object (id, message_id, thread_id, subject, snippet, from/to — including `from_display_name` on live results — date, is_read, labels, body, `attached_messages`). With `fields`, only `id` plus the requested fields are returned. `attached_messages` holds the original(s) of a forward, each with its own subject, sender, date, and body; the email's `body` is only the forward's own note.
 
 ### `get_thread`
 Fetch a full conversation thread directly from Gmail (`users.threads.get`): every message in order, each with its own body, sender, recipients, and date — enough to reconstruct the whole conversation in one call.
@@ -184,7 +187,7 @@ Search emails by meaning using natural language. Returns matches ranked by simil
 | `limit` | integer | | Max results (default 10) |
 | `min_score` | number | | Minimum similarity (default 0.0) |
 
-**Output:** `{ results: SearchResult[] }` where each result has `document_id`, `email_id`, `score`, `metadata`.
+**Output:** `{ results: SearchResult[] }` where each result has `document_id`, `email_id` (internal cache UUID), `score`, `metadata`, and `message_id` — the matched email's Gmail message id, passable straight to `get_email` (null when the email is not in the local cache; then locate it with `search_emails`).
 
 ## Resources
 

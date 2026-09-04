@@ -9,11 +9,15 @@ from agentic_mail_mcp.Gmail.Domain.ValueObjects import GmailMessageId, ThreadId
 
 _VALID_LABEL_TYPES = frozenset({"system", "user", "all"})
 _VALID_DIRECTIONS = frozenset({"received", "sent"})
+_VALID_QUERY_SCOPES = frozenset({"all", "subject", "body"})
 
 
 @dataclass(frozen=True)
 class SearchEmailsQuery:
     query_string: str = ""
+    # Where the free-text term matches: everywhere (Gmail full-text), the
+    # subject only, or the body only.
+    query_scope: str = "all"
     from_address: str | None = None
     to_address: str | None = None
     subject: str | None = None
@@ -38,6 +42,11 @@ class SearchEmailsQuery:
             raise ValidationError(
                 f"direction must be one of {sorted(_VALID_DIRECTIONS)}, "
                 f"got {self.direction!r}"
+            )
+        if self.query_scope not in _VALID_QUERY_SCOPES:
+            raise ValidationError(
+                f"query_scope must be one of {sorted(_VALID_QUERY_SCOPES)}, "
+                f"got {self.query_scope!r}"
             )
         if self.body_max_length is not None and self.body_max_length < 1:
             raise ValidationError(

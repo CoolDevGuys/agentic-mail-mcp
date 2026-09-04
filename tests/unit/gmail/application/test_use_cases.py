@@ -94,6 +94,38 @@ class TestBuildGmailQuery:
         assert "-in:trash" in q.value
         assert "-in:chats" in q.value
 
+    def test_query_scope_subject_restricts_term_to_subject(self) -> None:
+        q = build_gmail_query(
+            SearchEmailsQuery(query_string="Luma hiring", query_scope="subject")
+        )
+        assert q.value == 'subject:"Luma hiring"'
+
+    def test_query_scope_body_restricts_term_to_body(self) -> None:
+        q = build_gmail_query(
+            SearchEmailsQuery(query_string="Luma", query_scope="body")
+        )
+        assert q.value == 'inbody:"Luma"'
+
+    def test_query_scope_all_keeps_term_unrestricted(self) -> None:
+        q = build_gmail_query(SearchEmailsQuery(query_string="Luma"))
+        assert q.value == "Luma"
+
+    def test_query_scope_does_not_double_quote(self) -> None:
+        q = build_gmail_query(
+            SearchEmailsQuery(
+                query_string='"quarterly report"', query_scope="subject"
+            )
+        )
+        assert q.value == 'subject:"quarterly report"'
+
+
+class TestSearchEmailsQueryValidation:
+    def test_invalid_query_scope_raises(self) -> None:
+        from agentic_mail_mcp.Common.Domain.Exceptions import ValidationError
+
+        with pytest.raises(ValidationError):
+            SearchEmailsQuery(query_scope="headers")
+
 
 def _header(mid: str, *, body: str = "") -> GmailMessageHeader:
     return GmailMessageHeader(
@@ -447,6 +479,35 @@ class TestDTOMapping:
         assert dto.attached_messages[0].subject == "Original"
         assert dto.attached_messages[0].body == "Original body"
 
+    def test_gateway_header_splits_inmail_display_name(self) -> None:
+        header = _header("m1", body="note")
+        header.from_ = "Will G. <inmail-hit-reply@linkedin.com>"
+        dto = EmailDTO.from_gateway_header(header)
+        assert dto.from_address == "inmail-hit-reply@linkedin.com"
+        assert dto.from_display_name == "Will G."
+
+    def test_gateway_message_bare_sender_has_no_display_name(self) -> None:
+        message = GmailMessage(
+            id="m1",
+            thread_id="t1",
+            snippet="s",
+            subject="Sub",
+            from_="a@b.com",
+            to="me@example.com",
+            date="",
+            labels=["INBOX"],
+            body="body",
+            attachments=[],
+        )
+        dto = EmailDTO.from_gateway_message(message)
+        assert dto.from_address == "a@b.com"
+        assert dto.from_display_name is None
+
+    def test_entity_path_has_no_display_name(self) -> None:
+        # The aggregate stores only the address, so the live-only display name
+        # is None on the cached path.
+        assert EmailDTO.from_entity(_make_email("m1")).from_display_name is None
+
 
 class TestDeriveSnippet:
     def test_collapses_whitespace(self) -> None:
@@ -465,6 +526,20 @@ class TestDeriveSnippet:
         result = derive_snippet("x" * 300, "fallback", max_length=100)
         assert len(result) == 101
         assert result.endswith("…")
+
+    def test_strips_zero_width_and_bidi_characters(self) -> None:
+        from agentic_mail_mcp.Gmail.Application.DTO.dtos import derive_snippet
+
+        linkedin_style = "Will\u200b G.\u200d\u2060 hires\u200e you\ufeff"
+        assert derive_snippet(linkedin_style, "fb") == "Will G. hires you"
+
+    def test_fallback_is_cleaned_and_truncated_like_body(self) -> None:
+        from agentic_mail_mcp.Gmail.Application.DTO.dtos import derive_snippet
+
+        assert derive_snippet("", "a\u200bb\u00adc", max_length=10) == "abc"
+        truncated = derive_snippet("", "x" * 300, max_length=100)
+        assert len(truncated) == 101
+        assert truncated.endswith("…")
 
     def test_label_dto_from_entity(self) -> None:
         from agentic_mail_mcp.Gmail.Domain.Entities.label import Label

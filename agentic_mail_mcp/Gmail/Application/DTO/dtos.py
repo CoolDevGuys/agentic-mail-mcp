@@ -15,20 +15,48 @@ from agentic_mail_mcp.Gmail.Domain.Gateway.gmail_gateway import (
 )
 from agentic_mail_mcp.Gmail.Domain.ValueObjects.attached_message import AttachedMessage
 
+# Zero-width spaces/joiners, bidi controls, soft hyphen, and BOM — injected by
+# some senders (e.g. LinkedIn) and invisible when rendered, but corrupting for
+# programmatic snippet parsing.
+_INVISIBLE_CHARS = frozenset(
+    "\u00ad\u200b\u200c\u200d\u200e\u200f\u2060\u2061\u2062\u2063\u2064\ufeff"
+)
+
+
+def _clean_snippet(text: str, max_length: int) -> str:
+    """Strip invisible characters, collapse whitespace, truncate with an
+    ellipsis when ``max_length`` is exceeded."""
+    stripped = "".join(ch for ch in text if ch not in _INVISIBLE_CHARS)
+    collapsed = " ".join(stripped.split())
+    if len(collapsed) <= max_length:
+        return collapsed
+    return collapsed[:max_length].rstrip() + "…"
+
 
 def derive_snippet(body: str, fallback: str, max_length: int = 200) -> str:
     """Derive a short one-line snippet from the body.
 
-    Falls back to the gateway-provided snippet when the body is empty. The body
-    is whitespace-collapsed so the preview is a single clean line, and truncated
-    with an ellipsis when it exceeds ``max_length``.
+    Falls back to the gateway-provided snippet when the body is empty. Either
+    source is cleaned of invisible characters, whitespace-collapsed to a single
+    line, and truncated with an ellipsis when it exceeds ``max_length``.
     """
-    if not body:
-        return fallback
-    text = " ".join(body.split())
-    if len(text) <= max_length:
-        return text
-    return text[:max_length].rstrip() + "…"
+    return _clean_snippet(body or fallback, max_length)
+
+
+def _split_sender(raw: str) -> tuple[str | None, str | None]:
+    """Split a raw ``From`` header into ``(bare address, display name)``.
+
+    Senders like LinkedIn InMail put the real person only in the display name
+    (``"Will G. <inmail-hit-reply@linkedin.com>"``); exposing both parts saves
+    callers from parsing the header. Malformed values without a parseable
+    address are kept verbatim so no information is lost.
+    """
+    if not raw:
+        return None, None
+    name, address = email.utils.parseaddr(raw)
+    if not address:
+        return raw.strip() or None, None
+    return address, name.strip() or None
 
 
 @dataclass(frozen=True)
@@ -79,6 +107,10 @@ class EmailDTO:
     date_sent: datetime | None
     is_read: bool
     labels: list[str]
+    # Sender display name from the raw From header (live gateway paths only —
+    # the aggregate stores just the address), e.g. the real person behind a
+    # LinkedIn InMail alias address.
+    from_display_name: str | None = None
     body: str = ""
     # The original(s) of a forward (nested message/rfc822 parts), each with its
     # own subject, sender, date, and body. Empty for non-forwarded messages.
@@ -125,7 +157,8 @@ class EmailDTO:
             thread_id=header.thread_id,
             subject=header.subject,
             snippet=derive_snippet(header.body, header.snippet),
-            from_address=header.from_ or None,
+            from_address=_split_sender(header.from_)[0],
+            from_display_name=_split_sender(header.from_)[1],
             to_addresses=to_addresses,
             date_sent=date_sent,
             is_read="UNREAD" not in header.labels,
@@ -151,7 +184,8 @@ class EmailDTO:
             thread_id=message.thread_id,
             subject=message.subject,
             snippet=derive_snippet(message.body, message.snippet),
-            from_address=message.from_ or None,
+            from_address=_split_sender(message.from_)[0],
+            from_display_name=_split_sender(message.from_)[1],
             to_addresses=to_addresses,
             date_sent=date_sent,
             is_read="UNREAD" not in message.labels,

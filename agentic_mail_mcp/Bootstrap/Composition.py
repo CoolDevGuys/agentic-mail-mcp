@@ -148,8 +148,12 @@ def build_oauth_provider(settings: Settings) -> GmailOAuthProvider:
     )
 
 
-def _build_semantic_search(settings: Settings):
-    """Best-effort search wiring; returns None if the backend is unavailable."""
+def _build_semantic_search(settings: Settings, email_repo: EmailRepository | None = None):
+    """Best-effort search wiring; returns None if the backend is unavailable.
+
+    The email repository (when supplied) lets results carry the Gmail message
+    id of matched emails.
+    """
     try:
         from agentic_mail_mcp.Search.Application.UseCases.semantic_search import (
             SemanticSearchUseCase,
@@ -168,7 +172,10 @@ def _build_semantic_search(settings: Settings):
         vector_repo = SqliteVecRepository.create(
             "./gmail_mcp_vectors.db", dimension=dimension
         )
-        return SemanticSearchUseCase(embedding, vector_repo), vector_repo
+        return (
+            SemanticSearchUseCase(embedding, vector_repo, email_repository=email_repo),
+            vector_repo,
+        )
     except Exception as exc:  # noqa: BLE001  # pragma: no cover - optional extra
         logger.warning(
             "Semantic search unavailable (install the 'search' extra to enable): %s",
@@ -209,7 +216,7 @@ def build_use_cases(
         ttl_seconds=settings.database.cache_ttl_seconds,
     )
     # --- search (optional) ---
-    semantic_search, _vector_repo = _build_semantic_search(settings)
+    semantic_search, _vector_repo = _build_semantic_search(settings, email_repo)
 
     uses = McpUseCases(
         search_emails=SearchEmailsUseCase(gateway, email_repo),

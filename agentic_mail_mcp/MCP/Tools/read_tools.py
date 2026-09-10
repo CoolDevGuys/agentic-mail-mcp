@@ -137,16 +137,16 @@ def build_search_emails_tool(uses: McpUseCases) -> ToolDefinition:
             "(sender, recipient, subject, date range, label, unread, direction). "
             "Returns a page of emails plus the exact total_count of matches. By "
             "default each email includes its full body; pass `fields` to return "
-            'only the fields you need (e.g. ["subject", "from", "date"]) to '
+            "only the fields you need (e.g. [\"subject\", \"from\", \"date\"]) to "
             "keep results small, and `body_max_length` to cap the body length. "
             "Use `direction` to restrict to received or sent mail, and `seen_ids` "
             "to exclude messages you have already seen. Restrict the free-text "
-            '`query` to one field with `query_scope` ("subject" or "body"); '
+            "`query` to one field with `query_scope` (\"subject\" or \"body\"); "
             "use it when a company name also appears in unrelated mail (CI "
             "notifications, coding challenges). To match only on the subject "
             "line, set `subject` (it searches the subject only). To match an "
             "exact phrase, wrap it in double quotes in `query` (e.g. "
-            '"quarterly report"). Each result\'s `id` is the Gmail message id — '
+            "\"quarterly report\"). Each result's `id` is the Gmail message id — "
             "pass it straight to get_email or get_thread. Some senders (e.g. "
             "LinkedIn InMail) use a generic alias address with the real person "
             "only in the display name — request the `from_display_name` field."
@@ -174,7 +174,7 @@ def build_get_email_tool(uses: McpUseCases) -> ToolDefinition:
         name="get_email",
         description=(
             "Fetch a single email with its body by Gmail message id or internal "
-            'UUID. Pass `fields` (e.g. ["subject", "from", "date"]) to '
+            "UUID. Pass `fields` (e.g. [\"subject\", \"from\", \"date\"]) to "
             "return only those fields instead of the full body. For a forwarded "
             "email, `body` holds only the forward's own note; the forwarded "
             "original(s) are in `attached_messages`, each with its own subject, "
@@ -207,7 +207,9 @@ def build_get_thread_tool(uses: McpUseCases) -> ToolDefinition:
 
 
 def build_list_unread_tool(uses: McpUseCases) -> ToolDefinition:
-    async def list_unread(limit: int = 25, label: str | None = None) -> dict[str, Any]:
+    async def list_unread(
+        limit: int = 25, label: str | None = None
+    ) -> dict[str, Any]:
         try:
             result = uses.list_unread.execute(ListUnreadQuery(limit=limit, label=label))
             return {"emails": to_jsonable(result)}

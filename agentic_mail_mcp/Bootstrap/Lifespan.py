@@ -41,9 +41,9 @@ def _validate_db_path(url: str) -> None:
     # sqlite:///./db.db -> ./db.db
     # sqlite:////var/lib/db.db -> /var/lib/db.db
     if url.startswith("sqlite:///"):
-        file_path = url[len("sqlite:///") :]
+        file_path = url[len("sqlite:///"):]
     elif url.startswith("sqlite://"):
-        file_path = url[len("sqlite://") :]
+        file_path = url[len("sqlite://"):]
     else:
         file_path = url.split("sqlite", 1)[1]
     file_path = unquote(file_path)

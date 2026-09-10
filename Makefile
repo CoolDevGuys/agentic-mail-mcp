@@ -35,9 +35,9 @@ $(STAMP): pyproject.toml | $(VENV)
 	@touch $(STAMP)
 
 .PHONY: install-all
-install-all: | $(VENV) ## Install with every optional extra (postgresql, search, notifications, llm, scraping)
+install-all: | $(VENV) ## Install with every optional extra (postgresql, search, notifications, llm)
 	$(PIP) install --upgrade pip
-	$(PIP) install -e ".[dev,postgresql,search,notifications,llm,scraping]"
+	$(PIP) install -e ".[dev,postgresql,search,notifications,llm]"
 	@touch $(STAMP)
 
 .PHONY: env

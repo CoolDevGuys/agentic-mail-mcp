@@ -132,7 +132,9 @@ class SearchEmailsUseCase:
     ) -> SearchEmailsResult:
         matches = self._repository.search(gmail_query.value)
         if query.seen_ids:
-            matches = [e for e in matches if e.message_id.value not in query.seen_ids]
+            matches = [
+                e for e in matches if e.message_id.value not in query.seen_ids
+            ]
         total_count = len(matches)
         start = (query.page - 1) * query.page_size
         end = start + query.page_size

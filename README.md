@@ -108,7 +108,6 @@ pip install agentic-mail-mcp
 | `search` | local embeddings + sqlite-vec semantic search |
 | `notifications` | Redis pub/sub notifications |
 | `llm` | local llama.cpp inference |
-| `scraping` | job-scraping integration (linkedin-scrappy actor) |
 | `dev` | test / lint / build tooling |
 
 ```bash
@@ -152,34 +151,6 @@ with defaults and purpose — and the **Google OAuth walkthrough** — is in
 | `AGENTIC_MAIL_MCP_LLM_API_KEY` | LLM API key | (required for intelligence) |
 | `AGENTIC_MAIL_MCP_MCP_TRANSPORT` | `stdio` (default) or `http` | `stdio` |
 | `AGENTIC_MAIL_MCP_MCP_HOST` / `AGENTIC_MAIL_MCP_MCP_PORT` | HTTP transport bind address | `127.0.0.1` / `8080` |
-| `AGENTIC_MAIL_MCP_APIFY_JOBS_ENABLED` | Job-scraping integration (linkedin-scrappy actor) | `false` |
-| `AGENTIC_MAIL_MCP_APIFY_JOBS_TOKEN` | Apify API token (secret, env only) | (none) |
-
-### Job scraping integration (linkedin-scrappy)
-
-**Off by default.** The `Jobs` context triggers the private
-[linkedin-scrappy](https://apify.com) actor, waits for completion and streams
-the dataset page by page into a sink (`JobsSink`), persisting the run id first
-so a crashed process **re-attaches** to the in-flight run instead of
-double-triggering it (double proxy spend).
-
-```bash
-pip install -e ".[scraping]"
-export AGENTIC_MAIL_MCP_APIFY_JOBS_ENABLED=true
-export AGENTIC_MAIL_MCP_APIFY_JOBS_TOKEN=apify_api_...
-```
-
-```python
-from agentic_mail_mcp.Bootstrap.Settings import Settings
-from agentic_mail_mcp.Bootstrap.Composition import build_scrape_jobs
-
-use_case = build_scrape_jobs(Settings())          # None while the flag is off
-run = await use_case.execute({"searches": [...]}, sink=MyJobsSink())
-```
-
-Every trigger first checks the deployed actor against
-`AGENTIC_MAIL_MCP_APIFY_JOBS_MIN_ACTOR_VERSION` and fails fast on drift.
-Rollback = flag off; the actor itself is untouched.
 
 ## 🔌 Usage
 

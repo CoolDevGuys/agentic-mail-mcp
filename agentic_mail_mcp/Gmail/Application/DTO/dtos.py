@@ -145,7 +145,9 @@ class EmailDTO:
                 date_sent = email.utils.parsedate_to_datetime(header.date)
             except (ValueError, TypeError):
                 pass
-        to_addresses = [a.strip() for a in header.to.split(",")] if header.to else []
+        to_addresses = (
+            [a.strip() for a in header.to.split(",")] if header.to else []
+        )
         return cls(
             # No internal cache UUID exists for a live (non-cached) result, so
             # the Gmail message id doubles as the identifier — it is what

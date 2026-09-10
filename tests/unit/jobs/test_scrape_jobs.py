@@ -323,6 +323,11 @@ class TestPersistenceFidelity:
         repo.save(original)
         assert repo.load("k").status is status
 
+    def test_unknown_persisted_status_is_non_terminal(self):
+        loaded = ScrapeRun.from_dict({"run_id": "r", "status": "wat-0.0"})
+        assert loaded.status is RunStatus.RUNNING
+        assert not loaded.status.is_terminal
+
 
 class TestFeatureFlag:
     def test_integration_off_by_default(self):

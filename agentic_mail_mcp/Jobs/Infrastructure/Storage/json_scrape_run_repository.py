@@ -84,6 +84,8 @@ class JsonScrapeRunRepository:
             raw = json.loads(path.read_text(encoding="utf-8"))
             if not isinstance(raw, dict):
                 return None
+            if raw.get("status") == "starting":
+                return None  # starter claim without a run id yet: not a record
             return ScrapeRun.from_dict(raw)
         except FileNotFoundError:
             return None

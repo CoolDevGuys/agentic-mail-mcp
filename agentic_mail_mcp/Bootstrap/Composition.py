@@ -170,10 +170,14 @@ def build_scrape_jobs(settings: Settings):
         actor_id=cfg.actor_id,
         minimum_actor_version=cfg.min_actor_version,
     )
-    return ScrapeJobsUseCase(gateway, JsonScrapeRunRepository(cfg.state_path), page_size=cfg.page_size)
+    return ScrapeJobsUseCase(
+        gateway, JsonScrapeRunRepository(cfg.state_path), page_size=cfg.page_size
+    )
 
 
-def _build_semantic_search(settings: Settings, email_repo: EmailRepository | None = None):
+def _build_semantic_search(
+    settings: Settings, email_repo: EmailRepository | None = None
+):
     """Best-effort search wiring; returns None if the backend is unavailable.
 
     The email repository (when supplied) lets results carry the Gmail message

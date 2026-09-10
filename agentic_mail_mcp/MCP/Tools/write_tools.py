@@ -105,7 +105,9 @@ def build_delete_email_tool(uses: McpUseCases) -> ToolDefinition:
 
 
 def build_create_draft_tool(uses: McpUseCases) -> ToolDefinition:
-    async def create_draft(to: str, subject: str = "", body: str = "") -> dict[str, Any]:
+    async def create_draft(
+        to: str, subject: str = "", body: str = ""
+    ) -> dict[str, Any]:
         try:
             command = CreateDraftCommand(to_address=to, subject=subject, body=body)
             draft_id = uses.create_draft.execute(command)

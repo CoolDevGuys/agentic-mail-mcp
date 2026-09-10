@@ -71,7 +71,9 @@ def _to_attached(attached: GmailAttachedMessage) -> AttachedMessage:
             date_sent = None
     return AttachedMessage(
         subject=attached.subject,
-        from_address=EmailAddress(addr) if (addr := _valid_address(attached.from_)) else None,
+        from_address=EmailAddress(addr)
+        if (addr := _valid_address(attached.from_))
+        else None,
         date_sent=date_sent,
         body=attached.body,
     )

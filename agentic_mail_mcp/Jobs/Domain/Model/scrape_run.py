@@ -87,13 +87,12 @@ class ScrapeRun:
 
     @classmethod
     def from_dict(cls, data: dict[str, object]) -> ScrapeRun:
-        known = {s.value for s in RunStatus}
         raw_status = str(data.get("status") or RunStatus.PENDING.value)
+        # Unknown values fall back to RUNNING via from_actor (non-terminal):
+        # a status we cannot read must never be trusted as completion.
         return cls(
             run_id=str(data["run_id"]),
-            status=RunStatus.from_actor(raw_status)
-            if raw_status in known
-            else RunStatus.PENDING,
+            status=RunStatus.from_actor(raw_status),
             dataset_id=(str(v) if (v := data.get("dataset_id")) else None),
             key=str(data.get("key") or "default"),
             started_at=cls.parse_timestamp(_as_opt_str(data.get("started_at"))),

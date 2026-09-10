@@ -148,6 +148,31 @@ def build_oauth_provider(settings: Settings) -> GmailOAuthProvider:
     )
 
 
+def build_scrape_jobs(settings: Settings):
+    """Feature-flagged job-scraping integration; None when disabled.
+
+    Off by default (apify_jobs.enabled). Enable only after a staging run of the
+    linkedin-scrappy actor has succeeded; rollback is the flag.
+    """
+    cfg = settings.apify_jobs
+    if not cfg.enabled:
+        return None
+    from agentic_mail_mcp.Jobs.Application.UseCases.scrape_jobs import ScrapeJobsUseCase
+    from agentic_mail_mcp.Jobs.Infrastructure.Apify.apify_job_scraper_gateway import (
+        ApifyJobScraperGateway,
+    )
+    from agentic_mail_mcp.Jobs.Infrastructure.Storage.json_scrape_run_repository import (
+        JsonScrapeRunRepository,
+    )
+
+    gateway = ApifyJobScraperGateway(
+        token=cfg.token,
+        actor_id=cfg.actor_id,
+        minimum_actor_version=cfg.min_actor_version,
+    )
+    return ScrapeJobsUseCase(gateway, JsonScrapeRunRepository(cfg.state_path), page_size=cfg.page_size)
+
+
 def _build_semantic_search(settings: Settings, email_repo: EmailRepository | None = None):
     """Best-effort search wiring; returns None if the backend is unavailable.
 

@@ -46,6 +46,9 @@ notifications = [
 llm = [
     "llama-cpp-python",
 ]
+scraping = [
+    "apify-client",
+]
 dev = [
     "pytest",
     "pytest-asyncio",

@@ -98,6 +98,25 @@ class NotificationsConfig(BaseSettings):
     redis_url: str = ""
 
 
+class ApifyJobsConfig(BaseSettings):
+    """Job-scraping integration (linkedin-scrappy actor). Disabled by default;
+    enable after a successful staging run. The token is a secret: env/.env only,
+    never committed."""
+
+    model_config = _section_config("AGENTIC_MAIL_MCP_APIFY_JOBS_")
+
+    enabled: bool = False
+    token: str = Field(default="", repr=False)
+    actor_id: str = "WSSzIpJbtE8VJ09c6"
+    # Minimum deployed actor version whose input/dataset contract this
+    # integration consumes; checked before every trigger. Version numbers are
+    # the contract boundary (builds within a version never change it).
+    min_actor_version: str = "0.1"
+    # Crash-reattach state: persists the actor run id until ingestion finishes.
+    state_path: str = "data/scrape_runs"
+    page_size: int = 100
+
+
 class LoggingConfig(BaseSettings):
     model_config = _section_config("AGENTIC_MAIL_MCP_LOGGING_")
 
@@ -113,6 +132,7 @@ class Settings(BaseSettings):
     llm: LLMConfig = Field(default_factory=LLMConfig)
     search: SearchConfig = Field(default_factory=SearchConfig)
     notifications: NotificationsConfig = Field(default_factory=NotificationsConfig)
+    apify_jobs: ApifyJobsConfig = Field(default_factory=ApifyJobsConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
 
     model_config = SettingsConfigDict(

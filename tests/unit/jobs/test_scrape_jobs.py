@@ -23,8 +23,10 @@ from agentic_mail_mcp.Jobs.Infrastructure.Storage.json_scrape_run_repository imp
 
 
 class InMemoryRunRepository:
-    def __init__(self) -> None:
+    def __init__(self, *, claim_ok: bool = True) -> None:
         self.data: dict[str, ScrapeRun] = {}
+        self.claim_ok = claim_ok
+        self.claims: list[str] = []
 
     def load(self, key: str) -> ScrapeRun | None:
         return self.data.get(key)
@@ -34,6 +36,10 @@ class InMemoryRunRepository:
 
     def clear(self, key: str) -> None:
         self.data.pop(key, None)
+
+    def claim(self, key: str) -> bool:
+        self.claims.append(key)
+        return self.claim_ok
 
 
 class FakeGateway:
@@ -253,6 +259,69 @@ class TestApifyGatewayPagination:
         pages = run(collect())
         assert pages == [[{"i": 1}, {"i": 2}], [{"i": 3}]]
         assert dataset.calls == [(0, 2), (2, 2)]
+
+
+class TestConcurrencyClaim:
+    def test_new_run_claims_key(self):
+        repo = InMemoryRunRepository()
+        run(ScrapeJobsUseCase(FakeGateway(), repo).execute({"a": 1}, RecordingSink()))
+        assert repo.claims == ["default"]
+
+    def test_busy_claim_raises_without_triggering(self):
+        from agentic_mail_mcp.Jobs.Application.UseCases.scrape_jobs import (
+            ScrapeAlreadyInProgress,
+        )
+
+        repo = InMemoryRunRepository(claim_ok=False)
+        gateway = FakeGateway()
+        with pytest.raises(ScrapeAlreadyInProgress):
+            run(ScrapeJobsUseCase(gateway, repo).execute({"a": 1}, RecordingSink()))
+        assert gateway.started == []
+
+    def test_attach_path_needs_no_claim(self):
+        repo = InMemoryRunRepository(claim_ok=False)
+        repo.save(ScrapeRun.new("run-existing"))
+        result = run(
+            ScrapeJobsUseCase(FakeGateway(), repo).execute({"a": 1}, RecordingSink())
+        )
+        assert result.run_id == "run-existing"
+        assert repo.claims == []
+
+
+class TestJsonClaim:
+    def test_fresh_claim_blocks_and_record_overwrites_it(self, tmp_path):
+        repo = JsonScrapeRunRepository(tmp_path)
+        assert repo.claim("k") is True
+        assert repo.claim("k") is False  # fresh placeholder
+        repo.save(ScrapeRun.new("run-1", key="k"))
+        assert repo.claim("k") is False  # real record: attach instead
+
+    def test_stale_claim_is_replaced(self, tmp_path):
+        repo = JsonScrapeRunRepository(tmp_path, claim_stale_secs=0.0)
+        assert repo.claim("k") is True
+        assert repo.claim("k") is True  # stale placeholder: reclaim
+
+    def test_placeholder_loads_as_absent(self, tmp_path):
+        repo = JsonScrapeRunRepository(tmp_path)
+        repo.claim("k")
+        assert repo.load("k") is None
+
+
+class TestSecretRepr:
+    def test_token_hidden_from_repr(self):
+        from agentic_mail_mcp.Bootstrap.Settings import ApifyJobsConfig
+
+        cfg = ApifyJobsConfig(token="apify_api_supersecret")
+        assert "supersecret" not in repr(cfg)
+
+
+class TestPersistenceFidelity:
+    @pytest.mark.parametrize("status", list(RunStatus))
+    def test_roundtrip_preserves_status(self, tmp_path, status):
+        repo = JsonScrapeRunRepository(tmp_path)
+        original = ScrapeRun(run_id="r", status=status, key="k")
+        repo.save(original)
+        assert repo.load("k").status is status
 
 
 class TestFeatureFlag:

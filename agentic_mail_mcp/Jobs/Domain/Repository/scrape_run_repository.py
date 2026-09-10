@@ -13,3 +13,11 @@ class ScrapeRunRepository(Protocol):
     def save(self, run: ScrapeRun) -> None: ...
 
     def clear(self, key: str) -> None: ...
+
+    def claim(self, key: str) -> bool:
+        """Atomically reserve a key for starting a new run.
+
+        Returns False when another process already holds a fresh claim,
+        preventing concurrent duplicate triggers for the same key.
+        """
+        ...

@@ -23,6 +23,10 @@ from agentic_mail_mcp.Jobs.Domain.Repository.scrape_run_repository import (
 logger = logging.getLogger(__name__)
 
 
+class ScrapeAlreadyInProgress(Exception):
+    """Another process holds a fresh claim to start a run for this key."""
+
+
 class ScrapeJobsUseCase:
     def __init__(
         self,
@@ -101,7 +105,12 @@ class ScrapeJobsUseCase:
                 return current
             self._runs.clear(key)
 
+        if not self._runs.claim(key):
+            raise ScrapeAlreadyInProgress(
+                f"a scrape run is already being started for key {key!r}"
+            )
         run = await self._gateway.start_run(run_input, key=key)
+        # Persisted immediately; the minutes-long wait below is crash-safe.
         self._runs.save(run)
         logger.info("Started scrape run", extra={"run_id": run.run_id})
         return run

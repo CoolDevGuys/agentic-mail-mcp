@@ -106,7 +106,7 @@ class ApifyJobsConfig(BaseSettings):
     model_config = _section_config("AGENTIC_MAIL_MCP_APIFY_JOBS_")
 
     enabled: bool = False
-    token: str = ""
+    token: str = Field(default="", repr=False)
     actor_id: str = "WSSzIpJbtE8VJ09c6"
     # Minimum deployed actor version whose input/dataset contract this
     # integration consumes; checked before every trigger. Version numbers are
